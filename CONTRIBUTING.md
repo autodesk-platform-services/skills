@@ -7,6 +7,9 @@ To add a new skill, create a folder under `skills/` with:
 - A `scripts/` subfolder for any reusable helper scripts the agent should run
 - An `assets/` subfolder for output templates and other static resources
 
+> [!IMPORTANT]
+> Prefix the skill name with `aps-` to avoid name clashes with other skills.
+
 ## Best Practices
 
 The following guidance is adapted from [agentskills.io/skill-creation/best-practices](https://agentskills.io/skill-creation/best-practices).
