@@ -2,6 +2,8 @@
 
 A collection of reusable AI agent skills for [Autodesk Platform Services](https://aps.autodesk.com). Each skill is a self-contained instruction set that teaches a coding agent how to perform a specific APS-related task.
 
+https://github.com/user-attachments/assets/7126310c-4ef6-4b21-9b29-a702dfc0a16d
+
 ## Available Skills
 
 | Skill | Description |
