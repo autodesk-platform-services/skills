@@ -12,12 +12,16 @@ A collection of reusable AI agent skills for [Autodesk Platform Services](https:
 
 Each skill is a folder inside [`skills/`](skills/) containing a `SKILL.md` file and optional supporting reference documents. To install a skill, use the [skills](https://www.npmjs.com/package/skills) utility, for example:
 
-```bash
-# Add all skills globally
-npx skills add -g autodesk-platform-services/skills
+### Installing all skills globally
 
-# Add a single skill to current project, for a specific agent
-npx skills add autodesk-platform-services/skills --skill aps-mcp-server-gen --agent claude-code
+```bash
+npx skills add --global autodesk-platform-services/skills
+```
+
+### Installing a selected skill in current project
+
+```bash
+npx skills add --project autodesk-platform-services/skills --skill aps-mcp-server-gen
 ```
 
 ## Contributing
