@@ -1,5 +1,5 @@
 ---
-name: autodesk-aps
+name: aps-docs-portal
 description: >
   Navigate the Autodesk Platform Services (APS) documentation portal — find the right API docs,
   decode glossary terms, crawl table-of-contents JSON trees, extract content from static HTML pages,
@@ -205,6 +205,15 @@ After collecting the content, synthesize it into a clear answer:
 3. **List the specific events or features** (from the reference pages)
 4. **Provide reference links** (convert CDN URLs to portal URLs for clickable links)
 5. **Include a practical example** if applicable (curl command, code snippet, etc.)
+
+---
+
+## Gotchas
+
+- **`htmlq` is not pre-installed** — it's required for Steps 4–6. Install it with `brew install htmlq` on macOS or `cargo install htmlq` if you have Rust installed. If `htmlq` is unavailable, fall back to `pup` or use `python3 -c` with `html.parser` for simple extractions.
+- **The TOC JSON URL 404s if the `source_id` is wrong** — double-check against the source table in Step 2. The `source_id` is case-sensitive and versioned (e.g., `data_v2`, not `data`).
+- **CDN paths change when docs are re-deployed** — the repo-slug segment (the hex/numeric hash before the API name) changes when the docs team pushes updates. If a CDN URL returns 404, re-fetch the TOC to get the current slug.
+- **"dm." vs "documents." prefix** — Data Management webhook events use the `dm.` prefix (e.g., `dm.version.added`). ACC document webhooks use the `documents.` prefix (e.g., `documents.document.created`). Mixing them up returns empty results.
 
 ---
 
