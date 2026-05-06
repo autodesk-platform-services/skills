@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="Current"
+  xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ArxAppType>[!output PRJ_TYPE_APP]</ArxAppType>
+    <RDS>[!output RDS_SYMB]</RDS>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <CLRSupport>[!output ARX_CLR_SUPPORT]</CLRSupport>
+[!if !MFC_EXT_SHARED]
+    <UseOfMfc>[!output ARX_MFC_SUPPORT]</UseOfMfc>
+[!endif]
+    <!-- For MFC extension DLLs (MFC_EXT_SHARED): UseOfMfc is intentionally absent.
+         _AFXDLL + /MD come from rxsdk_common.props; _AFXEXT is set explicitly below.
+         Setting <UseOfMfc>Dynamic</UseOfMfc> drags mfcs140u.lib(dllmodul.obj)'s DllMain
+         into link, conflicting with our own DllMain → LNK2005. -->
+    <!-- <UseOfAtl>[!output ARX_ATL_SUPPORT]</UseOfAtl> -->
+    <PlatformToolset>v145</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'" Label="Configuration">
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <PropertyGroup Label="Globals">
+    <TargetName Condition="'$(RDS)'!=''">$(RDS)$(ProjectName)</TargetName>
+    <ProjectGuid>{F87873B0-2B5D-4D52-8FD5-BE1CDC50B2E3}</ProjectGuid>
+    <!--For Visual Studio 2019, you can specify the most recent version of the Windows 10 SDK by using a value of 10.0-->
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="Autodesk.arx-2027.props" />
+  </ImportGroup>
+  <PropertyGroup Label="Configuration">
+    <PlatformToolset Condition="'$(ArxSDKPlatform)'=='v145'">v145</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup />
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions Condition="'$(Platform)'=='x64'">_WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+[!if MFC_EXT_SHARED]
+      <!-- _AFXEXT gates adui/acui includes in arxHeaders.h and links acui26/adui26 libs.
+           Set explicitly because UseOfMfc is intentionally absent (see comment above).
+           _AFXDLL comes from rxsdk_common.props. -->
+      <PreprocessorDefinitions>_AFXEXT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+[!else]
+      <PreprocessorDefinitions Condition="'$(UseOfMfc)'=='Dynamic'">_AFXEXT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+[!endif]
+      <!-- ARX SDK 2027 headers use nested-namespace definitions which require C++17. -->
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <!-- Added to avoid Narrow conversion warnings introduced in VS2015 /Wv:xx[.yy[.zzzzz],  is CL version -->
+      <AdditionalOptions>/Wv:17.00.61030 %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link>
+[!if MFC_EXT_SHARED]
+      <!-- ARX MFC extension DLL: mfcs140u.lib(dllmodul.obj) exports its own DllMain
+           via the rawdllmainproxy chain pulled in by <afx.h> when _AFXDLL is set.
+           Our DllMain (in <ProjectName>.cpp) is required to call AttachInstance/DetachInstance.
+           Our .obj files precede libs in link order, so our DllMain wins; the lib copy
+           is dead code but causes no runtime issue. /FORCE:MULTIPLE is the documented
+           ARX extension DLL workaround for VS 2022+. -->
+      <ForceFileOutput>MultiplyDefinedSymbolOnly</ForceFileOutput>
+[!endif]
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
