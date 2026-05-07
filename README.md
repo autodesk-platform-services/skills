@@ -36,6 +36,7 @@ npx skills add --project autodesk-platform-services/skills --skill aps-mcp-serve
 | Skill | Description |
 | ----- | ----------- |
 | [`aps-mcp-server-gen`](skills/aps-mcp-server-gen/SKILL.md) | Scaffold a custom MCP (Model Context Protocol) server that integrates with APS. Supports Node.js/TypeScript, .NET/C#, and Python. |
+| [`aps-docs-portal`](skills/aps-docs-portal/SKILL.md) | Navigate the APS documentation portal — decode glossary terms, crawl TOC JSON trees, extract content from static HTML pages, and convert CDN URLs to clickable portal links. |
 
 ## Contributing
 
