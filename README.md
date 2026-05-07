@@ -15,6 +15,7 @@ Clone this repository and copy the skill folder to wherever your AI agent looks 
 ```bash
 git clone https://github.com/autodesk-platform-services/skills.git
 cp -r skills/aps-mcp-server-gen ~/.claude/skills/
+cp -r skills/acad-arx-wizard ~/.claude/skills/
 ```
 
 ### Automated installation
@@ -23,20 +24,18 @@ Use the [skills](https://www.npmjs.com/package/skills) utility to install and ma
 
 ```bash
 # Install all skills globally
-npx skills add --global autodesk-platform-services/skills
+npx skills add autodesk-platform-services/skills --global
 
 # ... or ...
-
-# Install a selected skill in the current project
-npx skills add --project autodesk-platform-services/skills --skill aps-mcp-server-gen
 ```
 
 ## Available Skills
 
-| Skill | Description |
-| ----- | ----------- |
-| [`aps-mcp-server-gen`](skills/aps-mcp-server-gen/SKILL.md) | Scaffold a custom MCP (Model Context Protocol) server that integrates with APS. Supports Node.js/TypeScript, .NET/C#, and Python. |
-| [`aps-docs-portal`](skills/aps-docs-portal/SKILL.md) | Navigate the APS documentation portal — decode glossary terms, crawl TOC JSON trees, extract content from static HTML pages, and convert CDN URLs to clickable portal links. |
+| Skill | Description | Recommended install |
+| ----- | ----------- | ------------------- |
+| [`acad-arx-wizard`](skills/acad-arx-wizard/SKILL.md) | Scaffold ObjectARX C++ projects/classes for AutoCAD 2027 and Visual Studio 2026 using deterministic PowerShell generators (ARX/DBX/CRX, Jig, Reactors, Custom Object, MFC, .NET, COM, DynProp). | `npx skills add autodesk-platform-services/skills --global --skill acad-arx-wizard` |
+| [`aps-docs-portal`](skills/aps-docs-portal/SKILL.md) | Navigate the APS documentation portal — decode glossary terms, crawl TOC JSON trees, extract content from static HTML pages, and convert CDN URLs to clickable portal links. | `npx skills add autodesk-platform-services/skills --project --skill aps-docs-portal` |
+| [`aps-mcp-server-gen`](skills/aps-mcp-server-gen/SKILL.md) | Scaffold a custom MCP (Model Context Protocol) server that integrates with APS. Supports Node.js/TypeScript, .NET/C#, and Python. | `npx skills add autodesk-platform-services/skills --project --skill aps-mcp-server-gen` |
 
 ## Contributing
 
