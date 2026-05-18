@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <OutputType>Library</OutputType>
+        <RootNamespace>$RootNamespace$</RootNamespace>
+        <TargetFramework>net8.0-windows</TargetFramework>
+        <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+        <Platforms>AnyCPU;x64</Platforms>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+        <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    </PropertyGroup>
+    <PropertyGroup>
+        <AcadDir>$(AcadDir)</AcadDir>
+        <AcadDir Condition="'$(AcadDir)' == ''">D:\ACAD\venn\AutoCAD 2025\</AcadDir>
+        <ArxMgdPath>$(AcadDir)</ArxMgdPath>
+        <OMFMgdPath>$(AcadDir)ACA\</OMFMgdPath>
+        <AeccMgdPath>$(AcadDir)C3D\</AeccMgdPath>
+        <AssemblySearchPaths>$(AcadDir);$(OMFMgdPath);$(AeccMgdPath);$(AssemblySearchPaths)</AssemblySearchPaths>
+    </PropertyGroup>
+    <ItemGroup>
+        <Reference Include="AcDbMgd">
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="accoremgd">
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="AcMgd">
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="AeccDbMgd">
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="AecBaseMgd">
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="AeccPressurePipesMgd">
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="AecPropDataMgd">
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="AcDbMgdBrep">
+            <Private>false</Private>
+        </Reference>
+    </ItemGroup>
+    <ItemGroup Condition=" '$(UsingMicrosoftNETSdk)' == 'true' or '$(CLRSupport)' == 'NetCore' ">
+        <FrameworkReference Include="Microsoft.WindowsDesktop.App" />
+    </ItemGroup>
+    <ItemDefinitionGroup Condition=" '$(CLRSupport)' == 'NetCore' ">
+        <ClCompile>
+            <DisableSpecificWarnings>4945;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+        </ClCompile>
+    </ItemDefinitionGroup>
+</Project>

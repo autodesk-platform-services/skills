@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ApplicationPackage SchemaVersion="1.0" Version="1.0" ProductCode="{$guid$}" Name="$RootNamespace$.bundle" Description="$Description$" Author="$Author$">
+
+    <CompanyDetails Name="$CompanyName$" Url="https://aps.autodesk.com" Email="aps.help@autodesk.com" />
+
+    <Components>
+        <RuntimeRequirements OS="Win64" SeriesMin="R26.0" SeriesMax="R26.0" />
+        <ComponentEntry AppName="$RootNamespace$" ModuleName="./Contents/$RootNamespace$.dll" AppDescription="$Description$" LoadOnCommandInvocation="True" LoadOnAutoCADStartup="False">
+            <Commands GroupName="$CommandGroup$">
+                <Command Global="$CommandName$" Local="$CommandName$"/>
+            </Commands>
+        </ComponentEntry>
+    </Components>
+</ApplicationPackage>

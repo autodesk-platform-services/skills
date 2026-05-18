@@ -1,0 +1,126 @@
+{
+    "$schema": "http://json.schemastore.org/template",
+    "author": "Madhukar Moogala",
+    "classifications": [
+        "AutoCAD",
+        ".NET",
+        "Plugin",
+        "Library"
+    ],
+    "identity": "AutoCAD.ClassLib.Template",
+    "name": "AutoCAD .NET C# Class Library",
+    "shortName": "acad",
+    "description": "A template for AutoCAD Design Automation .NET plugins using AutoCAD.NET.Core NuGet package.",
+    "tags": {
+        "language": "C#",
+        "type": "project"
+    },
+    "sourceName": "RootNamespace",
+    "preferNameDirectory": true,
+    "sources": [
+        {
+            "modifiers": [
+                {
+                    "exclude": [
+                        "**/[Bb]in/**",
+                        "**/[Oo]bj/**"
+                    ]
+                }
+            ]
+        }
+    ],
+    "symbols": {
+        "AcadVersion": {
+            "type": "parameter",
+            "datatype": "string",
+            "defaultValue": "26.0.0",
+            "choices": [
+                {
+                    "choice": "26.0.0",
+                    "description": "AutoCAD 2027"
+                },
+                {
+                    "choice": "27.0.0",
+                    "description": "AutoCAD 2028"
+                }
+            ],
+            "replaces": "$AcadVersion$"
+        },
+        "RootNamespace": {
+            "type": "parameter",
+            "datatype": "string",
+            "defaultValue": "MyPlugin",
+            "replaces": "$RootNamespace$",
+            "FileRename": "RootNamespace"
+        },
+        "ClassName": {
+            "type": "parameter",
+            "datatype": "string",
+            "defaultValue": "AcadCommands",
+            "replaces": "$ClassName$",
+            "FileRename": "ClassName"
+        },
+        "Description": {
+            "type": "parameter",
+            "datatype": "string",
+            "defaultValue": "AutoCAD .NET Plugin for APS Automation using AutoCAD.NET.Core",
+            "replaces": "$Description$"
+        },
+        "Author": {
+            "type": "parameter",
+            "datatype": "string",
+            "defaultValue": "Madhukar Moogala",
+            "replaces": "$Author$"
+        },
+        "CompanyName": {
+            "type": "parameter",
+            "datatype": "string",
+            "defaultValue": "Autodesk",
+            "replaces": "$CompanyName$"
+        },
+        "CommandName": {
+            "type": "parameter",
+            "datatype": "string",
+            "defaultValue": "HelloWorld",
+            "replaces": "$CommandName$"
+        },
+        "CommandGroup": {
+            "type": "parameter",
+            "datatype": "string",
+            "defaultValue": "ACADCMD",
+            "replaces": "$CommandGroup$"
+        },
+        "guid": {
+            "type": "generated",
+            "generator": "guid"
+        }
+    },
+    "primaryOutputs": [
+        {
+            "path": "$RootNamespace$.csproj"
+        },
+        {
+            "path": "$ClassName$.cs"
+        },
+        {
+            "path": "README.md"
+        },
+        {
+            "path": "$RootNamespace$.bundle"
+        },
+        {
+            "path": "$RootNamespace$.bundle/PackageContents.xml"
+        },
+        {
+            "path": "$RootNamespace$.bundle/Contents/.gitkeep"
+        }
+    ],
+    "postActions": [
+        {
+            "actionId": "E2F5A5F0-B189-4511-A6F6-8221FE331B6C",
+            "description": "Project created. Run `dotnet restore && dotnet build` to generate DLL and populate your .bundle directory.",
+            "manualInstructions": [],
+            "continueOnError": true
+        }
+    ]
+}
