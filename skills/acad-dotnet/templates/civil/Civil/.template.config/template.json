@@ -1,0 +1,39 @@
+{
+    "$schema": "http://json.schemastore.org/template",
+    "author": "Madhukar Moogala",
+    "classifications": [
+        "Library"
+    ],
+    "name": "Civil Class Library",
+    "identity": "Civil.ClassLib.Template",
+    "shortName": "civil",
+    "sourceName": "CivilClassLib",
+    "tags": {
+        "language": "C#",
+        "type": "project"
+    },
+    "symbols": {
+        "rootNamespace": {
+            "type": "parameter",
+            "datatype": "string",
+            "defaultValue": "CivilTools",
+            "replaces": "$RootNamespace$",
+            "description": "The root namespace for the project"
+        }
+    },
+    "sources": [
+        {
+            "modifiers": [
+                {
+                    "condition": "symbols.rootNamespace != 'CivilTools'",
+                    "operations": [
+                        {
+                            "type": "rename",
+                            "value": "CivilTools"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

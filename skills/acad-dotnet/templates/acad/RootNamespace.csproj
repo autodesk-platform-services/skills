@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Library</OutputType>
+        <RootNamespace>$RootNamespace$</RootNamespace>
+        <TargetFramework>net10.0-windows</TargetFramework>
+        <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+        <PlatformTarget>x64</PlatformTarget>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+        <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="AutoCAD.NET.Core" Version="$AcadVersion$">
+			<ExcludeAssets>runtime</ExcludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+<!-- Copy build outputs into .bundle/Contents -->
+<Target Name="BundlePostBuild" AfterTargets="Build">
+    <PropertyGroup>
+        <BundleRoot>$(ProjectDir)$RootNamespace$.bundle</BundleRoot>
+        <BundleContents>$(BundleRoot)\Contents</BundleContents>
+    </PropertyGroup>
+
+    <!-- Create folder if not exists -->
+    <MakeDir Directories="$(BundleContents)" />
+
+    <!-- Copy all output except PDBs -->
+    <ItemGroup>
+        <BundleFiles Include="$(OutputPath)**\*.*" Exclude="**\*.pdb" />
+    </ItemGroup>
+
+    <Copy SourceFiles="@(BundleFiles)" DestinationFolder="$(BundleContents)" SkipUnchangedFiles="true" />
+</Target>
+
+<!-- Zip the entire .bundle folder into .bundle.zip -->
+<Target Name="ZipBundleDirectory" AfterTargets="BundlePostBuild" Condition="'$(Configuration)' == 'Release'">
+    <PropertyGroup>
+        <ZipOutputFile>$(ProjectDir)$RootNamespace$.bundle.zip</ZipOutputFile>
+        <TempDir>$(ProjectDir)temp_zip</TempDir>
+    </PropertyGroup>
+    <MakeDir Directories="$(TempDir)" />
+    <Exec Command="xcopy &quot;$(BundleRoot)&quot; &quot;$(TempDir)\$RootNamespace$.bundle&quot; /E /I /Y" />
+    <ZipDirectory SourceDirectory="$(TempDir)" DestinationFile="$(ZipOutputFile)" Overwrite="true" />
+    <RemoveDir Directories="$(TempDir)" />
+</Target>
+
+</Project>
+<!-- End of file: acadcoreclasslib.csproj -->
