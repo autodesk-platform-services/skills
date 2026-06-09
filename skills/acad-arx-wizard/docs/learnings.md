@@ -297,6 +297,45 @@ void CTodoManagerDialog::OnEnChangeEditNewItem() {
 
 ---
 
+### [2026-06-09] Modeless ARX dialog focus stolen by AutoCAD — official fix is `WM_ACAD_KEEPFOCUS`
+
+**Tag:** `#dialogs #mfc #modeless #focus`
+
+When a modeless dialog is shown from an `ACRX_CMD_MODAL` command, AutoCAD steals focus back to its command line after the command function returns. Timer hacks and `OnActivate`/`SetForegroundWindow` workarounds are unreliable.
+
+**Official fix (from SDK `samples/editor/mfcsamps/modeless/sampdialog.cpp`):** AutoCAD sends `WM_ACAD_KEEPFOCUS` (`WM_ACAD_MFC_BASE + 1` = 1001) to the modeless dialog whenever it is about to reclaim focus. Returning `TRUE` keeps focus on the dialog.
+
+```cpp
+#define WM_ACAD_MFC_BASE  1000
+#define WM_ACAD_KEEPFOCUS (WM_ACAD_MFC_BASE + 1)
+
+// Header:
+afx_msg LRESULT onAcadKeepFocus(WPARAM, LPARAM);
+
+// Message map:
+ON_MESSAGE(WM_ACAD_KEEPFOCUS, &CTodoDialog::onAcadKeepFocus)
+
+// Implementation:
+LRESULT CTodoDialog::onAcadKeepFocus(WPARAM, LPARAM) { return TRUE; }
+```
+
+**Additional best practices from the same SDK sample:**
+- Use `acedGetAcadFrame()` (not `CWnd::FromHandle(adsw_acadMainWnd())`) as the dialog parent — it returns the actual MFC `CFrameWnd*` for AutoCAD's main frame.
+- `CAcModuleResourceOverride` is only valid when `AC_IMPLEMENT_EXTENSION_MODULE` is declared (MFC extension DLL pattern). In `AcRxArxApp`-based projects (MFC shared mode), `AFX_MANAGE_STATE(AfxGetStaticModuleState())` at the top of the command handler already ensures the correct module is active — no `resOverride` needed.
+
+```cpp
+CAcModuleResourceOverride resOverride;
+g_pDlg = new CMyDialog(acedGetAcadFrame());
+g_pDlg->Create(IDD_MY_DIALOG, acedGetAcadFrame());
+g_pDlg->ShowWindow(SW_SHOW);
+```
+
+**Verified:** Official Autodesk SDK reference pattern; timer/OnActivate approach removed.
+
+**Source:** `D:\SDKS\ARX2027\samples\editor\mfcsamps\modeless\sampdialog.cpp`
+
+---
+
 ## Linker
 
 *(See also MFC section for DllMain conflict)*
