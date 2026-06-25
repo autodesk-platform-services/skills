@@ -47,9 +47,19 @@ One command installs both the skill and [`CuixBuilder.exe`](https://github.com/A
 irm https://raw.githubusercontent.com/autodesk-platform-services/skills/main/skills/acad-cuix-builder/install.ps1 | iex
 ```
 
-Then in Claude Code: `/acad-cuix-builder`
+Then in your agent:
 
-> **Source:** [ADN-DevTech/acad-cuix-builder](https://github.com/ADN-DevTech/acad-cuix-builder)
+```
+/acad-cuix-builder
+
+I need a ribbon tab called "Drafting Tools" with two panels:
+  Panel 1 — Annotation: Quick Leader (QLEADER), Mtext (MTEXT)
+  Panel 2 — View: Zoom Extents (ZOOM E), Regen (REGEN)
+Save to C:\Plugins\DraftingTools.cuix
+```
+
+→ See [README.md](skills/acad-cuix-builder/README.md) for full usage and examples.  
+→ Source: [ADN-DevTech/acad-cuix-builder](https://github.com/ADN-DevTech/acad-cuix-builder)
 
 ## Contributing
 
