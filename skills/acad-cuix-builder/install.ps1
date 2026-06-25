@@ -4,9 +4,11 @@
 
 $ErrorActionPreference = "Stop"
 
-$repo  = "ADN-DevTech/acad-cuix-builder"
-$dest  = "$env:USERPROFILE\.cuixbuilder"
-$exe   = "$dest\CuixBuilder.exe"
+$repo      = "ADN-DevTech/acad-cuix-builder"
+$skillsRaw = "https://raw.githubusercontent.com/autodesk-platform-services/skills/main/skills/acad-cuix-builder"
+$dest      = "$env:USERPROFILE\.cuixbuilder"
+$exe       = "$dest\CuixBuilder.exe"
+$skillDest = "$env:USERPROFILE\.claude\skills\acad-cuix-builder"
 
 Write-Host ""
 Write-Host "CuixBuilder installer"
@@ -33,10 +35,26 @@ Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $exe -UseBasicParsin
 Write-Host "      Saved to: $exe"
 Write-Host ""
 
-# --- Step 2: Install the skill ---
+# --- Step 2: Install skill files directly ---
 Write-Host "[2/2] Installing acad-cuix-builder skill..."
-npx --yes skills add autodesk-platform-services/skills --global --skill acad-cuix-builder
+
+$files = @(
+    "SKILL.md",
+    "README.md",
+    "references/cuix-architecture.md"
+)
+
+foreach ($file in $files) {
+    $dir = Split-Path "$skillDest\$file" -Parent
+    New-Item -ItemType Directory -Force -Path $dir | Out-Null
+    Invoke-WebRequest -Uri "$skillsRaw/$file" -OutFile "$skillDest\$file" -UseBasicParsing
+    Write-Host "      $file"
+}
 
 Write-Host ""
-Write-Host "All done. In Claude Code, type: /acad-cuix-builder"
+Write-Host "All done."
+Write-Host "  Exe   : $exe"
+Write-Host "  Skill : $skillDest"
+Write-Host ""
+Write-Host "In Claude Code, type: /acad-cuix-builder"
 Write-Host ""
