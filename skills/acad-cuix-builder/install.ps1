@@ -1,4 +1,4 @@
-# install.ps1 — Download CuixBuilder.exe from GitHub Releases
+# install.ps1 — One-shot installer: CuixBuilder.exe + acad-cuix-builder skill
 # Usage: irm https://raw.githubusercontent.com/autodesk-platform-services/skills/main/skills/acad-cuix-builder/install.ps1 | iex
 
 $ErrorActionPreference = "Stop"
@@ -13,7 +13,7 @@ Write-Host "Repository : https://github.com/$repo"
 Write-Host "Install to : $dest"
 Write-Host ""
 
-# Fetch latest release metadata
+# --- Step 1: Download CuixBuilder.exe ---
 $api     = "https://api.github.com/repos/$repo/releases/latest"
 $headers = @{ "User-Agent" = "cuix-builder-installer"; "Accept" = "application/vnd.github+json" }
 $release = Invoke-RestMethod -Uri $api -Headers $headers
@@ -24,16 +24,18 @@ if (-not $asset) {
     exit 1
 }
 
-Write-Host "Downloading $($release.tag_name) / $($asset.name) ($([math]::Round($asset.size/1MB, 1)) MB)..."
+Write-Host "[1/2] Downloading $($release.tag_name) / $($asset.name) ($([math]::Round($asset.size/1MB, 1)) MB)..."
 
 New-Item -ItemType Directory -Force -Path $dest | Out-Null
 Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $exe -UseBasicParsing
 
+Write-Host "      Saved to: $exe"
 Write-Host ""
-Write-Host "Done."
-Write-Host "  Exe : $exe"
+
+# --- Step 2: Install the skill ---
+Write-Host "[2/2] Installing acad-cuix-builder skill..."
+npx --yes skills add autodesk-platform-services/skills --global --skill acad-cuix-builder
+
 Write-Host ""
-Write-Host "Next: install the skill (if not already done)"
-Write-Host "  npx skills add autodesk-platform-services/skills --global --skill acad-cuix-builder"
+Write-Host "All done. In Claude Code, type: /acad-cuix-builder"
 Write-Host ""
-Write-Host "Then in Claude Code: /acad-cuix-builder"

@@ -39,15 +39,15 @@ npx skills add autodesk-platform-services/skills --global
 | [`acad-dotnet`](skills/acad-dotnet/SKILL.md) | Scaffold and develop AutoCAD 2027 .NET plugins (AutoCAD, Civil 3D, Plant 3D) targeting .NET 10 / x64. Covers csproj patterns, bundle packaging, desktop testing, and Design Automation deployment. | `npx skills add autodesk-platform-services/skills --project --skill acad-dotnet` |
 | [`acad-cuix-builder`](skills/acad-cuix-builder/SKILL.md) | Generate AutoCAD partial CUIX files from prompts. Describe your ribbon panels and LISP/command buttons conversationally — skill builds a ready-to-CUILOAD `.cuix` with embedded BMP icons. Requires `CuixBuilder.exe` — see install note below. | `npx skills add autodesk-platform-services/skills --global --skill acad-cuix-builder` |
 
-### acad-cuix-builder — install CuixBuilder.exe
+### acad-cuix-builder — one-shot install
 
-The skill uses [`CuixBuilder.exe`](https://github.com/ADN-DevTech/acad-cuix-builder/releases/latest) — a self-contained Windows CLI that generates the CUIX XML. Install it once with:
+One command installs both the skill and [`CuixBuilder.exe`](https://github.com/ADN-DevTech/acad-cuix-builder/releases/latest):
 
 ```powershell
 irm https://raw.githubusercontent.com/autodesk-platform-services/skills/main/skills/acad-cuix-builder/install.ps1 | iex
 ```
 
-This downloads the latest release to `~\.cuixbuilder\CuixBuilder.exe`. No .NET SDK needed.
+Then in Claude Code: `/acad-cuix-builder`
 
 > **Source:** [ADN-DevTech/acad-cuix-builder](https://github.com/ADN-DevTech/acad-cuix-builder)
 
