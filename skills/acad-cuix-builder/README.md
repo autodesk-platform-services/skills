@@ -35,14 +35,16 @@ Panel 2 — View:
   - Zoom Extents button (command: ZOOM E)
   - Regen button (command: REGEN)
 
-Save to C:\Plugins\DraftingTools.cuix
+Save to C:\Temp\DraftingTools.cuix
 ```
 
-The skill collects your plugin name, panels, buttons, and commands — then runs `CuixBuilder.exe` to generate the `.cuix`:
+No image paths needed — if omitted, the skill auto-generates colored 16×16 BMP placeholders for each button.
+
+The skill runs `CuixBuilder.exe` and reports:
 
 ```
-Done: C:\Plugins\DraftingTools.cuix
-In AutoCAD: CUILOAD → browse to C:\Plugins\DraftingTools.cuix
+Done: C:\Temp\DraftingTools.cuix
+In AutoCAD: CUILOAD → browse to C:\Temp\DraftingTools.cuix
 ```
 
 ---
@@ -51,7 +53,7 @@ In AutoCAD: CUILOAD → browse to C:\Plugins\DraftingTools.cuix
 
 - A partial CUIX file with a **ribbon tab**, **panels**, and **buttons**
 - Each button gets a `^C^C`-prefixed macro automatically (bare commands and LISP expressions both handled)
-- Buttons without an image path get **auto-colored 16×16 BMP placeholders** (cycles blue → green → orange → purple → teal → red → amber → cyan)
+- Buttons without an image path get **auto-colored 16×16 BMP placeholders** (blue → green → orange → purple → teal → red → amber → cyan)
 
 Load in AutoCAD with `CUILOAD` — the tab appears instantly in the ribbon.
 
