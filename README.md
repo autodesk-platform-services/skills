@@ -37,7 +37,19 @@ npx skills add autodesk-platform-services/skills --global
 | [`aps-docs-portal`](skills/aps-docs-portal/SKILL.md) | Navigate the APS documentation portal — decode glossary terms, crawl TOC JSON trees, extract content from static HTML pages, and convert CDN URLs to clickable portal links. | `npx skills add autodesk-platform-services/skills --project --skill aps-docs-portal` |
 | [`aps-mcp-server-gen`](skills/aps-mcp-server-gen/SKILL.md) | Scaffold a custom MCP (Model Context Protocol) server that integrates with APS. Supports Node.js/TypeScript, .NET/C#, and Python. | `npx skills add autodesk-platform-services/skills --project --skill aps-mcp-server-gen` |
 | [`acad-dotnet`](skills/acad-dotnet/SKILL.md) | Scaffold and develop AutoCAD 2027 .NET plugins (AutoCAD, Civil 3D, Plant 3D) targeting .NET 10 / x64. Covers csproj patterns, bundle packaging, desktop testing, and Design Automation deployment. | `npx skills add autodesk-platform-services/skills --project --skill acad-dotnet` |
-| [`acad-cuix-builder`](skills/acad-cuix-builder/SKILL.md) | Generate AutoCAD partial CUIX files from prompts. Describe your ribbon panels and LISP/command buttons conversationally — skill builds a ready-to-CUILOAD `.cuix` with embedded BMP icons. | `npx skills add autodesk-platform-services/skills --global --skill acad-cuix-builder` |
+| [`acad-cuix-builder`](skills/acad-cuix-builder/SKILL.md) | Generate AutoCAD partial CUIX files from prompts. Describe your ribbon panels and LISP/command buttons conversationally — skill builds a ready-to-CUILOAD `.cuix` with embedded BMP icons. Requires `CuixBuilder.exe` — see install note below. | `npx skills add autodesk-platform-services/skills --global --skill acad-cuix-builder` |
+
+### acad-cuix-builder — install CuixBuilder.exe
+
+The skill uses [`CuixBuilder.exe`](https://github.com/ADN-DevTech/acad-cuix-builder/releases/latest) — a self-contained Windows CLI that generates the CUIX XML. Install it once with:
+
+```powershell
+irm https://raw.githubusercontent.com/autodesk-platform-services/skills/main/skills/acad-cuix-builder/install.ps1 | iex
+```
+
+This downloads the latest release to `~\.cuixbuilder\CuixBuilder.exe`. No .NET SDK needed.
+
+> **Source:** [ADN-DevTech/acad-cuix-builder](https://github.com/ADN-DevTech/acad-cuix-builder)
 
 ## Contributing
 
