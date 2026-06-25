@@ -3,7 +3,7 @@
 
 $ErrorActionPreference = "Stop"
 
-$repo  = "autodesk-platform-services/cuix-builder"
+$repo  = "ADN-DevTech/acad-cuix-builder"
 $dest  = "$env:USERPROFILE\.cuixbuilder"
 $exe   = "$dest\CuixBuilder.exe"
 
