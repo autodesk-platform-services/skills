@@ -12,7 +12,9 @@ Works in GitHub Copilot, Claude Code, Cursor, and any AI agent that can run a te
 irm https://raw.githubusercontent.com/autodesk-platform-services/skills/main/skills/acad-cuix-builder/install.ps1 | iex
 ```
 
-Downloads `CuixBuilder.exe` and installs the skill in one shot. No .NET SDK needed.
+Downloads `CuixBuilder.exe` (~200 KB) and installs the skill in one shot.
+
+> **Requires .NET 10 runtime** — ships with AutoCAD 2027. No separate SDK install needed.
 
 Then in your agent: `/acad-cuix-builder`
 

@@ -1,5 +1,6 @@
 # install.ps1 — One-shot installer: CuixBuilder.exe + acad-cuix-builder skill
 # Usage: irm https://raw.githubusercontent.com/autodesk-platform-services/skills/main/skills/acad-cuix-builder/install.ps1 | iex
+# Requires: .NET 10 runtime (ships with AutoCAD 2027)
 
 $ErrorActionPreference = "Stop"
 
