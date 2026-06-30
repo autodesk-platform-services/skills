@@ -172,16 +172,30 @@ Index cycles 0→7 across all buttons in the CUIX.
 
 ---
 
-## F1 Help — AutoCAD 2027
+## F1 Help — CHM via PackageContents
 
-AutoCAD 2027 uses a web-based help engine. `setfunhelp` with CHM/HLP is ignored. However, **`HelpTopic` URL in the XAML tooltip works** — pressing F1 while hovering a ribbon button opens the URL in the browser.
+F1 help works via **CHM + PackageContents.xml**. Tested and confirmed working in AutoCAD 2027.
 
-Set `helpTopic` per button to a full URL (with anchor):
+### How it works
+- `HelpFile="./Contents/Win64/Plugin.chm"` on `<ApplicationPackage>`
+- `<Command Local="ZOOMSEL" HelpTopic="zoomsel" />` — anchor name only (no `.htm`)
+- CUIX `<ToolTip HelpTopic="zoomsel" HelpSource="C:\absolute\path\Plugin.chm" />`
+
+### Config
+Set `chmPath` + `helpTopic` (anchor name, not filename) per button:
+
 ```json
-"helpTopic": "https://yoursite.com/help/DraftingTools.Help.html#zoomsel"
+{
+  "chmPath": "C:\\path\\to\\DraftingTools.chm",
+  "panels": [{
+    "buttons": [{
+      "helpTopic": "zoomsel"
+    }]
+  }]
+}
 ```
 
-CuixBuilder wires it into `<RibbonToolTip HelpTopic="..." IsHelpEnabled="True">` in the XAML — F1 opens the browser to that URL.
+CuixBuilder strips `.htm`/`.html` extensions automatically if user provides a filename — always outputs anchor name only.
 
 ---
 
