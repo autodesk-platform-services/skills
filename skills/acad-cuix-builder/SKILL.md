@@ -172,20 +172,16 @@ Index cycles 0→7 across all buttons in the CUIX.
 
 ---
 
-## F1 Help — AutoCAD 2027 Note
+## F1 Help — AutoCAD 2027
 
-> **AutoCAD 2027 uses a web-based help engine.** `setfunhelp` with CHM/HLP files is ignored. `<Command HelpTopic>` in PackageContents also redirects to Autodesk's online help.
+AutoCAD 2027 uses a web-based help engine. `setfunhelp` with CHM/HLP is ignored. However, **`HelpTopic` URL in the XAML tooltip works** — pressing F1 while hovering a ribbon button opens the URL in the browser.
 
-**For demos and production: skip F1 — use tooltip GIFs instead.** The extended tooltip with animated GIF is the primary way to show command help inline.
-
-If online help is required, add a dedicated help button to the ribbon:
+Set `helpTopic` per button to a full URL (with anchor):
 ```json
-{
-  "label": "?",
-  "command": "(startapp \"cmd.exe\" \"/c start https://yoursite.com/help#commandname\")",
-  "tooltip": "Open online help"
-}
+"helpTopic": "https://yoursite.com/help/DraftingTools.Help.html#zoomsel"
 ```
+
+CuixBuilder wires it into `<RibbonToolTip HelpTopic="..." IsHelpEnabled="True">` in the XAML — F1 opens the browser to that URL.
 
 ---
 
