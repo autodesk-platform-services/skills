@@ -56,16 +56,46 @@ Ask:
 
 ## Step 3 — Collect buttons (per panel)
 
+### Auto-scan icons folder (when user provides a folder path)
+
+If the user says "use icons from `<folder>`", list that folder and auto-match files by button name:
+
+```powershell
+Get-ChildItem "D:\SkillDemo\demo\icons\" | Select-Object Name
+```
+
+Matching convention (case-insensitive, spaces→empty):
+- `{buttonname}.bmp` → `imagePath`  (16×16 ribbon icon)
+- `{buttonname}.gif` → `tooltipImage` (expanded tooltip animation)
+- `{buttonname}.png` → `tooltipImage` (fallback if no GIF)
+
+Example: button label `Zoom Selection`, internal name `zoomsel`:
+- `zoomsel.bmp` → imagePath
+- `zoomsel.gif` → tooltipImage
+
+Derive internal name from label: lowercase, strip spaces/special chars (e.g. `Zoom Selection` → `zoomsel`, `Isolate Layer` → `layiso`). If no match found, use colored placeholder.
+
+### Per-button fields
+
 For each panel, for each button ask:
 - **Label** — text on the button (e.g. `Quick Leader`)
 - **Command** — one of:
   - Bare AutoCAD command: `QLEADER` → generator adds `^C^C` automatically
   - LISP expression: `(c:ZOOMSEL)` → generator adds `^C^C` automatically
   - Pre-formatted: `^C^CMYCOMMAND` → used as-is
-- **Image** — path to `.bmp` file (16×16), or Enter/`skip` → auto-generates colored placeholder. Verify file exists and ends in `.bmp` before writing config.
+- **Image** — auto-matched from icons folder, or path to `.bmp` file, or skip → colored placeholder
 - **Tooltip** — short hover text (defaults to label)
 - **Tooltip description** — optional extended body text shown in expanded tooltip
-- **Tooltip GIF** — optional path to `.gif`/`.png` animation shown in expanded tooltip (recommended: 300×187px, <30KB)
+- **Tooltip GIF** — auto-matched from icons folder, or path to `.gif`/`.png` (recommended: 300×187px, <30KB)
+- **Help topic** — anchor name for F1 help (e.g. `zoomsel`); derive from internal name if not given
+
+### CHM / F1 help
+
+If user does not mention a CHM file, **always ask**:
+> "Do you have a CHM help file for F1 support? If yes, provide the path."
+
+If provided, set `chmPath` in config. If skipped, omit `chmPath` (F1 will open AutoCAD's own help).  
+Help topic per button = anchor name derived from button internal name (e.g. `zoomsel`).
 
 ---
 
