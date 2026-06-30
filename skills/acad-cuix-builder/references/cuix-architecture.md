@@ -186,9 +186,156 @@ Step 3 is the critical one — without `Type="Image"`, the CUIx Image Manager ca
 
 ---
 
+## Extended Tooltips (XAML)
+
+Extended tooltips show animated GIFs and rich text on hover. Requires two things:
+
+### 1. Standalone XAML file (in bundle Contents/Win64/)
+
+```xml
+<ResourceDictionary
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:src="clr-namespace:Autodesk.Windows;assembly=AdWindows">
+
+  <src:RibbonToolTip x:Key="RBN_BTN_000_000"
+      Title="Zoom to selected objects"
+      HelpTopic="zoomsel"
+      HelpSource="C:\absolute\path\to\DraftingTools.chm"
+      IsHelpEnabled="True">
+    <src:RibbonToolTip.ExpandedContent>
+      <StackPanel>
+        <TextBlock Background="AntiqueWhite" TextWrapping="Wrap">Description text here</TextBlock>
+        <Image Source="zoomsel.gif" Width="Auto" Height="Auto" />
+      </StackPanel>
+    </src:RibbonToolTip.ExpandedContent>
+  </src:RibbonToolTip>
+
+</ResourceDictionary>
+```
+
+**Key rules:**
+- `x:Key` must match button `BtnUid` (e.g. `RBN_BTN_000_000`)
+- `Image Source` = filename only — AutoCAD resolves via SupportPath (bundle Contents/Win64/)
+- `HelpSource` = **absolute** deployed path to CHM
+- `HelpTopic` = anchor name only (e.g. `zoomsel`, NOT `zoomsel.htm`)
+
+### 2. MenuGroup.cui ToolTip element
+
+```xml
+<ToolTip HelpTopic="zoomsel"
+         HelpSource="C:\absolute\path\to\DraftingTools.chm">
+  <ExtendedContent
+    UriSource="C:\absolute\path\to\DraftingTools_ToolTips.xaml"
+    SourceKey="RBN_BTN_000_000" />
+</ToolTip>
+```
+
+**Key rules:**
+- `UriSource` = **absolute** deployed path to XAML — relative/filename-only paths are ignored
+- `SourceKey` = same `x:Key` as in XAML ResourceDictionary
+- `HelpTopic` = anchor name (no `.htm`)
+- `HelpSource` = absolute path to CHM
+
+### GIF specs
+- Size: 300×187px recommended
+- Max: 30KB, ≤58 frames
+- Format: animated GIF
+- Placement: bundle `Contents/Win64/` alongside XAML
+
+---
+
+## F1 Help — PackageContents.xml + CHM
+
+F1 help is wired via `PackageContents.xml`. Tested working in AutoCAD 2027.
+
+### PackageContents.xml structure
+
+```xml
+<ApplicationPackage
+    HelpFile="./Contents/Win64/DraftingTools.chm">
+
+  <RuntimeRequirements SupportPath="./Contents/Win64" ... />
+
+  <Components>
+    <ComponentEntry ModuleName="./Contents/Win64/DraftingTools.lsp" ...>
+      <Commands GroupName="DRAFTINGTOOLS">
+        <Command Local="ZOOMSEL" Global="ZOOMSEL" HelpTopic="zoomsel" />
+        <Command Local="LAYISO"  Global="LAYISO"  HelpTopic="layiso"  />
+      </Commands>
+    </ComponentEntry>
+  </Components>
+</ApplicationPackage>
+```
+
+**Key rules:**
+- `HelpFile` = relative path to CHM from bundle root
+- `HelpTopic` = anchor name only (no `.htm` extension)
+- `SupportPath` = adds bundle folder to AutoCAD's support file search path
+
+### CHM structure (.hhp project)
+
+```ini
+[OPTIONS]
+Compiled file=DraftingTools.chm
+Default topic=zoomsel.htm
+
+[FILES]
+zoomsel.htm
+layiso.htm
+
+[MAP]
+#define zoomsel 1000
+#define layiso  1001
+
+[ALIAS]
+zoomsel=1000
+layiso=1001
+```
+
+Each HTM file needs `<a id="zoomsel"></a>` anchor. Compile with `hhc.exe` (HTML Help Workshop).
+
+### F1 resolution chain
+
+```
+User presses F1 on ribbon button
+        │
+        ▼
+MenuGroup.cui ToolTip HelpTopic="zoomsel" + HelpSource="...DraftingTools.chm"
+        │
+        ▼
+PackageContents.xml <Command HelpTopic="zoomsel"> + HelpFile="./Contents/Win64/DraftingTools.chm"
+        │
+        ▼
+DraftingTools.chm — [ALIAS] zoomsel → 1000 → zoomsel.htm
+        │
+        ▼
+zoomsel.htm displayed in AutoCAD Help viewer
+```
+
+---
+
+## Bundle Folder Structure
+
+```
+DraftingTools.bundle/
+├── PackageContents.xml
+└── Contents/
+    └── Win64/
+        ├── DraftingTools.cuix          ← ribbon definition
+        ├── DraftingTools_ToolTips.xaml ← extended tooltip XAML
+        ├── DraftingTools.chm           ← F1 help
+        ├── DraftingTools.lsp           ← LISP commands
+        ├── zoomsel.bmp                 ← ribbon button icon (16×16)
+        ├── layiso.bmp
+        ├── zoomsel.gif                 ← tooltip animation
+        └── layiso.gif
+```
+
+AutoCAD auto-loads the bundle from `%APPDATA%\Autodesk\ApplicationPlugins\` on startup — no `CUILOAD` needed.
+
+---
+
 ## Reference Project
 
-`D:\Dev\32520\src\CuixBuilder\` — console app that generates a minimal valid CUIX from scratch
-with one ribbon tab, one panel, one button, and one embedded BMP. No AutoCAD SDK required.
-
-Working real-world reference with embedded BMPs: `D:\Dev\32337\src\One_CAD_Tools\...\OneCadTools100.cuix`
+`https://github.com/ADN-DevTech/acad-cuix-builder` — console app that generates a complete valid bundle from a JSON config. No AutoCAD SDK required.
