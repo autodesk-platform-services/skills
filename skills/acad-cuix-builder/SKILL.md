@@ -1,13 +1,19 @@
 ---
 name: acad-cuix-builder
-description: "Generate AutoCAD CUIX files with ribbon UI, extended tooltips, and optional F1 help from prompts. Supports buttons, CHM help files, and bundle deployment. No XML editing required."
-argument-hint: "Describe the plugin with panels, buttons, and optional help files (e.g. 'drafting tools with zoom and layer commands, help file at help/DraftingTools.chm')"
-compatibility: "Windows only. Requires CuixBuilder.exe (see install.ps1) OR .NET SDK 10.0."
+description: "Generate a complete AutoCAD .bundle (CUIX ribbon + extended tooltip GIFs + LISP + PackageContents) from a plain-English prompt. No XML editing required."
+argument-hint: "Describe the plugin: panels, buttons, commands, tooltip GIFs, and optional LISP file (e.g. 'drafting tools with zoom selection and layer isolate commands, GIF tooltips, lispPath at D:/demo/DraftingTools.lsp')"
+compatibility: "Windows only. Requires CuixBuilder.exe (install via install.ps1) OR .NET SDK 10.0."
 ---
 
 # AutoCAD CUIX Builder
 
-Conversational skill that generates AutoCAD CUIX files with **ribbon UI**, **extended tooltips**, and **optional F1 help**. No manual XML editing. Works great with or without help files — it's up to you!
+Conversational skill that generates a complete AutoCAD `.bundle` folder:
+- Ribbon tab + panels + buttons (CUIX)
+- Extended tooltips with GIF animations (XAML)
+- LISP command file (copied from `lispPath`)
+- `PackageContents.xml` — AutoCAD plugin manifest
+
+Drop the bundle in `%APPDATA%\Autodesk\ApplicationPlugins\` and AutoCAD auto-loads on next startup.
 
 Architecture reference: see `references/cuix-architecture.md`.
 
@@ -15,13 +21,15 @@ Architecture reference: see `references/cuix-architecture.md`.
 
 ## Step 0 — Verify generator is available
 
-Run in PowerShell:
-
 ```powershell
 $exe = "$env:USERPROFILE\.cuixbuilder\CuixBuilder.exe"
-if (Test-Path $exe) { Write-Host "exe found: $exe" }
-elseif (Get-Command dotnet -ErrorAction SilentlyContinue) { dotnet --version }
-else { Write-Host "Neither found — see install.ps1" }
+if (Test-Path $exe) {
+    & $exe --help          # shows all config fields
+} elseif (Get-Command dotnet -ErrorAction SilentlyContinue) {
+    dotnet --version
+} else {
+    Write-Host "Neither found — run install.ps1 first"
+}
 ```
 
 - **exe found** → use `& $exe <config.json>` in Step 5
@@ -52,10 +60,12 @@ For each panel, for each button ask:
 - **Label** — text on the button (e.g. `Quick Leader`)
 - **Command** — one of:
   - Bare AutoCAD command: `QLEADER` → generator adds `^C^C` automatically
-  - LISP expression: `(alert "hi")` → generator adds `^C^C` automatically
+  - LISP expression: `(c:ZOOMSEL)` → generator adds `^C^C` automatically
   - Pre-formatted: `^C^CMYCOMMAND` → used as-is
-- **Image** — path to `.bmp` file, or Enter/`skip` → auto-generates a colored 16×16 placeholder. If the user provides an image path, check that the file exists and ends with `.bmp` before writing the config. If the path is invalid or the extension is wrong, warn the user and offer to use a placeholder instead.
-- **Tooltip** — optional hover text (defaults to label)
+- **Image** — path to `.bmp` file (16×16), or Enter/`skip` → auto-generates colored placeholder. Verify file exists and ends in `.bmp` before writing config.
+- **Tooltip** — short hover text (defaults to label)
+- **Tooltip description** — optional extended body text shown in expanded tooltip
+- **Tooltip GIF** — optional path to `.gif`/`.png` animation shown in expanded tooltip (recommended: 300×187px, <30KB)
 
 ---
 
@@ -81,25 +91,34 @@ Confirm with user, then build the JSON config:
 
 ```json
 {
-  "pluginName": "NoSpaces",
-  "displayName": "Human Name",
-  "tab": "Tab Label",
-  "outputPath": "C:\\full\\path\\Plugin.cuix",
+  "pluginName": "DraftingTools",
+  "displayName": "Drafting Tools",
+  "tab": "Drafting Tools",
+  "outputPath": "C:\\full\\path\\DraftingTools.cuix",
+  "acadDir": "C:\\Program Files\\Autodesk\\AutoCAD 2027",
+  "lispPath": "C:\\full\\path\\DraftingTools.lsp",
   "panels": [
     {
       "name": "Panel Name",
       "buttons": [
         {
-          "label": "Button Label",
-          "command": "raw input",
-          "imagePath": null,
-          "tooltip": "Optional"
+          "label": "Zoom Selection",
+          "command": "(c:ZOOMSEL)",
+          "imagePath": "C:\\icons\\zoomsel.bmp",
+          "tooltip": "Zoom to selected objects",
+          "tooltipDescription": "Zooms viewport to fit current selection set.",
+          "tooltipImage": "C:\\icons\\zoomsel.gif"
         }
       ]
     }
   ]
 }
 ```
+
+- `acadDir` — AutoCAD install dir, used to detect R-series (R26.0 = 2027, R25.1 = 2026, R25.0 = 2025)
+- `lispPath` — copied into bundle; `.Help.html` and `.chm` next to it are also auto-copied
+- `tooltipImage` — GIF/PNG shown in expanded tooltip; recommended 300×187px, <30KB
+- `imagePath` — 16×16 BMP for ribbon button icon; omit for auto-generated colored placeholder
 
 Write config with an explicit timestamp to `$env:TEMP`, then run:
 
@@ -110,8 +129,12 @@ $configPath = "$env:TEMP\cuix_$(Get-Date -Format 'yyyyMMdd_HHmmss').json"
 # With exe (preferred)
 & "$env:USERPROFILE\.cuixbuilder\CuixBuilder.exe" $configPath
 
-# With SDK fallback
-dotnet run --project "$env:USERPROFILE\.cuixbuilder\src\CuixBuilder" -c Release -- $configPath
+# With SDK fallback — clone source from GitHub
+$src = "$env:TEMP\acad-cuix-builder-src"
+if (-not (Test-Path $src)) {
+    git clone https://github.com/ADN-DevTech/acad-cuix-builder $src
+}
+dotnet run --project $src -c Release -- $configPath
 ```
 
 ---
@@ -149,159 +172,25 @@ Index cycles 0→7 across all buttons in the CUIX.
 
 ---
 
-## F1 Help Integration (OPTIONAL)
+## F1 Help — AutoCAD 2027 Note
 
-Two ways to add F1 help:
+> **AutoCAD 2027 uses a web-based help engine.** `setfunhelp` with CHM/HLP files is ignored. `<Command HelpTopic>` in PackageContents also redirects to Autodesk's online help.
 
-**Option A: Pre-compiled CHM (fastest)**
-- You have: `DraftingTools.chm` (already compiled)
-- Skill bundles it as-is
-- Configure: `"chmPath": "C:\\path\\to\\DraftingTools.chm"`
+**For demos and production: skip F1 — use tooltip GIFs instead.** The extended tooltip with animated GIF is the primary way to show command help inline.
 
-**Option B: AI generates HTML files from text (easiest, no compilation)**
-- You have: Simple text file with command descriptions
-- AI parses text → generates HTML files with anchors → creates config → invokes CuixBuilder
-- No CHM compilation, no HTML Help Workshop needed
-- CuixBuilder automatically bundles the generated HTML files directly into the CUIX archive — no additional compilation step required.
-- **Recommended: simplest path**
-
-**Option C: No help (for now)**
-- Omit help fields
-- Add help later by re-running
-
-### Config format
-
-**Minimal (no help):**
+If online help is required, add a dedicated help button to the ribbon:
 ```json
 {
-  "pluginName": "DraftingTools",
-  "displayName": "Drafting Tools",
-  "tab": "Drafting Tools",
-  "panels": [...]
+  "label": "?",
+  "command": "(startapp \"cmd.exe\" \"/c start https://yoursite.com/help#commandname\")",
+  "tooltip": "Open online help"
 }
 ```
-
-**With pre-compiled CHM:**
-```json
-{
-  "pluginName": "DraftingTools",
-  "displayName": "Drafting Tools",
-  "tab": "Drafting Tools",
-  "chmPath": "C:\\path\\to\\DraftingTools.chm",
-  "lispPath": "C:\\path\\to\\commands.lsp",
-  "panels": [...]
-}
-```
-
----
-
-## Workflow: AI generates HTML help (Option B)
-
-**Step 1: Provide help.txt**
-
-You provide the skill with a simple text file:
-```
-ZOOMSEL
-Zoom to selected objects and fit in viewport
-Type ZOOMSEL and press Enter, all selected geometry fits in view
-
-LAYISO
-Isolate the layer of a picked object
-Type LAYISO, pick an object on target layer, that layer becomes isolated
-```
-
-**Step 1a: Validate help.txt entries**
-
-Before generating HTML files, the skill validates that each help.txt entry contains at least a command name and one description line. If an entry is malformed or the file is empty, the skill informs you: "The help.txt entry for [entry] is missing required fields (command name and description). Please provide at least a command name on line 1 and a short description on line 2 for each entry." The skill will not generate HTML files for invalid entries.
-
-**Step 2: AI generates HTML files**
-
-The skill parses and creates:
-- `zoomsel.htm` with anchor `<a id="zoomsel"></a>`
-- `layiso.htm` with anchor `<a id="layiso"></a>`
-- `index.htm` linking all topics together
-
-These files are written to `$env:TEMP\cuix_help_<pluginName>\` (e.g., `$env:TEMP\cuix_help_DraftingTools\`). This folder path will be referenced in the config as `helpSourcePath` so CuixBuilder can locate the files.
-
-**Step 3: Skill generates config.json**
-
-No CHM file — just reference the HTML output folder:
-
-```json
-{
-  "pluginName": "MyPlugin",
-  "displayName": "My Plugin Name",
-  "tab": "My Tab",
-  "helpSourcePath": "C:\\Users\\username\\AppData\\Local\\Temp\\cuix_help_MyPlugin\\",
-  "panels": [
-    {
-      "name": "Panel Name",
-      "buttons": [
-        {
-          "label": "Command Name",
-          "command": "COMMANDNAME",
-          "imagePath": "C:\\icons\\icon.bmp",
-          "tooltip": "Hover text",
-          "helpTopic": "commandname"
-        }
-      ]
-    }
-  ]
-}
-```
-
-⚠️ **Key difference from Option A**: No `chmPath` needed. CuixBuilder bundles the HTML files directly into the CUIX archive.
-
-**Step 4: Skill invokes CuixBuilder**
-
-```powershell
-# CuixBuilder automatically copies HTML files into the bundle
-& "$env:USERPROFILE\.cuixbuilder\CuixBuilder.exe" $configPath
-```
-
-CuixBuilder packages:
-- Generated HTML files (with anchors)
-- LISP commands (if provided)
-- Button images
-- PackageContents.xml with F1 routing
-
-**Step 5: Test in AutoCAD**
-- F1 on ribbon → opens help
-- Type `ZOOMSEL`, F1 → opens help
-- Done! ✅
-
-### Generated outputs (Option B only)
-
-1. **HTML help files** — No compilation step
-   - Skill generates `zoomsel.htm`, `layiso.htm`, etc.
-   - Each file includes `<a id="commandname"></a>` anchor
-   - Clean, simple HTML — users can edit later
-
-2. **PackageContents.xml** — F1 routing configured
-   - `<Command HelpTopic="zoomsel" />` entries
-   - AutoCAD F1 resolves to correct HTML anchor
-
-3. **CUIX MenuGroup** — Ribbon buttons linked
-   - `HelpTopic="zoomsel"` on each button
-   - Works with tooltips and images
-
-4. **Ready-to-deploy bundle**
-   - HTML files embedded in CUIX
-   - No external CHM dependency
-   - F1 works immediately in AutoCAD
 
 ---
 
 ## Requirements
 
-**Option A: Pre-compiled CHM**
-- Provide an existing `.chm` file (any name)
-- CuixBuilder bundles it as-is
-- No compilation, no dependencies
-- ✅ Fast if you already have a CHM
-
-**Option B: AI generates HTML**
-- Provide help.txt with command descriptions
-- Skill generates HTML files with anchors
-- CuixBuilder bundles HTML directly
-- ✅ No compilation step, no hhc.exe needed, no dependencies
+- **CuixBuilder.exe** — install via `install.ps1` (downloads from GitHub Releases, ~200KB)
+- **.NET 10 runtime** — ships with AutoCAD 2027; or install from https://dot.net
+- **Windows only** — AutoCAD bundle format is Windows-specific
