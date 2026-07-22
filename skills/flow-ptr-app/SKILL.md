@@ -5,22 +5,19 @@ description: "Guide for developing a new Flow Production Tracking (FPTR) / ShotG
 
 # Create a Flow Production Tracking (FPTR) Toolkit App
 
-Scaffolds a new Toolkit (`sgtk`) app for Flow Production Tracking (formerly ShotGrid/Shotgun)
-by forking Autodesk's official starter template, rather than building an app from scratch.
-
 This skill guides developers and pipeline engineers through building an FPTR app, following a
 **spec-driven** way — capture intent, check for reuse, write and validate a spec, plan, then
 implement, verify, release, and maintain against that spec. Tell the user which phase (below)
 you're starting before acting in it, so they can track progress and step in between phases.
 
 Reference guide: [Developing a Toolkit App](https://help.autodesk.com/view/SGDEV/ENU/?guid=SGD_pg_developer_pg_sgtk_developer_app_html)
-Template repo: https://github.com/shotgunsoftware/tk-multi-starterapp
+Default app template repo: https://github.com/shotgunsoftware/tk-multi-starterapp
 
 ## Overview
 
-The `## Step N` sections below (Step 0 through Step 9) hold the mechanical how-to for parts of
-Phases 1, 3–6, and 8. Phases 2, 7, and 9 have no dedicated section below — they're about the spec
-and process rather than a tool/config action, so they're covered inline above.
+The How-to guides below hold the mechanical how-to for parts of Phases 1, 3–6, and 8. Phases 2, 7,
+and 9 have no dedicated guide — they're about the spec and process rather than a tool/config
+action, so they're covered inline above.
 
 - **Phase 1 — Requirements/Intent capture**
    - Step 1.1 — Ask for the business need, and capture it in a short spec (one paragraph or a few
@@ -82,54 +79,45 @@ and process rather than a tool/config action, so they're covered inline above.
      during initial development.
 
 
-## Find existing apps
+# How-to guides
+
+## Find existing functionality or apps
 
 Toolkit has a customization ladder — cheaper options first:
 
 1. **Project settings** — often what looks like "custom behavior" is just a setting on an
    existing app (`env/includes/settings/...`).
 2. **App settings** — check the target app's `info.yml` for a setting that already does this.
-3. **Hooks** — the app may expose a hook for exactly the behavior you want to change.
+3. **Hooks** — the app may already expose a hook for exactly the behavior you want to change.
 4. **An existing app, mainstream or niche** — search for one (below) before assuming none exists.
    Fork/extend if it's close to what you need.
-5. **A brand-new app** — when nothing found that can be reused.
+5. **A brand-new app** — only once none of the above can be reused.
 
-Search in the shotgunsoftware org by keyword — name, description, and
-README** — the table below is a commonly-used subset, not the full catalog, so absence from it
-isn't proof nothing exists (e.g. "import an EDL and create cuts" matches `tk-multi-importcut`,
-not anything named "edl"):
+Best practice is to search the shotgunsoftware org by keyword — name, description, and README —
+before assuming nothing exists:
 ```bash
 curl -s "https://api.github.com/search/repositories?q=<keyword>+org:shotgunsoftware+in:name,description,readme" \
   | grep -o '"full_name": *"[^"]*"'
 ```
 (Use this `curl`/api.github.com form, not `gh api`, if `gh` is configured against an internal
-GitHub Enterprise host.) If you get a hit, confirm it's not archived, then go to Step 6's forking
-path instead of Step 3's template clone.
-
-| App | What it does |
-|---|---|
-| Panel | Lightweight FPTR overview inside the DCC (Maya, Nuke, Houdini, ...) — current task, activity stream, notes, tasks, versions, publishes, without leaving the app. |
-| About | Displays the current Toolkit context, config, and installed app/engine versions — debugging/support utility. |
-| Launch App | Shortcuts to start any supported application from the web or Desktop interface. |
-| Snapshot | Capture/restore the state of the current DCC scene as a local backup (not shared/published). |
-| Workfiles | Safely create, open, or version up workfiles tied to a task/asset/shot; can also start from an already-published file. |
-| Publish | Lets artists publish work for downstream use, with pre-publish validation and progress/logging; supports both in-DCC and standalone file publishing. |
-| Loader | Browse and load/reference published files into the current DCC, with a customizable, context-aware tree view. |
-| Breakdown | Tracks assets referenced in a scene and flags when newer published versions are available. |
+GitHub Enterprise host.) 
 
 Flame, Nuke, Hiero, Houdini, and Mari ship their own export/tracking apps too — check those the
-same way before scaffolding new. Editorial/cut-import workflows specifically are covered by
-`tk-multi-importcut` (https://github.com/shotgunsoftware/tk-multi-importcut) — an EDL/AAF import
-app that creates Cuts, CutItems, and Versions and links them to Sequences/Shots.
+same way before scaffolding new.
 
-- Full list of ready-to-use apps: https://help.autodesk.com/view/SGDEV/ENU/?guid=SGD_pc_toolkit_apps_html
+- A list of ready-to-use apps: https://help.autodesk.com/view/SGDEV/ENU/?guid=SGD_pc_toolkit_apps_html
 - All app/engine/framework source: https://github.com/shotgunsoftware
 
-## Step 1 — Locate the project configuration
+Before designing your own app's architecture, read
+[references/reference-apps.md](references/reference-apps.md) — real Autodesk-maintained apps,
+each demonstrating one distinct, reusable pattern (publish pipelines, hook-per-concern slicing,
+minimal single-hook apps, web menu actions).
+
+## Locating a project configuration
 
 Before anything else, find the `PipelineConfiguration` you'll actually be developing against, and
 figure out how it's set up. This determines where files live, whether there's a local `tank`
-command to run, and where the app's code goes in Step 3 — get this wrong and
+command to run, and where the app's code should be cloned to later — get this wrong and
 `install_app`/`switch_app` will look in the wrong place or fail outright.
 
 Check the project's **Pipeline Configurations** page in Flow Production Tracking, or query it via
@@ -145,11 +133,11 @@ sg.find_one(
 
 **Planning boundary:** this query (and reading the descriptor scheme below) is read-only and safe
 to run during a plan pass — it doesn't touch the filesystem or any repo. Almost everything else in
-this skill branches on what it returns (sandbox strategy, install method, and whether Step 1 itself
-ends in "blocked, escalate" for some descriptor types), so treat this lookup as the plan-phase
-action and draft the rest of the plan *after* it returns, rather than trying to plan the whole
-thing upfront. Everything from here on — cloning, write-access probes, `tank` commands — is the
-execute phase.
+this guide branches on what it returns (sandbox strategy, install method, and whether this lookup
+itself ends in "blocked, escalate" for some descriptor types), so best practice is to run this
+lookup first and draft the rest of the plan *after* it returns, rather than planning the whole
+thing upfront. Everything from here on — cloning, write-access probes, `tank` commands — is
+execution, not planning.
 
 - **Populated `mac_path`/`windows_path`/`linux_path`, no `descriptor`** → **centralized (classic)**
   configuration.
@@ -158,7 +146,7 @@ execute phase.
 **Centralized (classic):** the whole config lives at one fixed path shared by every machine. Read
 [references/centralized-config.md](references/centralized-config.md) before continuing — it covers
 the access checks you must run before touching that path, plus how sandboxing, cloning, and the
-final release descriptor (Steps 2, 3, and 9) differ for this config type.
+final release descriptor differ for this config type.
 
 **Distributed:** there's no single fixed install location — every machine resolves the `descriptor`
 on demand into its own local bundle cache. Read
@@ -166,36 +154,36 @@ on demand into its own local bundle cache. Read
 whole file, not just the descriptor-type table: some descriptor types (App Store, FPTR-attachment)
 carry escalation steps that are easy to miss if skipped.
 
-## Step 2 — Find or create a sandbox/dev configuration (strongly advised, not mandatory)
+## Find or create a sandbox/dev configuration (strongly advised, not mandatory)
 
-You *can* develop directly against the configuration located in Step 1, even if it's production —
+You *can* develop directly against the configuration you located above, even if it's production —
 Toolkit doesn't technically stop you. It's just a bad idea: a half-finished app can break real
 menus/commands for everyone else on the project, and any test data/events you generate land in
-production. Use a sandbox unless you have a specific reason not to.
+production. Best practice is to use a sandbox unless you have a specific reason not to.
 
 First check whether a dev sandbox already exists for this project — look for one already
 cloned/flagged for dev use on the Pipeline Configurations page, or ask the user directly. If one
-exists, skip to Step 3 and target it instead of production.
+exists, target it instead of production.
 
 If one doesn't exist yet, create it by following the "Creating a sandbox" section of whichever
-reference file you read in Step 1 —
+reference file matches the config type —
 [references/centralized-config.md](references/centralized-config.md) or
 [references/distributed-config.md](references/distributed-config.md). Either way, once you have a
-target configuration you also know where the app's own code should be cloned to in Step 3.
+target configuration you also know where the app's own code should be cloned to next.
 
-## Step 3 — Clone and rename the starter template
+## Cloning and renaming the starter template
 
-Name the app, following the `tk-ENGINE-APPNAME` convention:
+Apps are named following the `tk-ENGINE-APPNAME` convention:
 
 - `tk-multi-<appname>` if the app should run in more than one engine (Maya, 3ds Max, Nuke, Desktop, Shell, ...)
 - `tk-<engine>-<appname>` if it's tied to one DCC, e.g. `tk-maya-characterposer`
 
-**Ask where the app's source should be cloned to — don't assume.** The default target and clone
-command depend on config type — follow the "Cloning the app template" section of
-[references/centralized-config.md](references/centralized-config.md) or
-[references/distributed-config.md](references/distributed-config.md) (whichever matches Step 1),
-which also covers when the user might still prefer a separate workspace folder over the config-type
-default.
+**Best practice: ask where the app's source should be cloned to, rather than assuming.** The
+default target and clone command depend on config type — follow the "Cloning the app template"
+section of [references/centralized-config.md](references/centralized-config.md) or
+[references/distributed-config.md](references/distributed-config.md) (whichever matches the
+project's config type), which also covers when the user might still prefer a separate workspace
+folder over the config-type default.
 
 **Working from GitHub's UI:** fork https://github.com/shotgunsoftware/tk-multi-starterapp (or
 download it as a zip) into your own repo instead, then place/rename it per the reference file above.
@@ -213,7 +201,7 @@ resources/resources.qrc
 style.qss              # Qt stylesheet
 ```
 
-## Step 4 — Install the app into the target configuration
+## Install an app into the target configuration
 
 Pick the environment (e.g. `shot_step` for Shots, `asset_step` for Assets, or `project` if the app
 only needs project-level context) and the engine you're targeting (`tk-maya`, `tk-nuke`,
@@ -241,10 +229,11 @@ earlier in this skill's own dev session, wiring `tk-multi-eventAiCreated` into `
 `tk-desktop.yml` this way, with no git repo involved at all yet.
 
 `type: dev` is about the development workflow (it's what turns on the "Reload and Restart" menu
-command), not about *where* the code physically sits — `path:` just points at wherever Step 3 put
-it. So it's still `type: dev` whether that path is `<configuration_folder>/install/apps/<name>` or
-an external workspace folder; the type only changes once the app stops being actively developed
-and gets a real release descriptor (`git`/`app_store`/...) in Step 9.
+command), not about *where* the code physically sits — `path:` just points at wherever the app's
+source was cloned to. So it's still `type: dev` whether that path is
+`<configuration_folder>/install/apps/<name>` or an external workspace folder; the type only changes
+once the app stops being actively developed and gets a real release descriptor (`git`/`app_store`/
+...) — see "Release and push to production" below.
 
 **Alternative — `install_app` + `switch_app`:** useful once the app already has at least one git
 tag (e.g. it started life as an app-store/git app and you're now developing a new feature for it).
@@ -271,12 +260,12 @@ when reviewing the diff before `push_configuration`:
 - `env/includes/settings/tk-<engine>.yml` — wires the app into an engine + pipeline step
   (asset/shot/sequence/...); make sure the app's settings file is included at the top of this file
 
-> **Engine version:** when the environment config pins an engine (e.g. `tk-maya`), use the
-> latest available engine version for that environment rather than an old pinned one — you get
-> current bug fixes and it avoids chasing issues in the engine that have already been fixed
-> upstream.
+> **Engine version:** when the environment config pins an engine (e.g. `tk-maya`), best practice
+> is to use the latest available engine version for that environment rather than an old pinned
+> one — you get current bug fixes and it avoids chasing issues in the engine that have already
+> been fixed upstream.
 
-## Step 5 — Adjust `info.yml`
+## Adjust the app descriptor `info.yml`
 
 Update the manifest to describe the app and its configuration surface:
 
@@ -317,7 +306,7 @@ Read settings in code with `self.get_setting("save_template")` (inside `Applicat
 
 Manifest reference: https://developers.shotgridsoftware.com/tk-core/platform.html#manifest-file
 
-## Step 6 — Decide on hooks
+## App hooks
 
 Hooks let studios override specific pieces of app behavior per-project without touching the app's
 code — extract a piece of logic that's likely to need per-studio customization (path logic,
@@ -361,13 +350,13 @@ my_custom_app:
     version: v1.0.0
 ```
 
-When forking, use extended version numbers (`vBASE.LOCAL`, e.g. `v0.2.12.1`) to indicate "based on
-upstream v0.2.12, plus our local patch 1" — this keeps a clear trail back to the original version
-and makes it obvious the tag isn't an upstream release.
+When forking, best practice is to use extended version numbers (`vBASE.LOCAL`, e.g. `v0.2.12.1`) to
+indicate "based on upstream v0.2.12, plus our local patch 1" — this keeps a clear trail back to the
+original version and makes it obvious the tag isn't an upstream release.
 
 More on descriptors: https://developers.shotgridsoftware.com/tk-core/descriptor.html
 
-## Step 7 — Implement the app
+## Implement a Flow PTR app
 
 - `app.py`: `Application` subclass, registers menu command(s) via `self.engine.register_command(...)`.
 - `python/app/dialog.py`: dialog construction and callbacks.
@@ -386,7 +375,7 @@ More on descriptors: https://developers.shotgridsoftware.com/tk-core/descriptor.
   via `sgtk`/the engine). It may also need the **REST API** for cases outside a Python/DCC context
   (e.g. external services, non-Python integrations): https://developers.shotgridsoftware.com/rest-api/
 
-### If the app is a web menu action (`tk-shotgun` engine)
+### Web menu action (`tk-shotgun` engine)
 
 Apps launched from a right-click menu in the FPTR **web** UI (not from inside a DCC) run under the
 `tk-shotgun` engine, which behaves differently from DCC engines like `tk-maya`:
@@ -401,8 +390,9 @@ Apps launched from a right-click menu in the FPTR **web** UI (not from inside a 
 
 Implications: this requires FPTR Desktop to be installed and running, plus network connectivity
 for the API calls. Logging goes to the standard Toolkit log files, not the browser console — set
-`debug_logging: true` (see Step 5) while iterating. Don't confuse `tk-shotgun` with `tk-desktop`
-(the engine that runs *inside* the Desktop launcher itself) — they're different engines.
+`debug_logging: true` (see "Adjust the app descriptor `info.yml`" above) while iterating. Don't
+confuse `tk-shotgun` with `tk-desktop` (the engine that runs *inside* the Desktop launcher itself)
+— they're different engines.
 
 ### Triggering custom events
 
@@ -418,7 +408,7 @@ Before writing any non-trivial `sg.find`/`sg.create` calls, read
 API-key/script hygiene, and design guidance that's cheap to follow now and expensive to retrofit
 later. Skip only for trivial, one-off calls.
 
-## Step 8 — Test
+## Test an app
 
 - Iterate using Reload and Restart as above.
 - Ask whether to verify headless in `tk-shell` first before testing in the final DCC/engine, or go
@@ -433,7 +423,7 @@ later. Skip only for trivial, one-off calls.
   - https://developers.shotgridsoftware.com/python-api/
   - https://help.autodesk.com/view/SGDEV/ENU/?guid=SGD_py_python_api_overview_html
 
-## Step 9 — Release and push to production
+## Release and push to production
 
 An app must be versioned to be installed via a git/App Store/GitHub descriptor at all — Toolkit
 resolves `version:` against git tags, so every release needs one. Use semantic versioning
@@ -459,7 +449,7 @@ GitHub releases, or a Shotgun-uploaded attachment — pick whichever matches how
 distributes Toolkit apps.
 
 Descriptor choice for this final release step also differs by config type — see the "Release
-descriptor" note in whichever reference file you read in Step 1
+descriptor" note in whichever reference file matches the project's config type
 ([references/centralized-config.md](references/centralized-config.md) /
 [references/distributed-config.md](references/distributed-config.md)).
 
@@ -468,20 +458,7 @@ descriptor" note in whichever reference file you read in Step 1
 configs/core updates" to upgrade automatically, or use `tank` from the project's config, or the
 update API — whichever fits the studio's workflow.
 
-## Reference apps to study
-
-Before designing your own app's architecture, read
-[references/reference-apps.md](references/reference-apps.md) — real Autodesk-maintained apps,
-each demonstrating one distinct, reusable pattern (publish pipelines, hook-per-concern slicing,
-minimal single-hook apps, web menu actions).
-
-## After this skill
-
-Once the app is scaffolded, developed, and tested in the sandbox, come back for help wiring the
-final descriptor and reviewing the environment YAML diff before it's pushed to the production
-pipeline configuration.
-
-## Documentation starting points
+## Flow PTR documentation
 
 - **User documentation** — getting-started guides and know-how articles by production role:
   https://help.autodesk.com/view/SGSUB/ENU/
