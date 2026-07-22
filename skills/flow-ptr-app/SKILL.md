@@ -24,8 +24,9 @@ action, so they're covered inline above.
      bullet points) — what the app should do, on which context and environment it will run,
      whether it needs a UI, whether it needs toolkit hooks, constraints and acceptance criteria.
    - Step 1.2 — Find if an existing app / project setting / hook cover fully or partially the
-     requirements, and confirm with the user whether later we will fork/extend from that tool or
-     scaffold a new app from the starter template.
+     requirements (see [references/existing-functionality.md](references/existing-functionality.md)
+     for the reuse ladder and search steps), and confirm with the user whether later we will
+     fork/extend from that tool or scaffold a new app from the starter template.
 - **Phase 2 — Specification** — before cloning anything, write down what the app does:
    - Step 2.1 — Clarify the goal, the app name, dependencies on Flow PTR frameworks/engines, the
      environment the tool runs in (e.g. Sequence/Shot/Episode-specific), the entities involved, the
@@ -83,35 +84,11 @@ action, so they're covered inline above.
 
 ## Find existing functionality or apps
 
-Toolkit has a customization ladder — cheaper options first:
-
-1. **Project settings** — often what looks like "custom behavior" is just a setting on an
-   existing app (`env/includes/settings/...`).
-2. **App settings** — check the target app's `info.yml` for a setting that already does this.
-3. **Hooks** — the app may already expose a hook for exactly the behavior you want to change.
-4. **An existing app, mainstream or niche** — search for one (below) before assuming none exists.
-   Fork/extend if it's close to what you need.
-5. **A brand-new app** — only once none of the above can be reused.
-
-Best practice is to search the shotgunsoftware org by keyword — name, description, and README —
-before assuming nothing exists:
-```bash
-curl -s "https://api.github.com/search/repositories?q=<keyword>+org:shotgunsoftware+in:name,description,readme" \
-  | grep -o '"full_name": *"[^"]*"'
-```
-(Use this `curl`/api.github.com form, not `gh api`, if `gh` is configured against an internal
-GitHub Enterprise host.) 
-
-Flame, Nuke, Hiero, Houdini, and Mari ship their own export/tracking apps too — check those the
-same way before scaffolding new.
-
-- A list of ready-to-use apps: https://help.autodesk.com/view/SGDEV/ENU/?guid=SGD_pc_toolkit_apps_html
-- All app/engine/framework source: https://github.com/shotgunsoftware
-
-Before designing your own app's architecture, read
-[references/reference-apps.md](references/reference-apps.md) — real Autodesk-maintained apps,
-each demonstrating one distinct, reusable pattern (publish pipelines, hook-per-concern slicing,
-minimal single-hook apps, web menu actions).
+Toolkit has a customization ladder — cheaper options first: project settings, app settings, hooks,
+an existing app (fork/extend it), and only then a brand-new app. Read
+[references/existing-functionality.md](references/existing-functionality.md) before scaffolding
+anything — it covers where/how to search for existing apps and settings, real apps to study for
+architecture patterns, and how to fork one if you go that route.
 
 ## Locating a project configuration
 
@@ -156,7 +133,7 @@ carry escalation steps that are easy to miss if skipped.
 
 ## Find or create a sandbox/dev configuration (strongly advised, not mandatory)
 
-You *can* develop directly against the configuration you located above, even if it's production —
+You *can* develop directly against the project's production configuration instead of a sandbox —
 Toolkit doesn't technically stop you. It's just a bad idea: a half-finished app can break real
 menus/commands for everyone else on the project, and any test data/events you generate land in
 production. Best practice is to use a sandbox unless you have a specific reason not to.
@@ -222,18 +199,16 @@ tk-multi-myapp:
 ```
 
 This goes wherever the app is wired into an engine's settings (e.g.
-`env/includes/settings/tk-shell.yml`'s `apps:` block for the environment you picked) — see the
-"Adding an app" reference guide for exactly where. Toolkit loads the code directly from that path,
-so every edit is picked up on the next reload — no reinstall step. This is exactly what we did
-earlier in this skill's own dev session, wiring `tk-multi-eventAiCreated` into `tk-shell.yml` and
-`tk-desktop.yml` this way, with no git repo involved at all yet.
+`env/includes/settings/tk-shell.yml`'s `apps:` block for the environment you picked). Toolkit loads
+the code directly from that path, so every edit is picked up on the next reload — no reinstall
+step, and no git repo is needed yet.
 
 `type: dev` is about the development workflow (it's what turns on the "Reload and Restart" menu
 command), not about *where* the code physically sits — `path:` just points at wherever the app's
 source was cloned to. So it's still `type: dev` whether that path is
 `<configuration_folder>/install/apps/<name>` or an external workspace folder; the type only changes
 once the app stops being actively developed and gets a real release descriptor (`git`/`app_store`/
-...) — see "Release and push to production" below.
+...) — see "Release and push to production".
 
 **Alternative — `install_app` + `switch_app`:** useful once the app already has at least one git
 tag (e.g. it started life as an app-store/git app and you're now developing a new feature for it).
@@ -337,25 +312,6 @@ Common generic hook names you'll see across apps (useful naming inspiration for 
 `hook_before_app_launch`, `hook_app_launch`, `pick_environment`, `hook_before_register_command`,
 `hook_ui_config`, `actions_hook`, `post_load`.
 
-**Alternative to building new — forking an existing app:** if an existing app already covers most
-of what you need and hooks/settings genuinely aren't enough, fork it via git instead of starting
-from the starter template. Convention: place the clone under `config/install/app_store` in the
-config, and point `app_locations.yml` at it:
-
-```yaml
-my_custom_app:
-  location:
-    type: git
-    path: git@github.com:yourstudio/tk-multi-mycustomapp.git
-    version: v1.0.0
-```
-
-When forking, best practice is to use extended version numbers (`vBASE.LOCAL`, e.g. `v0.2.12.1`) to
-indicate "based on upstream v0.2.12, plus our local patch 1" — this keeps a clear trail back to the
-original version and makes it obvious the tag isn't an upstream release.
-
-More on descriptors: https://developers.shotgridsoftware.com/tk-core/descriptor.html
-
 ## Implement a Flow PTR app
 
 - `app.py`: `Application` subclass, registers menu command(s) via `self.engine.register_command(...)`.
@@ -390,7 +346,7 @@ Apps launched from a right-click menu in the FPTR **web** UI (not from inside a 
 
 Implications: this requires FPTR Desktop to be installed and running, plus network connectivity
 for the API calls. Logging goes to the standard Toolkit log files, not the browser console — set
-`debug_logging: true` (see "Adjust the app descriptor `info.yml`" above) while iterating. Don't
+`debug_logging: true` (see "Adjust the app descriptor `info.yml`") while iterating. Don't
 confuse `tk-shotgun` with `tk-desktop` (the engine that runs *inside* the Desktop launcher itself)
 — they're different engines.
 
@@ -410,7 +366,9 @@ later. Skip only for trivial, one-off calls.
 
 ## Test an app
 
-- Iterate using Reload and Restart as above.
+- Iterate using Toolkit's **Reload and Restart** menu item to pick up code and config changes
+  without restarting the host application (see "Implement a Flow PTR app" for what enables it and
+  its limits).
 - Ask whether to verify headless in `tk-shell` first before testing in the final DCC/engine, or go
   straight to the final target — `tk-shell` first gives a faster logic-only loop (no DCC startup)
   and catches non-UI bugs early, but ultimately the dialog/UI still needs to be confirmed working

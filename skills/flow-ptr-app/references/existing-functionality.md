@@ -1,4 +1,31 @@
-# Reference apps to study
+# Find existing functionality or apps
+
+Toolkit has a customization ladder — cheaper options first:
+
+1. **Project settings** — often what looks like "custom behavior" is just a setting on an
+   existing app (`env/includes/settings/...`).
+2. **App settings** — check the target app's `info.yml` for a setting that already does this.
+3. **Hooks** — the app may already expose a hook for exactly the behavior you want to change.
+4. **An existing app, mainstream or niche** — search for one (below) before assuming none exists.
+   Fork/extend it if it's close to what you need (forking mechanics below).
+5. **A brand-new app** — only once none of the above can be reused.
+
+Best practice is to search the shotgunsoftware org by keyword — name, description, and README —
+before assuming nothing exists:
+```bash
+curl -s "https://api.github.com/search/repositories?q=<keyword>+org:shotgunsoftware+in:name,description,readme" \
+  | grep -o '"full_name": *"[^"]*"'
+```
+(Use this `curl`/api.github.com form, not `gh api`, if `gh` is configured against an internal
+GitHub Enterprise host.)
+
+Flame, Nuke, Hiero, Houdini, and Mari ship their own export/tracking apps too — check those the
+same way before scaffolding new.
+
+- A list of ready-to-use apps: https://help.autodesk.com/view/SGDEV/ENU/?guid=SGD_pc_toolkit_apps_html
+- All app/engine/framework source: https://github.com/shotgunsoftware
+
+## Reference apps to study
 
 Real Autodesk-maintained apps that each demonstrate a distinct, reusable pattern — read their
 source before designing your own app's architecture.
@@ -31,3 +58,22 @@ source before designing your own app's architecture.
   [tk-shotgun-launchfolder](https://github.com/shotgunsoftware/tk-shotgun-launchfolder),
   [tk-shotgun-launchpublish](https://github.com/shotgunsoftware/tk-shotgun-launchpublish) — minimal,
   single-action `tk-shotgun` apps.
+
+## Forking an existing app
+
+**If you decide to fork an existing app** instead of starting from the starter template, place the
+clone under `config/install/app_store` in the config, and point `app_locations.yml` at it:
+
+```yaml
+my_custom_app:
+  location:
+    type: git
+    path: git@github.com:yourstudio/tk-multi-mycustomapp.git
+    version: v1.0.0
+```
+
+When forking, best practice is to use extended version numbers (`vBASE.LOCAL`, e.g. `v0.2.12.1`) to
+indicate "based on upstream v0.2.12, plus our local patch 1" — this keeps a clear trail back to the
+original version and makes it obvious the tag isn't an upstream release.
+
+More on descriptors: https://developers.shotgridsoftware.com/tk-core/descriptor.html
