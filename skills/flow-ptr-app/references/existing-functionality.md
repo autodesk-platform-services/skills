@@ -59,21 +59,3 @@ source before designing your own app's architecture.
   [tk-shotgun-launchpublish](https://github.com/shotgunsoftware/tk-shotgun-launchpublish) — minimal,
   single-action `tk-shotgun` apps.
 
-## Forking an existing app
-
-**If you decide to fork an existing app** instead of starting from the starter template, place the
-clone under `config/install/app_store` in the config, and point `app_locations.yml` at it:
-
-```yaml
-my_custom_app:
-  location:
-    type: git
-    path: git@github.com:yourstudio/tk-multi-mycustomapp.git
-    version: v1.0.0
-```
-
-When forking, best practice is to use extended version numbers (`vBASE.LOCAL`, e.g. `v0.2.12.1`) to
-indicate "based on upstream v0.2.12, plus our local patch 1" — this keeps a clear trail back to the
-original version and makes it obvious the tag isn't an upstream release.
-
-More on descriptors: https://developers.shotgridsoftware.com/tk-core/descriptor.html
