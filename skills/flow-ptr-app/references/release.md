@@ -23,9 +23,21 @@ Other descriptor types are available for the final `location` entry besides a gi
 GitHub releases, or a Shotgun-uploaded attachment — pick whichever matches how the studio
 distributes Toolkit apps.
 
-Descriptor choice for this final release step also differs by config type — see the "Release
-descriptor" note in whichever reference file matches the project's config type
-([centralized-config.md](centralized-config.md) / [distributed-config.md](distributed-config.md)).
+Descriptor choice for this final release step also differs by the project's config type (see
+[locating-config.md](locating-config.md) if you haven't determined that yet):
+
+## Centralized config
+
+A git descriptor works well here — one admin runs the update and the resolved code is cached once,
+in a location every user already shares. See [centralized-config.md](centralized-config.md) for
+more on this layout.
+
+## Distributed config
+
+A git descriptor means every user's machine resolves and downloads it independently into their own
+bundle cache, so each of them needs git installed and authenticated against your repo. An App Store
+or Shotgun-uploaded descriptor avoids that per-user git dependency. See
+[distributed-config.md](distributed-config.md) for more on this layout.
 
 **Later, when you ship a new version:** bump the version manually in `app_locations.yml` (and
 `core_api.yml` if it's a core update), or use the Desktop app's Project menu → "Check for

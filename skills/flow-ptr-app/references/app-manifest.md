@@ -34,6 +34,12 @@ frameworks:
 Assets, Versions, ...) and `templates` lets a setting reference a filesystem template instead of
 a literal value/path.
 
+> **Core version:** don't copy the example value verbatim — check what core the target project is
+> actually running (`./tank core` from the config, or its `install/core/core_api.yml`) and pin to
+> that. Requiring a newer core than the project has deployed forces a core upgrade before this app
+> can be installed at all, so confirm with the user before bumping `requires_core_version` past
+> what's currently running.
+
 Read settings in code with `self.get_setting("save_template")` (inside `Application`) or
 `app.get_setting(...)` from the dialog module.
 

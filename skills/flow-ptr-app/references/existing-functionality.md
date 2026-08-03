@@ -10,8 +10,9 @@ Toolkit has a customization ladder — cheaper options first:
    Fork/extend it if it's close to what you need (forking mechanics below).
 5. **A brand-new app** — only once none of the above can be reused.
 
-Best practice is to search the shotgunsoftware org by keyword — name, description, and README —
+Check if the functionality to develop is already exposed in one of the 1-3 options. If not, for step 4 the best practice is to search the shotgunsoftware org by keyword — name, description, and README —
 before assuming nothing exists:
+
 ```bash
 curl -s "https://api.github.com/search/repositories?q=<keyword>+org:shotgunsoftware+in:name,description,readme" \
   | grep -o '"full_name": *"[^"]*"'
