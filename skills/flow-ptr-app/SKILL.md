@@ -93,6 +93,30 @@ rather than a tool/config action.
      through Phases 4-8 — the spec stays the source of truth for the life of the app, not just
      during initial development.
 
+## Reference guides — skip the phases
+
+The phases above are one way to work through building an app — spec-driven, with an explicit
+plan/verify loop. If you're following a different process instead (your own tickets, a different
+planning method, or you're just experienced enough with Toolkit not to need the scaffolding), use
+this table to jump straight to the how-to you need. Each guide is self-contained and doesn't assume
+you've read the phases above.
+
+| Guide | What it covers |
+|---|---|
+| [references/existing-functionality.md](references/existing-functionality.md) | Toolkit's customization ladder, GitHub org search for reuse, and reference apps to study for architecture patterns |
+| [references/locating-config.md](references/locating-config.md) | Finding the project's `PipelineConfiguration` and detecting centralized vs. distributed setup |
+| [references/sandbox-dev-configuration.md](references/sandbox-dev-configuration.md) | Finding or creating a dev sandbox instead of developing against production |
+| [references/cloning-template.md](references/cloning-template.md) | Naming convention and where/how to clone the starter template (or another existing app) |
+| [references/install-app.md](references/install-app.md) | Wiring the app into an engine/environment via a `dev` descriptor or `install_app`/`switch_app` |
+| [references/app-manifest.md](references/app-manifest.md) | `info.yml` manifest fields — engines, settings schema, frameworks, version requirements |
+| [references/app-hooks.md](references/app-hooks.md) | When and how to add a hook, and how studios override it per-project |
+| [references/implement-app.md](references/implement-app.md) | `app.py`/`dialog.py` structure, UI vs. no-UI paths, web menu actions, custom events |
+| [references/test-app.md](references/test-app.md) | Reload-and-Restart loop, `tk-shell`-first testing, granting testers sandbox access |
+| [references/release.md](references/release.md) | Versioning, tagging a release, and pushing config changes to production |
+| [references/centralized-config.md](references/centralized-config.md) | Access checks and on-disk layout for centralized (classic) pipeline configurations |
+| [references/distributed-config.md](references/distributed-config.md) | Descriptor types and what to do for each, for distributed pipeline configurations |
+| [references/python-api-best-practices.md](references/python-api-best-practices.md) | Performance, API-key hygiene, and design guidance for `sg.find`/`sg.create` calls |
+
 ## Flow PTR documentation
 
 - **User documentation** — getting-started guides and know-how articles by production role:
