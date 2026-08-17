@@ -6,7 +6,7 @@
 
 The whole config — `config/`, `install/` (core, plus every app/engine/framework it has ever
 resolved), `cache/`, and the `tank`/`tank.bat` scripts — lives at one fixed path on disk, the same
-path on every machine that uses it. This is what we used earlier in this skill's own dev session:
+path on every machine that uses it. For example:
 
 ```
 /Users/<username>/dev/FlowPTR/config/my_dev_config
