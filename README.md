@@ -1,6 +1,6 @@
 # Agent Skills for Autodesk Platform Services
 
-A collection of reusable AI agent skills for [Autodesk Platform Services](https://aps.autodesk.com). Each skill is a self-contained instruction set that teaches a coding agent how to perform a specific APS-related task.
+A collection of reusable AI agent skills for [Autodesk Platform Services](https://aps.autodesk.com) and Autodesk industry clouds like Flow, Forma and Fusion products. Each skill is a self-contained instruction set that teaches a coding agent how to perform a specific Autodesk API-related development task.
 
 https://github.com/user-attachments/assets/7126310c-4ef6-4b21-9b29-a702dfc0a16d
 
@@ -16,6 +16,8 @@ Clone this repository and copy the skill folder to wherever your AI agent looks 
 git clone https://github.com/autodesk-platform-services/skills.git
 cp -r skills/aps-mcp-server-gen ~/.claude/skills/
 cp -r skills/acad-arx-wizard ~/.claude/skills/
+cp -r skills/flow-ptr-app ~/.claude/skills/
+...
 ```
 
 ### Automated installation
@@ -38,6 +40,7 @@ npx skills add autodesk-platform-services/skills --global
 | [`aps-mcp-server-gen`](skills/aps-mcp-server-gen/SKILL.md) | Scaffold a custom MCP (Model Context Protocol) server that integrates with APS. Supports Node.js/TypeScript, .NET/C#, and Python. | `npx skills add autodesk-platform-services/skills --project --skill aps-mcp-server-gen` |
 | [`acad-dotnet`](skills/acad-dotnet/SKILL.md) | Scaffold and develop AutoCAD 2027 .NET plugins (AutoCAD, Civil 3D, Plant 3D) targeting .NET 10 / x64. Covers csproj patterns, bundle packaging, desktop testing, and Design Automation deployment. | `npx skills add autodesk-platform-services/skills --project --skill acad-dotnet` |
 | [`acad-cuix-builder`](skills/acad-cuix-builder/SKILL.md) | Generate AutoCAD partial CUIX files from prompts. Describe your ribbon panels and LISP/command buttons conversationally — skill builds a ready-to-CUILOAD `.cuix` with embedded BMP icons. Requires `CuixBuilder.exe` — see install note below. | `npx skills add autodesk-platform-services/skills --global --skill acad-cuix-builder` |
+| [`flow-ptr-app`](skills/flow-ptr-app/SKILL.md) | Guide for developing Flow Production Tracking (FPTR) / ShotGrid Toolkit apps following a spec-driven lifecycle — capture intent, write and validate a spec, plan, implement, verify, release, and maintain. | `npx skills add autodesk-platform-services/skills --project --skill flow-ptr-app` |
 
 ### acad-cuix-builder — one-shot install
 
