@@ -178,6 +178,17 @@ Fixture checks validate application behavior, not Forma host contracts.
 Record the SDK version, tested paths/providers, build output, fixture results, and remaining live checks in the generated README.
 Do not describe synthetic fixtures as live Forma verification.
 
+## Step 8 — Share beyond yourself (optional)
+
+Owner **Myself only** is enough for development. To let other Forma users install the extension:
+
+1. Create an APS application of type **Server-to-Server** at https://aps.autodesk.com (Applications → Create application). No callback URL is needed for an embedded view that does not call HTTP APIs.
+2. In the extension form set **Owner** → the APS application (pick it from the list; if empty, use **Manage APS applications**). Whether this can be reverted to **Myself only** is not documented — assume it cannot.
+3. Host the built app on a public URL and replace `http://localhost:5173` in Embedded views and Buttons; keep the allowlist or switch to **All users of Forma**. Even with **All users**, others find the extension only by its Extension ID until it is published.
+4. Marketplace listing is a separate publishing flow (public production URLs, design guidelines, Autodesk review). If the view later calls Forma/APS HTTP APIs, add a second APS app of type Desktop/Mobile/Single-Page with PKCE and an `/auth` callback; Server-to-Server apps cannot do three-legged auth.
+
+Source: https://aps.autodesk.com/en/docs/forma/v1/overview/sharing-extensions and …/overview/publishing-extensions.
+
 ## Gotchas
 
 - Extensions are created from a project; hub membership alone does not grant Design access.
@@ -187,7 +198,8 @@ Do not describe synthetic fixtures as live Forma verification.
 - Forma moves YAML `actions` before `label` on save; key reordering is not a failure.
 - `http://localhost:5173` works for local embedded development without HTTPS.
 - The right analysis content area is about 190–240 px, too narrow for full controls.
-- Description/Legal URLs that were not yet valid silently failed to persist; validate them before saving.
+- Description links / Legal documents persist only when their URLs resolve at save time (a not-yet-published GitHub URL or `mailto:` was dropped silently after a ~60 s save); Provider, Description and installed text persist regardless.
+- With the Vite dev server, installing packages re-optimizes dependencies and already-open Forma iframes then get `504 Outdated Optimize Dep` on the SDK import (and a stale HTML 404); the rejected import is cached, so reload the panel (close/reopen or reload Forma) — a plain in-app refresh is not enough.
 - Presentation has no icon upload field in the observed form.
 - A fresh site has no buildings until context is ordered or proposal buildings are drawn.
 - The category is singular `"building"`, despite inconsistent declaration examples; site limits use `"site_limit"`.
