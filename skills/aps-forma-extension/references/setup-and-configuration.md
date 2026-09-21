@@ -1,6 +1,7 @@
 # Setup and configuration
 
 These are observations from the EU Forma Site Design form on 2026-09-20/21.
+They were not repeated during this audit and are unverified in other projects unless the current Forma documentation states the same behavior.
 
 ## Access and project scope
 
@@ -25,18 +26,18 @@ A personal Forma Site Design licence creates its own hub.
 For the read-only local starter, configure Buttons and Embedded views; the observed personal-owner flow needs no APS credentials.
 Leave unrelated integration sections unchanged.
 Provider, Description, and Text to show persisted in the observed form.
-There is no icon upload field.
+The observed form had no icon upload field; verify the current form.
 
 ## Placements and button
 
-The Embedded views form offers exactly `LEFT_MENU_PANEL` and `RIGHT_MENU_ANALYSIS_PANEL`.
+The observed Embedded views form offered `LEFT_MENU_PANEL` and `RIGHT_MENU_ANALYSIS_PANEL`; verify the current choices.
 The default workflow uses the right analysis panel for the mini view and a button for the floating view.
 Paste [the button template](../assets/buttons.yaml) into **Integration → Buttons**.
-The template uses `OPEN_FLOATING_PANEL`, URL `http://localhost:5173`, and preferred size 440 × 720.
+The template uses `OPEN_FLOATING_PANEL`, URL `http://localhost:5173/`, and preferred size 440 × 720.
 Floating is not an embedded-view placement value.
-Forma reorders YAML keys on save, placing `actions` first and `label` last.
+The observed save reordered YAML keys by placing `actions` before `label`.
 
-`http://localhost:5173` works as the local embedded-view URL without HTTPS.
+`http://localhost:5173/` worked without HTTPS in the observed project; verify the current host policy.
 Keep the same scheme, host, and port for both views to support same-origin synchronization.
 Vite's strict port prevents a server from silently starting at an unregistered URL.
 

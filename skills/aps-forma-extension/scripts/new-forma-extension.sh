@@ -76,6 +76,7 @@ cat > "$destination/index.html" <<'EOF'
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="https://app.autodeskforma.eu/design-system/v2/forma/styles/base.css" />
     <title>Forma extension</title>
   </head>
   <body>

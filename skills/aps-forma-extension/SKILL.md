@@ -8,7 +8,7 @@ description: >
 metadata:
   author: Dinar Sharafutdinov
   version: "0.1"
-compatibility: Forma Site Design licence with a project you can edit; Node 20+; forma-embedded-view-sdk 0.96+
+compatibility: Forma Site Design licence with a project you can edit; Node 20+; forma-embedded-view-sdk 0.96.0
 ---
 
 # APS Forma Extension
@@ -17,7 +17,7 @@ compatibility: Forma Site Design licence with a project you can edit; Node 20+; 
 
 Use this skill to create or debug a Forma Site Design extension running in an embedded iframe.
 Default to vanilla TypeScript, Vite, and SDK 0.96.0; verify declarations before adopting newer SDK versions.
-The host observations below come from Forma Site Design in the EU region on 2026-09-20/21.
+Host-form observations from an EU project on 2026-09-20/21 are marked as observations and remain unverified in other projects.
 The worked example this skill was extracted from is [forma-zoning-check](https://github.com/sharafutdinovdi/forma-zoning-check).
 
 ## Step 1 — Prerequisites
@@ -26,7 +26,7 @@ The worked example this skill was extracted from is [forma-zoning-check](https:/
 2. Use the project's Extension menu; membership in someone else's hub without Design access does not permit extension creation.
 3. Install Node 20+ and npm.
 4. For context-building tests, order **Contextual data → Browse data → Overture buildings** (Free, LOD1) and **Overture Roads** (Free); processing took about 30 seconds in the observed project.
-5. Draw a proposal building and a site limit for live geometry checks; a fresh site has no buildings.
+5. Draw a proposal building and a site limit for live geometry checks; an earlier source-project observation reported no buildings on a fresh site, and that host behavior remains unverified elsewhere.
 
 ## Step 2 — Register the extension
 
@@ -37,8 +37,8 @@ Sharing requires changing Owner to an APS application.
 Set Name and **Who are allowed** to the intended project's `pro_…` authcontext or ACC project id.
 The allowlist controls which projects show the extension in **Add extension**.
 Fill Feedback link and Help link with working URLs.
-Under Integration, configure Embedded views with `http://localhost:5173`.
-The form offers exactly `LEFT_MENU_PANEL` and `RIGHT_MENU_ANALYSIS_PANEL`.
+Under Integration, configure Embedded views with `http://localhost:5173/`.
+The observed form offered only `LEFT_MENU_PANEL` and `RIGHT_MENU_ANALYSIS_PANEL`; verify the current choices before registration.
 Default to the right analysis panel for a compact summary and copy [assets/buttons.yaml](assets/buttons.yaml) into **Integration → Buttons** for the full view.
 `OPEN_FLOATING_PANEL` is a button action, not an embedded-view placement.
 
@@ -58,7 +58,7 @@ npm run build
 npm run dev
 ```
 
-The scaffold pins SDK 0.96.0, binds Vite to port 5173 with `strictPort`, and copies the README and button templates.
+The scaffold pins SDK 0.96.0, loads the Forma Design System base stylesheet, binds Vite to port 5173 with `strictPort`, and copies the README and button templates.
 It refuses an existing destination and does not install packages or start a server itself.
 If port 5173 is occupied, identify the existing process; do not silently move to another port or stop an unrelated server.
 Open `http://localhost:5173/?fixture=1` for synthetic data outside Forma.
@@ -133,12 +133,19 @@ Read [references/elements-and-geometry.md](references/elements-and-geometry.md) 
 ## Step 5 — UI for both placements
 
 Use one app URL for mini and full views; default to mini below 300 px.
-The observed right analysis content width is about 190–240 px; show a summary, Refresh, and an open-panel action there.
+An earlier EU-project observation reported about 190–240 px of right-analysis content width; treat that range as unverified and measure the target container.
 Put controls and detailed results in a floating panel with preferred size 440 × 720.
 The left-menu placement remains a supported form choice; test its actual container width when using it.
 Provide loading, empty, error, and ready states with a concrete next action for missing data.
+Load the [Forma Design System base stylesheet](https://app.autodeskforma.eu/design-system/v2/forma/styles/base.css) before local CSS.
+Panel extensions must follow the [Forma design guidelines](https://aps.autodesk.com/en/docs/forma/v1/overview/design-guidelines/); the same guidelines are recommended for floating panels.
+Use semantic variables such as `--background-color-surface-100`, `--text-color-medium-default`, `--text-color-light`, `--background-color-accent`, `--border-color-input-box`, and the `--12-*`, `--14-*`, and `--20-*` type tokens.
+Do not invent Forma spacing or radius tokens; no global tokens for those values were found in the loaded base styles.
+Load only the Weave modules the view uses.
+Official examples use `weave-button`, `weave-input`, `weave-select` with `weave-select-option`, `weave-checkbox`, `weave-tooltip`, `weave-progress-bar`, `weave-radio-button` with its group, `weave-toggle`, `weave-slider`, and `weave-accordion`.
+Check component APIs in the [Forma Design System Storybook](https://app.autodeskforma.eu/design-system/v2/docs/?path=/docs/forma-component-library--docs), and keep domain-specific charts or cards custom when no verified component fits.
 
-Mini and floating views are separate same-origin iframes.
+Treat mini and floating views as separate same-origin iframes, and verify origin and host lifecycle behavior in the target project.
 Use `BroadcastChannel`, with `localStorage` events as fallback, to share proposal-scoped controls and snapshots.
 Reject messages for another proposal/root or an older timestamp; render incoming results without recomputation or rebroadcast.
 A newly opened view requests the current snapshot from a peer.
@@ -157,7 +164,7 @@ Require a known base elevation before placing building meshes.
 Serialize `Forma.render.cleanup()` with replacement jobs and cancel stale work when the proposal changes.
 If rendering fails partway, clean up partial meshes and report the overlay error separately from numeric results.
 Assign overlays to the calculating view; receiving views clear their own meshes to avoid duplicate tints.
-Overlays disappear when their creating iframe unloads; another view must calculate/render again to restore them.
+The SDK declares host cleanup when an extension iframe closes; verify that behavior and recalculate/render from a surviving view when overlays disappear.
 
 ## Step 7 — Verify
 
@@ -182,26 +189,27 @@ Do not describe synthetic fixtures as live Forma verification.
 
 Owner **Myself only** is enough for development. To let other Forma users install the extension:
 
-1. Create an APS application of type **Server-to-Server** at https://aps.autodesk.com (Applications → Create application). No callback URL is needed for an embedded view that does not call HTTP APIs.
-2. In the extension form set **Owner** → the APS application (pick it from the list; if empty, use **Manage APS applications**). Whether this can be reverted to **Myself only** is not documented — assume it cannot.
-3. Host the built app on a public URL and replace `http://localhost:5173` in Embedded views and Buttons; keep the allowlist or switch to **All users of Forma**. Even with **All users**, others find the extension only by its Extension ID until it is published.
-4. Marketplace listing is a separate publishing flow (public production URLs, design guidelines, Autodesk review). If the view later calls Forma/APS HTTP APIs, add a second APS app of type Desktop/Mobile/Single-Page with PKCE and an `/auth` callback; Server-to-Server apps cannot do three-legged auth.
+1. Create an APS application of type **Server-to-Server** at https://aps.autodesk.com/ (Applications → Create application).
+2. In the extension form set **Owner** → the APS application; if the list is empty, use **Manage APS applications**. Reverting that ownership change to **Myself only** is undocumented and unverified.
+3. Host the built app on a public URL and replace `http://localhost:5173/` in Embedded views and Buttons; keep the allowlist or switch to **All users of Forma**. Even with **All users**, others find the extension only by its Extension ID until it is published.
+4. Treat Marketplace listing as a separate publishing flow with public production URLs, design-guideline conformance, and Autodesk review.
 
-Source: https://aps.autodesk.com/en/docs/forma/v1/overview/sharing-extensions and …/overview/publishing-extensions.
+Sources: [sharing extensions](https://aps.autodesk.com/en/docs/forma/v1/overview/sharing-extensions/) and [publishing extensions](https://aps.autodesk.com/en/docs/forma/v1/overview/publishing-extensions/).
 
 ## Gotchas
 
 - Extensions are created from a project; hub membership alone does not grant Design access.
 - **Myself only** needs no APS app but exposes the extension only to its creator.
 - A missing project allowlist entry keeps the extension out of that project's **Add extension** list.
-- The form offers only `LEFT_MENU_PANEL` and `RIGHT_MENU_ANALYSIS_PANEL`; floating panels use Buttons YAML.
-- Forma moves YAML `actions` before `label` on save; key reordering is not a failure.
-- `http://localhost:5173` works for local embedded development without HTTPS.
-- The right analysis content area is about 190–240 px, too narrow for full controls.
-- Description links / Legal documents persist only when their URLs resolve at save time (a not-yet-published GitHub URL or `mailto:` was dropped silently after a ~60 s save); Provider, Description and installed text persist regardless.
-- With the Vite dev server, installing packages re-optimizes dependencies and already-open Forma iframes then get `504 Outdated Optimize Dep` on the SDK import (and a stale HTML 404); the rejected import is cached, so reload the panel (close/reopen or reload Forma) — a plain in-app refresh is not enough.
-- Presentation has no icon upload field in the observed form.
-- A fresh site has no buildings until context is ordered or proposal buildings are drawn.
+- An earlier observed form offered only `LEFT_MENU_PANEL` and `RIGHT_MENU_ANALYSIS_PANEL`; verify the current choices, and use Buttons YAML for a floating panel.
+- An earlier observed save reordered YAML `actions` before `label`; treat key order as insignificant.
+- An earlier EU-project observation found that `http://localhost:5173/` worked without HTTPS; verify the current host policy.
+- Load Forma Design System `base.css`; each Weave custom element also requires its own module.
+- The reported 190–240 px right-analysis content width is unverified outside the source project; measure the target container.
+- In one unverified form observation, a not-yet-published GitHub URL and `mailto:` failed to persist after about 60 seconds; validate links and reopen the form after saving.
+- An unverified Vite development observation reported `504 Outdated Optimize Dep` after dependency installation; close and reopen the panel before deeper diagnosis.
+- An earlier observed Presentation form had no icon upload field; verify the current form instead of inventing one.
+- An earlier source-project observation reported no buildings on a fresh site until context was ordered or proposal buildings were drawn; verify the target site.
 - The category is singular `"building"`, despite inconsistent declaration examples; site limits use `"site_limit"`.
 - Existing buildings are identified by base ancestry, not `overture`/`integrate` substrings in their URNs.
 - Overture `basic` buildings have footprints but no observed floor count; zero SDK area metrics do not prove zero area.
@@ -212,7 +220,7 @@ Source: https://aps.autodesk.com/en/docs/forma/v1/overview/sharing-extensions an
 - SDK 0.96.0 has no selection setter; an extension cannot select a host element programmatically.
 - Proposal root/id/persistence calls and `proposal.subscribe` exist but are deprecated in favour of UDM.
 - The polling fingerprint cannot detect edits that change neither the root revision nor the paths.
-- Mini and floating iframes have no host-provided state synchronization or shared overlay lifetime.
+- The inspected 0.96.0 implementation uses its own iframe synchronization and overlay ownership; verify whether the current host provides newer lifecycle or state APIs.
 
 ## References
 

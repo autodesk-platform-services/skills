@@ -1,6 +1,7 @@
 # Gotchas and evidence boundaries
 
 ## Troubleshooting
+Form layout, panel dimensions, localhost policy, save behavior, and iframe ownership rows are source-project observations that remain unverified in other projects.
 
 | Symptom | Observed cause or check | Action |
 | --- | --- | --- |
@@ -10,7 +11,7 @@
 | Add extension does not list it | The project is absent from Who are allowed | Add the project's authcontext or ACC project id |
 | Floating placement cannot be found | The form offers only left-menu and right-analysis placements | Use `OPEN_FLOATING_PANEL` in Buttons YAML |
 | YAML changes order after saving | Forma serializes actions before label | Compare values, not key order |
-| Local embedded URL is assumed to need TLS | HTTP localhost worked in the observed project | Use `http://localhost:5173` for this local workflow |
+| Local embedded URL is assumed to need TLS | HTTP localhost worked in the observed project | Use `http://localhost:5173/` for this local workflow |
 | Controls overflow the right panel | Content width is about 190–240 px | Use mini results and a 440 × 720 floating panel for controls |
 | Save spins and links disappear | Invalid/not-yet-existing GitHub URL or mailto attempt did not persist | Validate the URL and reopen the form to verify persistence |
 | No icon uploader is visible | The observed Presentation form has none | Do not invent an icon field |
@@ -46,5 +47,5 @@ Read later corrections in NOTES before relying on earlier entries or the example
 
 The live native observation establishes `basicbuilding`, sparse properties, and the direct-footprint failure.
 The alternative provider chain is implemented and synthetically tested in the worked example; inspect the target project's returned representations before claiming live success.
-The supplied live spec establishes iframe overlay lifetime and same-origin view separation; runtime cleanup, synchronization transports, and actual rendered placement remain items to verify in a new extension.
-The 0.96+ compatibility field is not a claim that every later SDK has been tested.
+The worked example treats mini/floating views as separate same-origin iframes and assigns overlays to their creating view; verify synchronization transports, cleanup, origin, and rendered placement in a new extension.
+The compatibility field is limited to the inspected SDK 0.96.0 declarations.

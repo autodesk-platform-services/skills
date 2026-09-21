@@ -2,10 +2,10 @@
 
 ## Mini and floating views
 
-The observed right analysis panel has approximately 190–240 px of content width.
+An earlier EU-project observation reported approximately 190–240 px of right-analysis content width; remeasure it in the target project.
 Default to a mini summary below 300 px and put controls and detailed results in a 440 × 720 floating panel.
 Serve both from the same app URL and origin.
-The form's placements are `LEFT_MENU_PANEL` and `RIGHT_MENU_ANALYSIS_PANEL`; the floating view is opened by a button action.
+The observed form offered `LEFT_MENU_PANEL` and `RIGHT_MENU_ANALYSIS_PANEL`; verify the current choices, and open the floating view through a button action.
 Use [the Buttons YAML template](../assets/buttons.yaml) for the host button.
 
 A mini-view action can also use the experimental SDK call found in `src/forma.ts`:
@@ -38,7 +38,8 @@ Reserve result space during refresh and keep controls in place.
 Empty states name the missing input and the next action: draw a site limit, order context, draw a proposal building, or enable existing-building inclusion when the task supports it.
 Errors preserve the failing operation and provide Refresh or another concrete recovery action.
 Keep keyboard focus visible and validate any task-specified motion under `prefers-reduced-motion`.
-The scaffold uses native HTML controls without styling or animation; it is a functional starting point, not a product visual design.
+The scaffold loads Forma Design System base styles and uses native HTML controls without custom styling or animation; it is a functional starting point, not a product visual design.
+Before production, load the custom-element modules used by the view and replace applicable controls with Weave components documented in the Forma Design System Storybook.
 
 Load the SDK dynamically only on the embedded path.
 Outside an iframe, `?fixture=1` enables synthetic data without a host handshake; without that flag, display instructions to open the extension in Forma.
@@ -47,7 +48,7 @@ Iframe detection alone does not authenticate a Forma host; arbitrary third-party
 
 ## Synchronization
 
-Forma does not provide state synchronization between the mini and floating iframes.
+The inspected SDK 0.96.0 implementation uses no host state-synchronization API between mini and floating views; verify whether a newer SDK provides one.
 The worked example's `src/sync.ts` uses `BroadcastChannel` and falls back to `localStorage` plus its `storage` event when channel creation is unavailable.
 Use a channel name specific to the extension and a message containing proposal id, root revision, timestamp, controls, and results.
 Validate the payload shape, require the active proposal/root, and reject an older timestamp.
@@ -117,8 +118,8 @@ Its setback bands are illustrative flat strips, not terrain-draped geometry.
 Only the calculating view renders its report's meshes; recipients clear their own meshes to avoid stacked transparent copies.
 Serialize cleanup and replacement, and cancel stale jobs with a generation token.
 Call `Forma.render.cleanup()` before replacement, after partial failure, and on teardown as a best-effort operation.
-Overlays belong to the iframe that created them and disappear when it unloads.
-Closing the calculating view therefore removes the overlays until another view calculates and renders again.
+The SDK declaration promises host cleanup when an extension closes, but iframe ownership and unload behavior remain unverified in Forma.
+If closing the calculating view removes its overlays, another view must calculate and render again.
 
 The worked example's simple-ring mesh triangulator omits polygons with holes and reports a warning; numeric calculations retain holes.
 That is an application renderer limitation, not a claim that the SDK cannot render such meshes.

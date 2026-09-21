@@ -3,6 +3,8 @@
 A read-only Forma Site Design starter using vanilla TypeScript, Vite, and `forma-embedded-view-sdk` 0.96.0.
 It displays the number of building paths in the current proposal and provides Refresh.
 The summary includes context and proposal paths; it does not classify buildings or calculate geometry.
+The generated `index.html` loads the Forma Design System base stylesheet.
+Load each Weave custom-element module used by the finished interface, and use Forma semantic color, border, and typography variables in local CSS.
 
 ## Local development
 
@@ -29,13 +31,13 @@ Inside an iframe the flag is ignored and the app reads the host proposal.
 2. Open **Extension menu → Add extension → ⚙ → Create extension**.
 3. Set Name and Owner **Myself only** for personal development; sharing requires an APS application owner.
 4. Add the project's `pro_…` authcontext or ACC project id under **Who are allowed**.
-5. Set the embedded view URL to `http://localhost:5173` and select `RIGHT_MENU_ANALYSIS_PANEL`.
+5. Set the embedded view URL to `http://localhost:5173/` and select `RIGHT_MENU_ANALYSIS_PANEL`.
 6. Paste `buttons.yaml` into **Integration → Buttons** for a 440 × 720 floating panel.
 7. Save and verify the extension appears in the allowlisted project's **Add extension** list.
 
 The other offered placement is `LEFT_MENU_PANEL`; floating is a button action, not a placement.
 The right panel is approximately 190–240 px wide; add a mini summary there and keep task-specific controls in the floating view.
-The starter uses unstyled native HTML controls and has no animation.
+The starter loads Forma Design System base styles but keeps native HTML controls and no animation; replace controls with the task-appropriate Weave components before production.
 
 ## Verification record
 
