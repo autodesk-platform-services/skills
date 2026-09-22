@@ -17,8 +17,8 @@ compatibility: Forma Site Design licence with a project you can edit; Node 20+; 
 
 Use this skill to create or debug a Forma Site Design extension running in an embedded iframe.
 Default to vanilla TypeScript, Vite, and SDK 0.96.0; verify declarations before adopting newer SDK versions.
-Host-form observations from an EU project on 2026-09-20/21 are marked as observations and remain unverified in other projects.
-The worked example this skill was extracted from is [forma-zoning-check](https://github.com/sharafutdinovdi/forma-zoning-check).
+Host and UI observations from work on 2026-09-20–22 are marked as observations; they are not SDK guarantees.
+The worked example is [forma-zoning-check](https://github.com/sharafutdinovdi/forma-zoning-check): zoning verdicts plus a permitted envelope, presets, and a CSV report.
 
 ## Step 1 — Prerequisites
 
@@ -51,15 +51,17 @@ Read [references/setup-and-configuration.md](references/setup-and-configuration.
 Run the bundled script from the skill directory with a new destination path:
 
 ```bash
-bash scripts/new-forma-extension.sh /tmp/my-forma-extension
-cd /tmp/my-forma-extension
+bash scripts/new-forma-extension.sh my-forma-extension
+cd my-forma-extension
 npm install
 npm run build
 npm run dev
 ```
 
-The scaffold pins SDK 0.96.0, loads the Forma Design System base stylesheet, binds Vite to port 5173 with `strictPort`, and copies the README and button templates.
-It refuses an existing destination and does not install packages or start a server itself.
+The scaffold pins SDK 0.96.0, loads Forma Design System base styles and Weave modules, binds Vite to port 5173 with `strictPort`, and copies the README and button templates.
+It creates a two-tab shell, a metric row, a locale-safe decimal input, and a full-width primary action below the inputs using a local 4/8/16 px spacing scale.
+Rerunning against identical generated files is a no-op; differing or missing files in an existing destination cause refusal without overwriting anything.
+The script needs only Bash, Node, npm, and standard shell utilities; it does not install packages or start a server itself.
 If port 5173 is occupied, identify the existing process; do not silently move to another port or stop an unrelated server.
 Open `http://localhost:5173/?fixture=1` for synthetic data outside Forma.
 The fixture flag is ignored in an iframe; the SDK is dynamically imported only for the embedded path.
@@ -130,20 +132,54 @@ The level count is exact to the model; context buildings have no observed floor 
 Keep unavailable geometry/floors unknown, with an error and source label; do not convert them to zero or discard unresolved buildings.
 Read [references/elements-and-geometry.md](references/elements-and-geometry.md) before implementing the classifier or geometry provider.
 
-## Step 5 — UI for both placements
+## Step 5 — Native UI for both placements
 
 Use one app URL for mini and full views; default to mini below 300 px.
 An earlier EU-project observation reported about 190–240 px of right-analysis content width; treat that range as unverified and measure the target container.
 Put controls and detailed results in a floating panel with preferred size 440 × 720.
 The left-menu placement remains a supported form choice; test its actual container width when using it.
 Provide loading, empty, error, and ready states with a concrete next action for missing data.
-Load the [Forma Design System base stylesheet](https://app.autodeskforma.eu/design-system/v2/forma/styles/base.css) before local CSS.
-Panel extensions must follow the [Forma design guidelines](https://aps.autodesk.com/en/docs/forma/v1/overview/design-guidelines/); the same guidelines are recommended for floating panels.
-Use semantic variables such as `--background-color-surface-100`, `--text-color-medium-default`, `--text-color-light`, `--background-color-accent`, `--border-color-input-box`, and the `--12-*`, `--14-*`, and `--20-*` type tokens.
-Do not invent Forma spacing or radius tokens; no global tokens for those values were found in the loaded base styles.
-Load only the Weave modules the view uses.
-Official examples use `weave-button`, `weave-input`, `weave-select` with `weave-select-option`, `weave-checkbox`, `weave-tooltip`, `weave-progress-bar`, `weave-radio-button` with its group, `weave-toggle`, `weave-slider`, and `weave-accordion`.
-Check component APIs in the [Forma Design System Storybook](https://app.autodeskforma.eu/design-system/v2/docs/?path=/docs/forma-component-library--docs), and keep domain-specific charts or cards custom when no verified component fits.
+Panel extensions must follow the [Forma design guidelines](https://aps.autodesk.com/en/docs/forma/v1/overview/design-guidelines/); the same guidelines are recommended for floating panels, and Marketplace publishing includes Autodesk's design review.
+Load the DS base stylesheet before local CSS, then only the per-component ES modules used by the view; no Weave npm package is needed for these CDN custom elements:
+
+```html
+<link rel="stylesheet" href="https://app.autodeskforma.eu/design-system/v2/forma/styles/base.css">
+<script type="module" src="https://app.autodeskforma.eu/design-system/v2/weave/components/button/weave-button.js"></script>
+<script type="module" src="https://app.autodeskforma.eu/design-system/v2/weave/components/tab/weave-tab.js"></script>
+<weave-tabs init="0" gap="8" variant="underlined">
+  <weave-tab label="Summary" variant="underlined"></weave-tab>
+  <weave-tab label="Controls" variant="underlined"></weave-tab>
+  <section slot="content">Summary content</section>
+  <section slot="content">Controls content</section>
+</weave-tabs>
+```
+
+The usual module path is `https://app.autodeskforma.eu/design-system/v2/weave/components/<name>/weave-<name>.js`.
+The inspected [Storybook](https://app.autodeskforma.eu/design-system/v2/docs/) and source examples provide this component inventory; availability does not mean every component was used in the worked example:
+
+| Components | Module path relative to `design-system/v2/` |
+| --- | --- |
+| `weave-button`, `weave-input`, `weave-checkbox`, `weave-radio-button`, `weave-slider`, `weave-accordion` | `weave/components/<name>/weave-<name>.js` |
+| `weave-select` + `weave-select-option` | `weave/components/dropdown/weave-select.js` (registers options too) |
+| `weave-tabs` + `weave-tab` | `weave/components/tab/weave-tab.js` (registers both) |
+| `weave-segmented-buttons-group` + `weave-segmented-button` | `weave/components/segmented-buttons-group/weave-segmented-buttons-group.js` |
+| `weave-badge`, `weave-banner`, `weave-tooltip`, `weave-progress-bar`, `weave-tile`, `weave-menu` | `weave/components/<name>/weave-<name>.js` |
+| `forma-alert` | `forma/components/alert/forma-alert.js` |
+
+Observed usage: Shadow Study uses button/select/checkbox; View Analysis uses button/tooltip/progress-bar/radio-button; Pathmaker uses input/slider/accordion as well.
+The worked example adds tabs, badges, segmented buttons and `forma-alert`; banner, tile and menu were found in Storybook.
+**Observed catalog gap (2026-09-22):** Card, List, Table, Chip and Empty state have no dedicated Storybook component; build these from plain semantic markup styled with DS variables, without inventing custom-element names.
+Use `--background-color-surface-100`, `--text-color-medium-default`, `--text-color-light`, `--background-color-accent`, `--border-color-input-box`, and typography tokens.
+No global spacing/radius variables were found in the inspected base styles; declare the local spacing scale explicitly.
+
+Use these layout rules derived from Autodesk's [Shadow Study styles](https://github.com/autodesk-platform-services/aps-forma-extension-shadow-study/blob/main/src/styles.css) and [View Analysis components](https://github.com/autodesk-platform-services/aps-forma-extension-view-study/tree/main/src/components), plus the inspected DS styles. They are observed design patterns, not SDK layout guarantees:
+
+- Keep root `font-size: 10px`, as in DS base.css, so `1rem = 10px`; use a primary spacing scale of **4 / 8 / 16 px**.
+- High-density controls are **24 px**, medium buttons **34 px**, icon buttons **28 px**, setting rows **36 px**, and the Shadow Study header **48 px**; check the chosen component/variant rather than forcing every control to one height.
+- Use **12-bold** section titles, **12-regular/medium** values, **11-medium** labels, and **11-regular** helpers/units (`font: var(--12-bold)`, etc.; these roles use a 16 px line height).
+- Present metrics as rows with labels on the left and values aligned right, with smaller units; avoid dashboard cards for this compact panel pattern.
+- Put the primary action full width below the inputs in normal document flow, not sticky; retain loading, actionable empty and inline error states.
+- Preserve visible keyboard focus and verify reduced motion inside component shadow roots: the v4 mockup observation found native tab/accordion transitions still running under `prefers-reduced-motion`.
 
 Treat mini and floating views as separate same-origin iframes, and verify origin and host lifecycle behavior in the target project.
 Use `BroadcastChannel`, with `localStorage` events as fallback, to share proposal-scoped controls and snapshots.
@@ -165,6 +201,18 @@ Serialize `Forma.render.cleanup()` with replacement jobs and cancel stale work w
 If rendering fails partway, clean up partial meshes and report the overlay error separately from numeric results.
 Assign overlays to the calculating view; receiving views clear their own meshes to avoid duplicate tints.
 The SDK declares host cleanup when an extension iframe closes; verify that behavior and recalculate/render from a surviving view when overlays disappear.
+
+### Permitted-envelope pattern
+
+`Forma.render` can display temporary meshes; the envelope calculation is application code, not an SDK zoning solver.
+The worked example intersects the parcel with per-edge setback half-planes, caps height/storeys, and limits floor area using a FAR budget (`FAR × parcel area`).
+It compares footprint area with the coverage budget (`coverage fraction × parcel area`) and reports required shrinkage; it does **not** shrink the displayed footprint into a coverage-compliant building.
+Height-dependent setback forms require an iterative inset/re-cap solve: the example allows five iterations, requires area change below 0.1 m² and stable height, and warns/falls back to the conservative footprint at the original cap if convergence fails.
+Concave parcels can yield a conservative kernel rather than the full usable inset; missing limits stay unavailable, and mesh placement requires a known elevation with any terrain/datum approximation disclosed.
+
+**Declared but unverified:** SDK 0.96.0 declares `Forma.integrateElements.createElementHierarchy` for an inline mesh and `Forma.library.createItem` for its returned URN.
+The worked example implements this save path, but live edit permission, ingestion, persistence and placement were not verified; confirm them in the target Forma project before promising library saving.
+A saved generic volume is for subsequent user placement, not automatic insertion of a proposal building; the two calls are not transactional, so retain the created URN for an in-session retry if library creation fails.
 
 ## Step 7 — Verify
 
@@ -192,7 +240,7 @@ Owner **Myself only** is enough for development. To let other Forma users instal
 1. Create an APS application of type **Server-to-Server** at https://aps.autodesk.com/ (Applications → Create application).
 2. In the extension form set **Owner** → the APS application; if the list is empty, use **Manage APS applications**. Reverting that ownership change to **Myself only** is undocumented and unverified.
 3. Host the built app on a public URL and replace `http://localhost:5173/` in Embedded views and Buttons; keep the allowlist or switch to **All users of Forma**. Even with **All users**, others find the extension only by its Extension ID until it is published.
-4. Treat Marketplace listing as a separate publishing flow with public production URLs, design-guideline conformance, and Autodesk review.
+4. Treat Marketplace listing as a separate publishing flow with public production URLs, design-guideline conformance, and Autodesk design review.
 
 Sources: [sharing extensions](https://aps.autodesk.com/en/docs/forma/v1/overview/sharing-extensions/) and [publishing extensions](https://aps.autodesk.com/en/docs/forma/v1/overview/publishing-extensions/).
 
@@ -204,7 +252,12 @@ Sources: [sharing extensions](https://aps.autodesk.com/en/docs/forma/v1/overview
 - An earlier observed form offered only `LEFT_MENU_PANEL` and `RIGHT_MENU_ANALYSIS_PANEL`; verify the current choices, and use Buttons YAML for a floating panel.
 - An earlier observed save reordered YAML `actions` before `label`; treat key order as insignificant.
 - An earlier EU-project observation found that `http://localhost:5173/` worked without HTTPS; verify the current host policy.
-- Load Forma Design System `base.css`; each Weave custom element also requires its own module.
+- Load Forma Design System `base.css` and the module that registers each Weave custom element (some modules register a group and its children together).
+- Observed locale pitfall: native `<input type="number">` uses the OS locale (`6.972` can display as `6,972` on Russian/German machines); use `type="text" inputmode="decimal"` and `Intl.NumberFormat("en-US")` with grouping disabled for editable values.
+- Observed tabs contract: set `variant="underlined"` on both `weave-tabs` and each `weave-tab`, and supply `slot="content"` elements in the same order as the tabs.
+- Observed select limitation: nested native `optgroup` is unsupported; keep options as direct children and render group headers as plain options or headings.
+- Observed preset pitfall: applying a preset must not silently reset user state such as a checkbox or edge classification; preserve it or explain any necessary reset.
+- Observed two-view pattern: embedded views are separate iframes; share state explicitly via BroadcastChannel or storage, and let the view that recomputes take ownership of 3D overlays.
 - The reported 190–240 px right-analysis content width is unverified outside the source project; measure the target container.
 - In one unverified form observation, a not-yet-published GitHub URL and `mailto:` failed to persist after about 60 seconds; validate links and reopen the form after saving.
 - An unverified Vite development observation reported `504 Outdated Optimize Dep` after dependency installation; close and reopen the panel before deeper diagnosis.

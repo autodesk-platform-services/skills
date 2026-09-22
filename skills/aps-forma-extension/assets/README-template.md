@@ -3,8 +3,9 @@
 A read-only Forma Site Design starter using vanilla TypeScript, Vite, and `forma-embedded-view-sdk` 0.96.0.
 It displays the number of building paths in the current proposal and provides Refresh.
 The summary includes context and proposal paths; it does not classify buildings or calculate geometry.
-The generated `index.html` loads the Forma Design System base stylesheet.
-Load each Weave custom-element module used by the finished interface, and use Forma semantic color, border, and typography variables in local CSS.
+The generated `index.html` loads the Forma Design System base stylesheet and Weave tab/button modules.
+Summary and Controls tabs demonstrate a metric row, a locale-safe decimal input and a full-width Refresh action below the inputs, with 4/8/16 px spacing and DS typography/colors.
+The example limit demonstrates input formatting only; it does not affect the building count.
 
 ## Local development
 
@@ -37,7 +38,8 @@ Inside an iframe the flag is ignored and the app reads the host proposal.
 
 The other offered placement is `LEFT_MENU_PANEL`; floating is a button action, not a placement.
 The right panel is approximately 190–240 px wide; add a mini summary there and keep task-specific controls in the floating view.
-The starter loads Forma Design System base styles but keeps native HTML controls and no animation; replace controls with the task-appropriate Weave components before production.
+The starter adds no motion and suppresses the observed native tab transition under reduced motion through its open shadow root; verify this adapter against the current CDN.
+Load additional task-appropriate Weave modules as needed; the text input uses `inputmode="decimal"` and formats values with `Intl.NumberFormat("en-US")` to avoid OS-dependent decimal display.
 
 ## Verification record
 
