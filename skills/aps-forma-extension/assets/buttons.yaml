@@ -1,0 +1,8 @@
+- label: Open full panel
+  actions:
+    click:
+      type: OPEN_FLOATING_PANEL
+      url: http://localhost:5173/
+      preferredSize:
+        width: 440
+        height: 720
