@@ -210,9 +210,11 @@ It compares footprint area with the coverage budget (`coverage fraction × parce
 Height-dependent setback forms require an iterative inset/re-cap solve: the example allows five iterations, requires area change below 0.1 m² and stable height, and warns/falls back to the conservative footprint at the original cap if convergence fails.
 Concave parcels can yield a conservative kernel rather than the full usable inset; missing limits stay unavailable, and mesh placement requires a known elevation with any terrain/datum approximation disclosed.
 
-**Declared but unverified:** SDK 0.96.0 declares `Forma.integrateElements.createElementHierarchy` for an inline mesh and `Forma.library.createItem` for its returned URN.
-The worked example implements this save path, but live edit permission, ingestion, persistence and placement were not verified; confirm them in the target Forma project before promising library saving.
+**Verified in an EMEA project (SDK 0.96.0):** `Forma.integrateElements.createElementHierarchy` ingests an inline mesh and returns a URN, and `Forma.library.createItem` publishes that URN as a library item.
+The saved item appears in the project's **Library** tab with the name supplied by the extension; the observed round trip from button press to a visible item took seconds.
 A saved generic volume is for subsequent user placement, not automatic insertion of a proposal building; the two calls are not transactional, so retain the created URN for an in-session retry if library creation fails.
+`Forma.library` exposes only `createItem`, `updateItem` and `deleteItem` — there is no reader, so an extension cannot confirm its own save programmatically; verify it in the Library tab.
+Guard the call with `Forma.getCanEdit()`: a viewer-role session reaches the same code path and fails at ingestion.
 
 ## Step 7 — Verify
 
@@ -274,6 +276,7 @@ Sources: [sharing extensions](https://aps.autodesk.com/en/docs/forma/v1/overview
 - Proposal root/id/persistence calls and `proposal.subscribe` exist but are deprecated in favour of UDM.
 - The polling fingerprint cannot detect edits that change neither the root revision nor the paths.
 - The inspected 0.96.0 implementation uses its own iframe synchronization and overlay ownership; verify whether the current host provides newer lifecycle or state APIs.
+- `Forma.library` has no read method in 0.96.0; a save can be written and deleted but never listed back, so acceptance evidence is the host's Library tab, not an SDK response.
 
 ## References
 
