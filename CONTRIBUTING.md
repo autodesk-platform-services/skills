@@ -3,12 +3,15 @@
 To add a new skill, create a folder under `skills/` with:
 
 - A `SKILL.md` file containing the full agent instructions (with YAML frontmatter for `name`, `description`, and `metadata`)
+- A `README.md` file for humans describing what the skill does, its requirements, recommended installation command (e.g., `npx skills add autodesk-platform-services/skills --project --skill <skill-name>`), any additional setup steps, and example usage
 - A `references/` subfolder with any supporting documentation the agent needs to read during execution
 - A `scripts/` subfolder for any reusable helper scripts the agent should run
 - An `assets/` subfolder for output templates and other static resources
 
 > [!IMPORTANT]
-> Prefix the skill name with `aps-` to avoid name clashes with other skills.
+> Prefix the skill name (for example, with `aps-`) to avoid name clashes with other skills.
+
+Then add a row for the new skill to the "Available Skills" table in the main [README.md](README.md), with a short description and a link to the skill's folder. Keep all other skill-specific information (requirements, installation, usage) in the skill's own `README.md`. The main README should only contain general information about the repository.
 
 ## Best Practices
 

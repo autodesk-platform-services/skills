@@ -18,6 +18,8 @@ Downloads `CuixBuilder.exe` (~200 KB) and installs the skill in one shot.
 
 Then in your agent: `/acad-cuix-builder`
 
+Alternatively, install just the skill with `npx skills add autodesk-platform-services/skills --global --skill acad-cuix-builder` and download `CuixBuilder.exe` separately from [ADN-DevTech/acad-cuix-builder releases](https://github.com/ADN-DevTech/acad-cuix-builder/releases/latest) into `%USERPROFILE%\.cuixbuilder\`.
+
 ---
 
 ## Example prompt
