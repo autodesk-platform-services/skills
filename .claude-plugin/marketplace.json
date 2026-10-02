@@ -1,0 +1,76 @@
+{
+  "name": "aps-skills",
+  "description": "Agent skills for Autodesk Platform Services (APS) and Autodesk products like AutoCAD and Flow Production Tracking.",
+  "owner": {
+    "name": "Autodesk Platform Services",
+    "url": "https://aps.autodesk.com"
+  },
+  "plugins": [
+    {
+      "name": "acad-arx-wizard",
+      "source": "./skills/acad-arx-wizard",
+      "description": "Scaffold ObjectARX C++ projects/classes for AutoCAD 2027 and Visual Studio 2026 using deterministic PowerShell generators (ARX/DBX/CRX, Jig, Reactors, Custom Object, MFC, .NET, COM, DynProp).",
+      "category": "autocad",
+      "tags": ["autocad", "objectarx", "c++", "visual-studio", "scaffolding"],
+      "author": { "name": "Autodesk" },
+      "homepage": "https://github.com/autodesk-platform-services/skills/tree/main/skills/acad-arx-wizard",
+      "repository": "https://github.com/autodesk-platform-services/skills",
+      "license": "MIT"
+    },
+    {
+      "name": "acad-cuix-builder",
+      "source": "./skills/acad-cuix-builder",
+      "description": "Generate AutoCAD partial CUIX files from prompts. Describe your ribbon panels and LISP/command buttons conversationally and get a ready-to-CUILOAD .cuix with embedded BMP icons.",
+      "category": "autocad",
+      "tags": ["autocad", "cuix", "ribbon", "lisp", "bundle"],
+      "author": { "name": "Autodesk" },
+      "homepage": "https://github.com/autodesk-platform-services/skills/tree/main/skills/acad-cuix-builder",
+      "repository": "https://github.com/autodesk-platform-services/skills",
+      "license": "MIT"
+    },
+    {
+      "name": "acad-dotnet",
+      "source": "./skills/acad-dotnet",
+      "description": "Scaffold and develop AutoCAD 2027 .NET plugins (AutoCAD, Civil 3D, Plant 3D) targeting .NET 10 / x64. Covers csproj patterns, bundle packaging, desktop testing, and Design Automation deployment.",
+      "category": "autocad",
+      "tags": ["autocad", "civil-3d", "plant-3d", "dotnet", "design-automation"],
+      "author": { "name": "Autodesk" },
+      "homepage": "https://github.com/autodesk-platform-services/skills/tree/main/skills/acad-dotnet",
+      "repository": "https://github.com/autodesk-platform-services/skills",
+      "license": "MIT"
+    },
+    {
+      "name": "aps-docs-portal",
+      "source": "./skills/aps-docs-portal",
+      "description": "Navigate the APS documentation portal — decode glossary terms, crawl TOC JSON trees, extract content from static HTML pages, and convert CDN URLs to clickable portal links.",
+      "category": "aps",
+      "tags": ["aps", "forge", "documentation", "acc", "bim360", "model-derivative", "viewer"],
+      "author": { "name": "Autodesk" },
+      "homepage": "https://github.com/autodesk-platform-services/skills/tree/main/skills/aps-docs-portal",
+      "repository": "https://github.com/autodesk-platform-services/skills",
+      "license": "MIT"
+    },
+    {
+      "name": "aps-mcp-server-gen",
+      "source": "./skills/aps-mcp-server-gen",
+      "description": "Scaffold a custom MCP (Model Context Protocol) server that integrates with APS. Supports Node.js/TypeScript, .NET/C#, and Python.",
+      "category": "aps",
+      "tags": ["aps", "forge", "mcp", "scaffolding", "nodejs", "dotnet", "python"],
+      "author": { "name": "Autodesk" },
+      "homepage": "https://github.com/autodesk-platform-services/skills/tree/main/skills/aps-mcp-server-gen",
+      "repository": "https://github.com/autodesk-platform-services/skills",
+      "license": "MIT"
+    },
+    {
+      "name": "flow-ptr-app",
+      "source": "./skills/flow-ptr-app",
+      "description": "Guide for developing Flow Production Tracking (FPTR) / ShotGrid Toolkit apps following a spec-driven lifecycle — capture intent, write and validate a spec, plan, implement, verify, release, and maintain.",
+      "category": "flow",
+      "tags": ["flow-production-tracking", "shotgrid", "toolkit", "sgtk", "python"],
+      "author": { "name": "Autodesk" },
+      "homepage": "https://github.com/autodesk-platform-services/skills/tree/main/skills/flow-ptr-app",
+      "repository": "https://github.com/autodesk-platform-services/skills",
+      "license": "MIT"
+    }
+  ]
+}

@@ -8,6 +8,23 @@ https://github.com/user-attachments/assets/7126310c-4ef6-4b21-9b29-a702dfc0a16d
 
 Each skill is a folder inside [`skills/`](skills/) containing a `SKILL.md` file and optional supporting reference documents.
 
+### Claude Code plugin marketplace
+
+This repository is also a [Claude Code plugin marketplace](https://code.claude.com/docs/en/plugins/install) called `aps-skills`, with one plugin per skill. Add the marketplace once, then install the skills you need:
+
+```bash
+claude plugin marketplace add autodesk-platform-services/skills
+claude plugin install <skill-name>@aps-skills
+```
+
+Or do both from inside a Claude Code session:
+
+```
+/plugin install <skill-name> --marketplace autodesk-platform-services/skills
+```
+
+You can also browse and install the skills interactively with `/plugin`. To get the latest changes later, run `claude plugin update <skill-name>@aps-skills`.
+
 ### Manual installation
 
 Clone this repository and copy the skill folder to wherever your AI agent looks for skills. For example, for Claude Code:
