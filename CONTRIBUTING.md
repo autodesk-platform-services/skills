@@ -13,7 +13,7 @@ To add a new skill, create a folder under `skills/` with:
 
 Then add a row for the new skill to the "Available Skills" table in the main [README.md](README.md), with a short description and a link to the skill's folder. Keep all other skill-specific information (requirements, installation, usage) in the skill's own `README.md`. The main README should only contain general information about the repository.
 
-Finally, register the skill in the Claude Code plugin marketplace by adding an entry to the `plugins` array in [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json). Copy an existing entry and update it:
+Finally, register the skill in the plugin marketplace (used by both Claude Code and GitHub Copilot) by adding an entry to the `plugins` array in [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json). Copy an existing entry and update it:
 
 ```json
 {
@@ -31,7 +31,7 @@ Finally, register the skill in the Claude Code plugin marketplace by adding an e
 
 - `name` must match the skill folder name and the `name` in its `SKILL.md` frontmatter. Users install the skill as `<skill-name>@aps-skills`, so treat the name as permanent: renaming it later breaks existing installs.
 - Use `aps`, `autocad`, or `flow` as the `category`, or introduce a new one if none fits.
-- Don't add a `version` field, and don't add a `plugin.json` to the skill folder. The marketplace entry serves as the plugin manifest, and without a `version` Claude Code uses the git commit SHA, so users get updates on every push.
+- Don't add a `version` field, and don't add a `plugin.json` to the skill folder. The marketplace entry serves as the plugin manifest, and without a `version` Claude Code uses the git commit SHA, so users get updates on every push. GitHub Copilot reads the same `.claude-plugin/marketplace.json` and also falls back to the `SKILL.md` in the plugin root, so don't add a separate `.github/plugin/marketplace.json` either.
 
 Validate your changes locally with the [Claude Code CLI](https://code.claude.com/docs/en/setup) and the consistency check script before opening a pull request:
 
