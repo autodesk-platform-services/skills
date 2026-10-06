@@ -42,7 +42,7 @@
     {
       "name": "aps-docs-portal",
       "source": "./skills/aps-docs-portal",
-      "description": "Navigate the APS documentation portal — decode glossary terms, crawl TOC JSON trees, extract content from static HTML pages, and convert CDN URLs to clickable portal links.",
+      "description": "Navigate the APS documentation portal — decode glossary terms, index TOC JSON trees, extract content from static HTML pages, and build valid portal links.",
       "category": "aps",
       "tags": ["aps", "forge", "documentation", "acc", "bim360", "model-derivative", "viewer"],
       "author": { "name": "Autodesk" },

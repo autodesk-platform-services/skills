@@ -75,7 +75,7 @@ npx skills add autodesk-platform-services/skills --project --skill <skill-name>
 | [`acad-arx-wizard`](skills/acad-arx-wizard/) | Scaffold ObjectARX C++ projects/classes for AutoCAD 2027 and Visual Studio 2026 using deterministic PowerShell generators (ARX/DBX/CRX, Jig, Reactors, Custom Object, MFC, .NET, COM, DynProp). |
 | [`acad-cuix-builder`](skills/acad-cuix-builder/) | Generate AutoCAD partial CUIX files from prompts. Describe your ribbon panels and LISP/command buttons conversationally and get a ready-to-CUILOAD `.cuix` with embedded BMP icons. |
 | [`acad-dotnet`](skills/acad-dotnet/) | Scaffold and develop AutoCAD 2027 .NET plugins (AutoCAD, Civil 3D, Plant 3D) targeting .NET 10 / x64. Covers csproj patterns, bundle packaging, desktop testing, and Design Automation deployment. |
-| [`aps-docs-portal`](skills/aps-docs-portal/) | Navigate the APS documentation portal — decode glossary terms, crawl TOC JSON trees, extract content from static HTML pages, and convert CDN URLs to clickable portal links. |
+| [`aps-docs-portal`](skills/aps-docs-portal/) | Navigate the APS documentation portal — decode glossary terms, index TOC JSON trees, extract content from static HTML pages, and build valid portal links. |
 | [`aps-mcp-server-gen`](skills/aps-mcp-server-gen/) | Scaffold a custom MCP (Model Context Protocol) server that integrates with APS. Supports Node.js/TypeScript, .NET/C#, and Python. |
 | [`flow-ptr-app`](skills/flow-ptr-app/) | Guide for developing Flow Production Tracking (FPTR) / ShotGrid Toolkit apps following a spec-driven lifecycle — capture intent, write and validate a spec, plan, implement, verify, release, and maintain. |
 
