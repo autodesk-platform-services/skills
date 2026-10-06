@@ -105,3 +105,140 @@ Match the specificity of instructions to the fragility of the task.
 **Plan-validate-execute** — for batch or destructive operations, have the agent produce an intermediate plan, validate it against a source of truth, then execute.
 
 **Bundled scripts** — if the agent independently reinvents the same logic across runs, write a tested script once and bundle it in `scripts/`.
+
+## Evals
+
+Evals check that a skill fires on the right prompts, stays quiet on the wrong ones, and gives better answers than the agent does without it. They use [`claude plugin eval`](https://code.claude.com/docs/en/setup). By default, each case runs twice: once with the skill installed and once without it, and the report shows the score difference.
+
+Evals live at the repo root, one subfolder per skill. They don't go inside `skills/<skill-name>/`, because everything in that folder ships to users when they install the plugin:
+
+```
+evals/
+  <skill-name>/
+    01-<case-name>/
+      prompt.md          # frontmatter (run settings) + the user prompt
+      graders/
+        <grader>.md      # one file per check
+    results/             # run output (gitignored)
+```
+
+### Creating a case
+
+Scaffold a blank case from the repo root:
+
+```bash
+claude plugin eval init --bare 01-<case-name> --eval-dir evals/<skill-name>
+```
+
+Then edit `prompt.md`. The frontmatter holds the run settings and the body holds the prompt the agent receives:
+
+```markdown
+---
+max_turns: 30
+timeout_seconds: 600
+runs: 3
+allowed_tools: [Skill, Read, WebFetch, "Bash(curl:*)", "WebFetch(domain:example.autodesk.com)"]
+plugins: [../../../skills/<skill-name>]
+---
+Write a Node.js script that gets a 2-legged token and kicks off an SVF2 translation...
+```
+
+- `plugins` is required. It's resolved relative to the case folder and points the case at the skill under test.
+- `allowed_tools` lists the tools the agent may use. The case is skipped unless every gated tool on the list (`Bash`, `WebFetch`, `Write`, `Edit`, `mcp__*`) is also granted with `--allow-tools` at run time (see below).
+- Write prompts the way a real user would. Don't name the skill or hint at it.
+
+Add graders under `graders/`, one file per check. Three types are used in this repo:
+
+```markdown
+---
+type: tool_used          # did the skill fire?
+tool: Skill
+input_match: <skill-name>
+min: 1                   # for negative cases: min: 0, max: 0
+---
+```
+
+```markdown
+---
+type: regex              # cheap, deterministic text check
+target: last_message
+match: not_contains      # or: contains
+weight: 3
+flags: i                 # optional
+---
+forge\.autodesk\.com|authentication/v1/
+```
+
+```markdown
+---
+type: llm                # judged by a model (default: haiku)
+focus: last_message
+weight: 1
+---
+Score PASS only if ALL of these hold:
+1. ...
+FAIL if any item is missing or wrong.
+```
+
+Tips for a good suite:
+
+- **Include negative cases**: prompts that are close to the skill's domain but shouldn't trigger it. Grade them with `tool_used` and `min: 0, max: 0`.
+- **Prefer regex graders** for hard rules, such as banned URLs or deprecated endpoints. Give them a high `weight`. Use `llm` graders for correctness that regex can't express, and write their criteria as an explicit checklist.
+- The `tool_used: Skill` grader only shows whether the skill fired. It isn't counted in the with/without score, because the baseline run can't fire the skill.
+- Use `runs: 3` or more. Agent output varies from run to run, and a single run is noise.
+
+See [`evals/aps-docs-portal/`](evals/aps-docs-portal/) for a complete example.
+
+### Running evals locally
+
+Run from the repo root, granting every gated tool your cases list in `allowed_tools`:
+
+```bash
+claude plugin eval . --eval-dir evals/<skill-name> \
+  --allow-tools Skill Read WebFetch "Bash(curl:*)" "WebFetch(domain:example.autodesk.com)"
+```
+
+Useful flags:
+
+- `--case '<glob>'`: run only matching cases, for example `--case '03*'`. It takes a single glob; if you repeat the flag, only the last one is used.
+- `--runs 1`: quick smoke test while you're iterating on a case.
+- `--max-cost-usd <n>`: hard cost ceiling.
+- `-j <n>`: run up to `n` agents in parallel. They all share your rate limit.
+- `--ablation none`: skip the no-skill baseline run.
+- `--no-publish`: keep the HTML report local.
+
+Results and an HTML report are written to `evals/<skill-name>/results/<timestamp>/`.
+
+> [!NOTE]
+> Every run is a full agent session billed to your credentials. An 8-case suite with 3 runs and both arms is 48 agent runs. Use `--case` and `--runs 1` while iterating, and `--max-cost-usd` to cap a full run.
+
+### Troubleshooting
+
+**"Not logged in" / every run scores 0 in both arms.** Eval runs start separate `claude` processes, and those can't always read credentials that Claude Code stored in the macOS keychain. If you authenticate with a Console API key, read it from the keychain and pass it as an environment variable:
+
+```bash
+ANTHROPIC_API_KEY="$(security find-generic-password -s 'Claude Code' -w)" \
+  claude plugin eval . --eval-dir evals/<skill-name> --allow-tools ...
+```
+
+The keychain entry name can differ between setups. To list the Claude-related entries on your machine without printing any secrets, run:
+
+```bash
+security dump-keychain | grep -i '"svce".*claude'
+```
+
+Then pass the matching name to `-s` (and add `-a <account>` if more than one entry shares the same name). An entry ending in `-credentials` holds a claude.ai subscription login, not an API key. Don't pass it as `ANTHROPIC_API_KEY`.
+
+Run evals from a regular terminal, not from inside a Claude Code session. Nested runs can fail to authenticate.
+
+**Cases that grant `Bash` fail during sandbox setup.** Docker Desktop puts symlinks in `~/.docker` that the eval sandbox refuses to work with. Setting `DOCKER_CONFIG` doesn't help. Quit Docker Desktop, move the folder aside for the duration of the run, then restore it:
+
+```bash
+mv ~/.docker ~/.docker.eval-bak
+claude plugin eval . --eval-dir evals/<skill-name> --allow-tools ...
+mv ~/.docker.eval-bak ~/.docker
+```
+
+**`curl` inside the agent can't reach a domain.** A bare `WebFetch` grant doesn't open network access for shell commands. Grant each domain explicitly, both in the case's `allowed_tools` and on the command line: `--allow-tools "WebFetch(domain:example.autodesk.com)"`.
+
+**A case shows "not granted" and is skipped.** Some tools in its `allowed_tools` are missing from `--allow-tools`, or a pattern is malformed. Copy the list from the case's frontmatter into the command.
