@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Agent Skills Gallery | Autodesk Platform Services</title>
+    <meta name="description" content="Browse reusable AI agent skills for Autodesk Platform Services, AutoCAD, Flow Production Tracking, and other Autodesk products.">
+    <link rel="icon" href="https://aps.autodesk.com/themes/custom/forge/favicon.ico">
+    <link rel="stylesheet" href="styles.css">
+    <script type="importmap">
+        {
+            "imports": {
+                "minisearch": "https://cdn.jsdelivr.net/npm/minisearch@7.2.0/dist/es/index.js",
+                "yaml": "https://cdn.jsdelivr.net/npm/yaml@2.9.1/browser/index.js"
+            }
+        }
+    </script>
+    <script type="module" src="app.mjs"></script>
+</head>
+<body>
+    <header class="site-header">
+        <div class="container site-header__inner">
+            <a class="brand" href="./">
+                <img class="brand__logo" src="https://cdn.autodesk.io/logo/white/stacked.png" alt="Autodesk Platform Services" width="146" height="28">
+                <span class="brand__divider" aria-hidden="true"></span>
+                <span class="brand__product">Agent Skills</span>
+            </a>
+            <nav class="site-nav" aria-label="Main">
+                <a href="https://aps.autodesk.com/developer/documentation">Documentation</a>
+                <a href="https://github.com/autodesk-platform-services/skills">GitHub</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <p class="eyebrow">Agent Skills</p>
+                <h1>Teach your coding agent to build with Autodesk.</h1>
+                <p class="hero__lead">
+                    Reusable skills for Claude Code, GitHub Copilot, Cursor, and other AI agents that cover
+                    Autodesk Platform Services APIs and Autodesk products like AutoCAD and Flow Production Tracking.
+                </p>
+                <div class="search">
+                    <svg class="search__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 3a7.5 7.5 0 0 1 5.96 12.05l4.5 4.5-1.41 1.41-4.5-4.5A7.5 7.5 0 1 1 10.5 3Zm0 2a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11Z"/></svg>
+                    <input id="search" type="search" placeholder="Search skills, e.g. &quot;civil dotnet&quot;" autocomplete="off" spellcheck="false" aria-label="Search skills">
+                    <kbd class="search__hint" aria-hidden="true">/</kbd>
+                </div>
+            </div>
+        </section>
+
+        <section class="container layout">
+            <aside class="filters" aria-label="Filters">
+                <div class="filters__header">
+                    <h2>Filter</h2>
+                    <button id="clear-filters" class="link-button" type="button" hidden>Clear all</button>
+                    <button id="toggle-filters" class="link-button filters__toggle" type="button" aria-expanded="false" aria-controls="filter-groups">Show filters</button>
+                </div>
+                <div id="filter-groups"></div>
+            </aside>
+
+            <div class="results">
+                <div class="results__bar">
+                    <p id="result-count" class="results__count" aria-live="polite"></p>
+                    <div id="active-filters" class="active-filters"></div>
+                </div>
+                <div id="loading" class="empty">
+                    <p>Loading skills&hellip;</p>
+                </div>
+                <div id="load-error" class="empty" hidden>
+                    <h3>Could not load skills</h3>
+                    <p>The skill list is loaded from GitHub. Check your connection and try again, or
+                        <a href="https://github.com/autodesk-platform-services/skills">browse the repository</a>.</p>
+                    <button id="load-retry" class="button" type="button">Try again</button>
+                </div>
+                <div id="grid" class="grid"></div>
+                <div id="empty" class="empty" hidden>
+                    <h3>No skills match your search</h3>
+                    <p>Try fewer words or remove some filters.</p>
+                    <button id="empty-reset" class="button" type="button">Reset search</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container site-footer__inner">
+            <p>
+                Want to add a skill? See the
+                <a href="https://github.com/autodesk-platform-services/skills/blob/main/CONTRIBUTING.md">contribution guide</a>.
+            </p>
+            <p>&copy; Autodesk, Inc. Skills are licensed under the MIT license.</p>
+        </div>
+    </footer>
+
+    <dialog id="details" class="details" aria-labelledby="details-title">
+        <div class="details__inner">
+            <button class="details__close" type="button" aria-label="Close" data-close>&times;</button>
+            <div id="details-body"></div>
+        </div>
+    </dialog>
+</body>
+</html>
