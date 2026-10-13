@@ -3,6 +3,10 @@ name: acad-cuix-builder
 description: "Generate a complete AutoCAD .bundle (CUIX ribbon + extended tooltip GIFs + LISP + PackageContents) from a plain-English prompt. No XML editing required."
 argument-hint: "Describe the plugin: panels, buttons, commands, tooltip GIFs, and optional LISP file (e.g. 'drafting tools with zoom selection and layer isolate commands, GIF tooltips, lispPath at D:/demo/DraftingTools.lsp')"
 compatibility: "Windows only. Requires CuixBuilder.exe (install via install.ps1) OR .NET SDK 10.0."
+metadata:
+  products: "AutoCAD"
+  technologies: "CUIX, AutoLISP, PowerShell, .NET"
+  industries: "AEC, Manufacturing"
 ---
 
 # AutoCAD CUIX Builder

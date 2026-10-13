@@ -2,6 +2,10 @@
 name: acad-dotnet
 description: "Scaffold and develop AutoCAD 2027 .NET plugins (AutoCAD, Civil 3D, Plant 3D) targeting .NET 10 / x64. Covers dotnet new templates, csproj patterns, bundle packaging, desktop NETLOAD testing, and Design Automation deployment."
 argument-hint: "Target product and project name (e.g. 'create a Civil 3D plugin called AlignmentExporter', or 'package my AutoCAD plugin as a DA bundle')"
+metadata:
+  products: "AutoCAD, Civil 3D, Plant 3D, Design Automation"
+  technologies: ".NET, C#"
+  industries: "AEC, Manufacturing"
 ---
 
 # Scaffold Skill — AutoCAD .NET Plugins

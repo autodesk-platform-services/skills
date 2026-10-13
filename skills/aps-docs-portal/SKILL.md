@@ -8,6 +8,9 @@ description: >
 metadata:
   author: Developer Advocates @ Autodesk
   version: "0.2"
+  products: "APS, ACC, BIM 360, Model Derivative, Data Management, Viewer, Design Automation"
+  technologies: "REST, Bash"
+  industries: "AEC, Manufacturing, Media & Entertainment"
 compatibility: Requires curl, jq, and htmlq for documentation scraping and TOC navigation.
 ---
 

@@ -2,7 +2,7 @@
 
 To add a new skill, create a folder under `skills/` with:
 
-- A `SKILL.md` file containing the full agent instructions (with YAML frontmatter for `name`, `description`, and `metadata`)
+- A `SKILL.md` file containing the full agent instructions (with YAML frontmatter for `name`, `description`, and `metadata`, including the [gallery tags](#gallery-tags))
 - A `README.md` file for humans describing what the skill does, its requirements, recommended installation command (e.g., `npx skills add autodesk-platform-services/skills --project --skill <skill-name>`), any additional setup steps, and example usage
 - A `references/` subfolder with any supporting documentation the agent needs to read during execution
 - A `scripts/` subfolder for any reusable helper scripts the agent should run
@@ -32,6 +32,22 @@ Finally, register the skill in the plugin marketplace (used by both Claude Code 
 - `name` must match the skill folder name and the `name` in its `SKILL.md` frontmatter. Users install the skill as `<skill-name>@aps-skills`, so treat the name as permanent: renaming it later breaks existing installs.
 - Use `aps`, `autocad`, or `flow` as the `category`, or introduce a new one if none fits.
 - Don't add a `version` field, and don't add a `plugin.json` to the skill folder. The marketplace entry serves as the plugin manifest, and without a `version` Claude Code uses the git commit SHA, so users get updates on every push. GitHub Copilot reads the same `.claude-plugin/marketplace.json` and also falls back to the `SKILL.md` in the plugin root, so don't add a separate `.github/plugin/marketplace.json` either.
+
+### Gallery tags
+
+The skill gallery (a static site hosted with GitHub Pages from the [`docs`](https://github.com/autodesk-platform-services/skills/tree/docs) branch) loads the list of skills from the `main` branch of this repository at runtime (from the plugin marketplace, each skill's `SKILL.md` frontmatter, and its `README.md` title), and lets users search skills and filter them by product, industry, and technology. Add these tags to the `metadata` block of the skill's `SKILL.md` frontmatter as comma-separated strings:
+
+```yaml
+metadata:
+  products: "AutoCAD, Civil 3D, Design Automation"
+  industries: "AEC, Manufacturing"
+  technologies: ".NET, C#"
+```
+
+- Reuse existing tag values where they fit, so that filters stay short. Check the filters in the gallery for the current values.
+- Use `AEC`, `Manufacturing`, and `Media & Entertainment` for `industries`. List all industries the skill is useful for.
+
+There's no build step and nothing to change in the `docs` branch: the skill shows up in the gallery as soon as it's merged to `main`.
 
 Validate your changes locally with the [Claude Code CLI](https://code.claude.com/docs/en/setup) and the consistency check script before opening a pull request:
 
