@@ -75,7 +75,7 @@
     {
       "name": "aps-aecdm-plant3d-forma",
       "source": "./skills/aps-aecdm-plant3d-forma",
-      "description": "Discover Plant 3D P&ID and 3D data sets in Forma/ACC via AEC Data Model GraphQL, local .dcf schema, and production query patterns.",
+      "description": "Discover Plant 3D P&ID and 3D data sets in Forma via AEC Data Model GraphQL, local .dcf schema, and production query patterns.",
       "category": "aps",
       "tags": ["aps", "aec-data-model", "forma", "acc", "plant-3d", "graphql"],
       "author": { "name": "Autodesk" },

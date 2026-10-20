@@ -4,7 +4,7 @@
 
 **AEC Data Model API does not expose Plant 3D’s PnP table/class/column schema in the cloud.** Element queries return property values and definition ids, but not the full catalog of tables, inheritance, column types, picklists, or relationship types.
 
-Integrations that need completeness rules, class trees, or relationship semantics need the **same Plant 3D project** (or a copy) that was published to Forma/ACC. That project folder contains SQLite **`.dcf`** files.
+Integrations that need completeness rules, class trees, or relationship semantics need the **same Plant 3D project** (or a copy) that was published to Forma. That project folder contains SQLite **`.dcf`** files.
 
 Element **values** come from GraphQL; `.dcf` files are **schema reference only**.
 
@@ -24,7 +24,7 @@ Both use the same PnP SQLite layout (`PnPTables`, `PnPColumnAttributes`, …). M
 
 ## Obtaining schema from `.dcf`
 
-1. Locate the Plant 3D project on disk (the source of the published ACC content).
+1. Locate the Plant 3D project on disk (the source of the published Forma content).
 2. Open **ProcessPower.dcf** and/or **Piping.dcf** with read-only SQLite access.
 3. Run SQL against standard PnP tables (see below) or use tooling that wraps those queries.
 
@@ -68,7 +68,7 @@ Plant 3D project on disk (ProcessPower.dcf + Piping.dcf)
         ↓
 Extract class tree, column types, relationships (local SQL)
         ↓
-Publish/sync project to ACC → AEC Data Model element groups
+Publish/sync project to Forma → AEC Data Model element groups
         ↓
 Query elements via GraphQL; validate using .dcf schema offline
 ```

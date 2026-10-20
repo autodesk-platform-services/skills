@@ -1,12 +1,12 @@
-# AEC Data Model — Plant 3D on Forma / ACC
+# AEC Data Model — Plant 3D on Forma
 
-Agent skill for discovering **AutoCAD Plant 3D** data sets in **Forma / ACC** through the **AEC Data Model GraphQL API**: hubs, projects, folders, P&ID and 3D piping element groups, local **`.dcf`** table schema, and production-oriented element queries.
+Agent skill for discovering **AutoCAD Plant 3D** data sets in **Forma** through the **AEC Data Model GraphQL API**: hubs, projects, folders, P&ID and 3D piping element groups, local **`.dcf`** table schema, and production-oriented element queries.
 
 ## Requirements
 
 - APS **Traditional Web App** (or equivalent) with **AEC Data Model API** enabled
-- **3-legged OAuth** with at least `data:read`; user must have access to the target hub and project
-- Plant 3D content **published/synced** to AEC Data Model in the ACC project
+- **3-legged OAuth** with at least `data:read`; user must have access to the target Forma hub and project
+- Plant 3D content **published/synced** to AEC Data Model in the Forma project
 - For schema work: **ProcessPower.dcf** / **Piping.dcf** from the Plant 3D project folder (SQLite, read-only)
 
 ## Installation
@@ -28,7 +28,7 @@ claude plugin install aps-aecdm-plant3d-forma@aps-skills
 
 ## Example prompts
 
-- “List the GraphQL steps to find P&ID and 3D data sets under Project Files in an ACC project.”
+- “List the GraphQL steps to find P&ID and 3D data sets under Project Files in a Forma project.”
 - “Why does filtering for Engineering Items over-fetch elements, and what should I do instead?”
 - “How do I get Plant 3D column types and picklists if AEC Data Model only returns property values?”
 - “Draft a folder-scoped scan for element groups named P&ID Data Set and 3D Piping Data Set.”

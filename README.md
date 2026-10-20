@@ -78,7 +78,7 @@ npx skills add autodesk-platform-services/skills --project --skill <skill-name>
 | [`aps-docs-portal`](skills/aps-docs-portal/) | Navigate the APS documentation portal — decode glossary terms, index TOC JSON trees, extract content from static HTML pages, and build valid portal links. |
 | [`aps-mcp-server-gen`](skills/aps-mcp-server-gen/) | Scaffold a custom MCP (Model Context Protocol) server that integrates with APS. Supports Node.js/TypeScript, .NET/C#, and Python. |
 | [`flow-ptr-app`](skills/flow-ptr-app/) | Guide for developing Flow Production Tracking (FPTR) / ShotGrid Toolkit apps following a spec-driven lifecycle — capture intent, write and validate a spec, plan, implement, verify, release, and maintain. |
-| [`aps-aecdm-plant3d-forma`](skills/aps-aecdm-plant3d-forma/) | Discover Plant 3D P&ID and 3D data sets in Forma/ACC via AEC Data Model GraphQL, local .dcf schema, and production query patterns. |
+| [`aps-aecdm-plant3d-forma`](skills/aps-aecdm-plant3d-forma/) | Discover Plant 3D P&ID and 3D data sets in Forma via AEC Data Model GraphQL, local .dcf schema, and production query patterns. |
 
 ## Contributing
 

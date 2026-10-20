@@ -81,7 +81,7 @@ Example variables:
 ```json
 {
   "projectId": "<aec-project-id>",
-  "folderId": "<acc-folder-id>",
+  "folderId": "<forma-folder-id>",
   "filter": { "searchType": "ALL" },
   "pagination": { "limit": 50, "cursor": null }
 }
@@ -177,7 +177,7 @@ Never pass `b.xxx` DM hub id where GraphQL expects the AEC hub `id`.
 | --- | --- |
 | No hubs | OAuth scopes; user not member of hub; all hubs filtered out (no `b.*` id) |
 | No data sets | Wrong element group names; wrong folder; model not published to AEC Data Model |
-| Scan hangs / 502 | Whole-project scan on large ACC project — use folder subtree |
+| Scan hangs / 502 | Whole-project scan on large Forma project — use folder subtree |
 | Wrong 2D/3D pairing | Data sets under different Plant 3D project folders (grandparent mismatch) |
 
 ## Table Names filter example

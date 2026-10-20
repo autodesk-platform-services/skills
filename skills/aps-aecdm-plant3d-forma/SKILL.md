@@ -1,20 +1,20 @@
 ---
 name: aps-aecdm-plant3d-forma
 description: >
-  Discovers AutoCAD Plant 3D content in Forma and ACC via AEC Data Model GraphQL—hubs, projects,
+  Discovers AutoCAD Plant 3D content in Forma via AEC Data Model GraphQL—hubs, projects,
   folders, element groups (P&ID and 3D data sets), local .dcf schema, and element queries.
   Covers folder vs project scan modes, Plant 3D project grouping, and production best practices
-  (Data Out, filters, pagination). Use when integrating Plant 3D with Forma, ACC, AEC Data Model,
+  (Data Out, filters, pagination). Use when integrating Plant 3D with Forma, AEC Data Model,
   P&ID Data Set, 3D Piping Data Set, or Plant 3D element quality workflows.
 metadata:
   author: Developer Advocates @ Autodesk
-  products: "APS, AEC Data Model, Forma, ACC, BIM 360, AutoCAD Plant 3D"
+  products: "APS, AEC Data Model, Forma, AutoCAD Plant 3D"
   technologies: "GraphQL, OAuth, Node.js"
   industries: "AEC"
-compatibility: Requires 3-legged OAuth with AEC Data Model access and a published Plant 3D project in ACC/Forma.
+compatibility: Requires 3-legged OAuth with AEC Data Model access and a published Plant 3D project in Forma.
 ---
 
-# Plant 3D in Forma / ACC via AEC Data Model
+# Plant 3D in Forma via AEC Data Model
 
 GraphQL endpoint: `POST https://developer.api.autodesk.com/aec/graphql` with 3-legged OAuth (`data:read` minimum).
 
@@ -27,8 +27,8 @@ GraphQL endpoint: `POST https://developer.api.autodesk.com/aec/graphql` with 3-l
 
 | AEC Data Model | Plant 3D meaning |
 | --- | --- |
-| Hub | Forma / ACC / BIM 360 hub |
-| Project | ACC project |
+| Hub | Forma hub |
+| Project | Forma project |
 | Folder | Project files tree (e.g. **Project Files**) |
 | Element group | Synced model container — a Plant 3D **data set** when `name` matches known labels |
 | Element | Row in a PnP table (equipment, pipe run, relationship, …) |
@@ -46,7 +46,7 @@ Maintain a configurable allowlist; trim and match names exactly.
 ## Discovery workflow
 
 ```
-- [ ] 1. List hubs → keep Forma/ACC/BIM 360 (DM hub id `b.*`)
+- [ ] 1. List hubs → keep Forma hubs (DM hub id `b.*`)
 - [ ] 2. List projects (AEC project id for GraphQL)
 - [ ] 3. List folders — user picks subtree (e.g. Project Files)
 - [ ] 4. Scan element groups → filter by data set names
@@ -56,7 +56,7 @@ Maintain a configurable allowlist; trim and match names exactly.
 
 ### Step 1 — Hubs
 
-Paginate `hubs`. Keep rows where `alternativeIdentifiers.dataManagementAPIHubId` **starts with `b.`**.
+Paginate `hubs`. Keep rows where `alternativeIdentifiers.dataManagementAPIHubId` **starts with `b.`** (Forma / Data Management hubs).
 
 ### Step 2 — Projects
 
@@ -71,7 +71,7 @@ Use `foldersByProject(projectId)`. Let the user choose a subtree before scanning
 | Mode | Query | When to use |
 | --- | --- | --- |
 | **Folder subtree** | `elementGroupsByFolderAndSubFolders` | Default for large projects; bounded per folder; parallelize subtrees with modest concurrency |
-| **Whole project** | `elementGroupsByProject` | Small projects only — often **timeouts** on large ACC projects |
+| **Whole project** | `elementGroupsByProject` | Small projects only — often **timeouts** on large Forma projects |
 
 Paginate with `limit` **1–99** (100 is rejected). Filter client-side to your data set name allowlist.
 
@@ -81,7 +81,7 @@ Bucket by **`parentFolder.parentFolder`**.
 
 ### Step 6 — Schema (local) and elements (cloud)
 
-**Schema:** AEC Data Model does **not** publish the full Plant 3D PnP catalog. Use **ProcessPower.dcf** (P&ID) and **Piping.dcf** (3D) from the Plant 3D project that was published to ACC. See [references/plant3d-schema.md](references/plant3d-schema.md).
+**Schema:** AEC Data Model does **not** publish the full Plant 3D PnP catalog. Use **ProcessPower.dcf** (P&ID) and **Piping.dcf** (3D) from the Plant 3D project that was published to Forma. See [references/plant3d-schema.md](references/plant3d-schema.md).
 
 **Property definitions:** Cache `propertyDefinitionsByElementGroup` per element group.
 
