@@ -71,6 +71,17 @@
       "homepage": "https://github.com/autodesk-platform-services/skills/tree/main/skills/flow-ptr-app",
       "repository": "https://github.com/autodesk-platform-services/skills",
       "license": "MIT"
+    },
+    {
+      "name": "aps-aecdm-plant3d-forma",
+      "source": "./skills/aps-aecdm-plant3d-forma",
+      "description": "Discover Plant 3D P&ID and 3D data sets in Forma/ACC via AEC Data Model GraphQL, local .dcf schema, and production query patterns.",
+      "category": "aps",
+      "tags": ["aps", "aec-data-model", "forma", "acc", "plant-3d", "graphql"],
+      "author": { "name": "Autodesk" },
+      "homepage": "https://github.com/autodesk-platform-services/skills/tree/main/skills/aps-aecdm-plant3d-forma",
+      "repository": "https://github.com/autodesk-platform-services/skills",
+      "license": "MIT"
     }
   ]
 }
