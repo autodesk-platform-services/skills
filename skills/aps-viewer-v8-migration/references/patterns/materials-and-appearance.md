@@ -12,8 +12,9 @@
 | `viewer.impl.matman().addMaterial(...)` | Not needed; `instances.add`/`setMaterial` take ownership. |
 
 All four share the `Material` interface (`clone`, `get/setColor`, `get/setOpacity`,
-`get/setVertexColors`, `get/setDepthTest`, `get/setDepthWrite`, `get/setTransparent`). `color`
-accepts an `avs.Color`, a hex number, or a CSS string. `opacity` below 1 needs `transparent: true`.
+`get/setVertexColors`, `get/setDepthTest`, `get/setDepthWrite`, `get/setTransparent`). Pass
+`color` as a hex number; the reference also lists `avs.Color` and CSS strings, but `avs.Color` was
+reported missing at runtime (see the gotchas in `SKILL.md`). `opacity` below 1 needs `transparent: true`.
 
 Never invent a shader workaround. List the gap (see `../gaps.md`) and move on.
 

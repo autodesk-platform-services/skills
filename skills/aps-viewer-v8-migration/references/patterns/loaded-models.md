@@ -17,9 +17,10 @@ tree.enumNodeFragments(dbId, (fragId) => {
 }, true);
 viewer.impl.sceneUpdated(true);
 
-// v8
+// v8 (sequence from the "Wrapping Loaded Instances" guide)
 const instances = model.getInstances();
 const tree = await model.getObjectTreeAsync();
+instances.setUsageHint(avs.UsageHint.Dynamic);   // while moving; see "Usage hints" below
 const root = instances.getSceneGraph(true);
 const group = new avs.Node3D();
 root.add(group);
@@ -27,8 +28,11 @@ tree.enumNodeInstances(dbId, (id) => {
     if (instances.getGeometry(id)) avs.InstanceNode3D.fromInstance(id, group);
 }, true);
 group.position.z += 10;
-group.markDirty();
-root.updateTransformWorld();
+group.updateTransformWorld(true);
+viewer.refresh(true);
+
+// when the drag or animation ends
+instances.setUsageHint(avs.UsageHint.Static);
 viewer.refresh(true);
 ```
 
@@ -37,16 +41,24 @@ covers explode-style tools, configurators, and 4D/phasing animations. For multi-
 prefer the documented load options (`placementTransform`, `applyScaling`, and `globalOffset` with
 Aggregated View) over moving instances.
 
-Moving a group: either call `group.updateTransformWorld(true)` on the moved node (as the v8
-"Wrapping Loaded Instances" guide does), or `markDirty()` each changed node and call
-`root.updateTransformWorld()` once per frame (the "Detach and Reattach" guide). Use the second form
-when many nodes change per frame.
+Moving a group: call `group.updateTransformWorld(true)` on the moved node, as above. When many
+nodes change per frame, `markDirty()` each changed node and call `root.updateTransformWorld()`
+once per frame instead (the "Detach and Reattach" guide).
+
+`Node3D.position` is relative to the parent node. The reference doesn't say whether it's in the
+model's coordinates before or after `globalOffset`/`placementTransform`; when moving by a world
+delta (for example, a drag distance), check on a known object that the part ends up where
+expected.
+
+If moving parts breaks bounding boxes (`e.makeEmpty is not a function` from
+`ensureModelBBoxUpToDate`), check the Initializer `env` first (`loading-and-init.md`, known issue).
 
 **Usage hints.** Loaded models default to `avs.UsageHint.Static`: after instances are added,
 removed, moved, or get new geometry, the model is optimized again, and added instances appear only
 once that's done. For animations and other frequent changes, call
 `instances.setUsageHint(avs.UsageHint.Dynamic)` first. Programmatically created models default to
-`Dynamic`. `add` and `remove` work on loaded models only after they've finished loading.
+`Dynamic`. `add` and `remove` work on loaded models only after they've finished loading. Switch
+back to `Static` when the interaction ends, so the model is optimized again for rendering.
 
 ## P9. Fragment-level visibility → instance visibility states
 
@@ -98,6 +110,17 @@ APIs deprecated in v7 are removed or renamed for internal use in v8. Every hit i
 | `av.UnifiedCamera` | `av.Camera` (`camera-and-picking.md`, P10) |
 | `viewer.searchText` | Removed. Drop the feature. |
 | `instances.getCount()` | `instances.getMaxIndex()` (highest instance id; doesn't decrease on `remove`) |
+| `model.getData().instanceTree` | `await model.getObjectTreeAsync()` |
+| `model.getFragmentList()`, `fragList.getWorldBounds`, `fragList.boxes` | `instances.getWorldBounds(id, box)` (P19) |
+| `viewer.impl.getFragmentProxy(...)` (moving parts) | `avs.InstanceNode3D.fromInstance` or `instances.setTransformWorld` (P8) |
+| `viewer.impl.getRenderProxy(...)` (`vb`, `ib`, `vbstride`) | Instance geometry read-back (below) |
+| `viewer.impl.matman()` | Built-in materials and `instances.setMaterial` (`materials-and-appearance.md`) |
+| `viewer.impl.sceneUpdated(...)`, `viewer.impl.invalidate(...)` | `viewer.refresh(true)`, or `viewer.refresh(false)` for overlay-only changes |
+| `viewer.impl.createOverlayScene`, `addOverlay`, `removeOverlay`, `removeOverlayScene` | Overlay render layer (`scene-content.md`, P2) |
+| `viewer.impl.intersectGround(...)` | Plane picking recipe (`camera-and-picking.md`, P11) |
+| `viewer.impl.camera`, `viewer.autocam`, `viewer.utilities` | `camera-and-picking.md` (P10) |
+| `viewer.impl.canvas`, `viewer.impl.getCanvasBoundingClientRect()` | `getBoundingClientRect()` on the container element you passed to the viewer constructor |
+| `viewer.impl.glrenderer()` | None (P14) |
 
 Check the exact `*Async` signatures (argument order, options objects) in the reference with the
 `aps-docs-portal` skill before rewriting calls; they're not always a 1:1 callback-to-promise swap.
@@ -124,6 +147,37 @@ Anything else on `viewer.impl`, `model.getFragmentList()`, `model.getGeometryLis
 or members that aren't in the reference guide: map it to a documented equivalent, or report "no
 documented equivalent" in the plan. `NOP_VIEWER` is a debugging global; pass the viewer instance
 explicitly instead.
+
+### Reading a loaded element's mesh
+
+v7 code read raw buffers through `viewer.impl.getRenderProxy(model, fragId)` (`geometry.vb`, `ib`,
+`vbstride`) and `proxy.matrixWorld`. In v8, read geometry through documented accessors:
+
+```js
+const tree = await model.getObjectTreeAsync();
+const instances = model.getInstances();
+const world = new avm.Matrix4();
+const p = new avm.Vector3();
+tree.enumNodeInstances(dbId, (id) => {
+    const geometry = instances.getGeometry(id);
+    if (!geometry) return;
+    instances.getTransformWorld(id, world);
+    const indices = geometry.getIndices();   // Uint16Array | Uint32Array | null
+    for (let i = 0; i < geometry.getVertexCount(); i++) {
+        geometry.getPosition(i, p).applyMatrix4(world);   // world-space vertex
+        // ...
+    }
+}, true);
+```
+
+`getIndices()` returns `null` for non-indexed geometry; then every three vertices form a triangle.
+Don't read the vertex attribute's typed array directly; use `getPosition`/`getNormal`.
+
+### Selection events
+
+`SELECTION_CHANGED_EVENT` still carries `fragIdsArray`, but fragments aren't a v8 concept. Use
+`event.dbIdArray` with `event.model`, and map to instances with `tree.enumNodeInstances` when you
+need geometry.
 
 ## P19. Bounding boxes from fragment lists → instance and object-tree bounds
 
@@ -165,9 +219,9 @@ tree.enumNodeInstances(dbId, (id) => {
 
 Rules:
 
-- Result types are `avm.Box3`, not `THREE.Box3`. Math types follow three.js r71 (see the gotchas in
-  `SKILL.md`), and `Box3` has `union`, `expandByPoint`, `getCenter`, `getSize`, and
-  `getBoundingSphere`.
+- Result types are `avm.Box3`, not `THREE.Box3`. Math types use current three.js names (see the
+  renames in `scene-content.md`): `Box3` has `union`, `expandByPoint`, `getCenter`, `getSize`,
+  `intersectsBox`, and `getBoundingSphere`, not r71's `center()` or `size()`.
 - Skip instances without geometry (`instances.getGeometry(id)` is falsy), as in P8. Start from an
   empty box and check `box.isEmpty()` before using it, for example when a `dbId` has no geometry.
 - `getWorldBounds` is documented as world-space and follows instance transforms, so bounds reflect

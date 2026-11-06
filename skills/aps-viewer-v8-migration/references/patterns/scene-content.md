@@ -48,6 +48,9 @@ viewer.refresh(true);
 
 Rules:
 
+- `layers.create(name, options)` takes `renderTarget` (`'main'` or `'overlay'`), `renderOrder`,
+  `visible`, and `clearDepthAfter` (`'main'` target only). Attach content with
+  `layers.addModel(model, layerId)`.
 - One `Model` per layer. Keep the returned instance id for later edits: `setTransformWorld`,
   `setMaterial`, `setVisibilityState`, `remove`.
 - `removeMesh` → `instances.remove(id)`; `removeScene` → `layers.remove('markers')`;
@@ -120,7 +123,7 @@ viewer.refresh(true);
 | v7 (three.js) | v8 |
 | --- | --- |
 | `THREE.Vector2/3/4`, `Matrix3/4`, `Quaternion`, `Box2/3` | `avm.Vector2/3/4`, `avm.Matrix3/4`, `avm.Quaternion`, `avm.Box2/3` |
-| `THREE.Color` | `avs.Color` (or hex numbers in material options) |
+| `THREE.Color` | Hex numbers (`0xff0000`) in material options and `setColor`. `avs.Color` is documented but reported missing at runtime; see the gotchas in `SKILL.md`. |
 | `THREE.BufferGeometry` + `BufferAttribute` | `avs.BufferGeometry` + `avs.BufferAttribute`; `setIndices(Uint16Array \| Uint32Array)` |
 | `THREE.Geometry` (legacy, r71) | Convert to `avs.BufferGeometry` |
 | `BoxGeometry`, `SphereGeometry`, `CylinderGeometry`, `PlaneGeometry`, … | `avs.GeometryFactory.create*` (spheres, boxes, cylinders, cones, planes; optional trailing flag for edge indices) |
@@ -141,11 +144,40 @@ Rules:
 - Hierarchies authored in code: `new avs.InstanceNode3D(geometry, material)` creates an instance
   node you can `add()` to any `Node3D` under `instances.getSceneGraph(true)`. Node transforms are
   relative to the parent; `remove()` then `add()` reparents a subtree without recreating it.
-- `avm` types keep three.js-compatible method names, but those of r71 (bundled with v7), not current
-  three.js. Code written against the bundled `THREE` migrates by renaming the namespace. Code
-  written against newer three.js (helpers copied from current docs, a separately installed `three`
-  package) must be checked against the r71 API and rewritten where methods differ.
+- `avm` types use current three.js method names, not those of r71 (bundled with v7). Renaming the
+  namespace isn't enough; apply the renames below. Some r71 names still work but log deprecation
+  warnings, so code that must run on both v7 and v8 should use the names that both accept, or
+  branch on `LMV_VIEWER_VERSION`.
+- `instances.add(geometry, material, transform, bbox, dbId)`: `transform`, `bbox`, and `dbId` are
+  optional.
+- `avs.LineMaterial` draws one segment per pair of indices (line-pieces mode), not a line strip. A
+  v7 `THREE.Line` with consecutive points needs indices `0,1, 1,2, 2,3, …`.
+- Subclasses of three.js types (`THREE.MeshBasicMaterial.call(this)`,
+  `Object.create(THREE.Object3D.prototype)`, `class X extends THREE.Mesh`) can't be ported by
+  renaming. Rewrite them as plain classes that own an instance id (or an `avs.Node3D`) and a
+  built-in material, and port ES5 constructors to classes (P20).
+- Libraries that need a global `THREE` (ThreeCSG/ThreeBSP, `TransformControls`, `OrbitControls`)
+  break: v8 exposes no `THREE`. Replace them (for gizmos, see `camera-and-picking.md`) or run CSG
+  in a separate three.js copy and convert its output to `avs.BufferGeometry`.
 - Custom loaders (glTF via three.js loaders, point clouds) should parse into `avs.BufferGeometry`
   and add instances to a dynamic model (P4), not into an overlay.
 - TypeScript: remove `@types/three` imports from viewer-facing code and type against the viewer's
   own typings.
+
+### Math method renames (r71 → v8)
+
+From the v8 reference for `Box3`, `Vector3`, and `Matrix4`. When a method isn't in this table,
+check the class page before using it.
+
+| r71 (v7 `THREE`) | v8 (`avm`) |
+| --- | --- |
+| `box.center(target)` | `box.getCenter(target)` |
+| `box.size(target)` | `box.getSize(target)` |
+| `box.empty()` | `box.isEmpty()` |
+| `box.isIntersectionBox(other)` | `box.intersectsBox(other)` |
+| `box.setFromObject(object3d)` | None. Use `instances.getWorldBounds(id, box)` (`loaded-models.md`, P19). |
+| `m.getInverse(other)` | `m.copy(other).invert()` |
+| `m.getPosition()`, `v.getPositionFromMatrix(m)` | `v.setFromMatrixPosition(m)` |
+| `m.multiplyVector3(v)` | `v.applyMatrix4(m)` |
+| `m.extractRotation(...)`, `m.makePerspective(...)`, `m.makeOrthographic(...)` | Not in the reference. Use `decompose` or `makeRotationFromQuaternion`; for cameras, use `av.Camera` (P10). |
+| `v.project(camera)`, `v.unproject(camera)` | Not on `avm.Vector3`. Use `viewer.worldToClient` / `viewer.clientToWorld` (P11). |

@@ -16,7 +16,8 @@
 ```
 
 - Keep the URLs in a single config constant, so the switch (and later the `8.*` GA path) is one edit.
-- Switch only after the app works on v7 with the Scene API (see SKILL.md workflow).
+- On the default path, switch only after the app works on v7 with the Scene API. On the v8-only
+  path, switch first (see SKILL.md workflow).
 - Check the loaded version at runtime with the global `LMV_VIEWER_VERSION`.
 - v8 removes rolled-out and deprecated flags from `PublicFeatureFlags`; the v8 reference lists only
   `DSEndpoints` and `SlowGpuDetection`. Delete every `FeatureFlags.set(...)` call for `SceneAPI`,
@@ -54,7 +55,8 @@ try {
 - **SVF2 geometry caching uses OPFS only** (IndexedDB is disabled). OPFS needs a secure context and
   may be unavailable or ephemeral in private browsing and some embedded hosts.
 - SVF (v1) derivatives still load: the v8 getting-started guide documents `env: 'AutodeskProduction'`
-  with `api: 'derivativeV2'`. `env: 'Local'` is documented on the Initializer for locally hosted
+  with `api: 'derivativeV2'`. Prefer `env: 'AutodeskProduction2', api: 'streamingV2'` for models
+  hosted by APS (see P18). `env: 'Local'` is documented on the Initializer for locally hosted
   files; ask the user to test local viewing early, because loading is always streamed in v8.
 
 ## P18. Call the Initializer before creating a viewer
@@ -75,11 +77,29 @@ viewer.start('/models/house/output/0.svf');
 Autodesk.Viewing.Initializer(options, () => { /* create viewer */ });
 
 // v8
-const options = { env: 'Local' };   // or env/api/getAccessToken for models hosted by APS
+const options = { env: 'Local' };   // or the APS options below for models hosted by APS
 await Autodesk.Viewing.Initializer(options);
 const viewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById('viewer'));
 viewer.start('/models/house/output/0.svf');
 ```
+
+For models hosted by APS, use the streaming endpoint:
+
+```js
+await Autodesk.Viewing.Initializer({
+    env: 'AutodeskProduction2',
+    api: 'streamingV2',
+    getAccessToken: (callback) => fetchToken().then(({ access_token, expires_in }) => callback(access_token, expires_in)),
+});
+```
+
+**Known issue with the legacy env.** With `env: 'AutodeskProduction'`, one migration found that
+after moving loaded instances (P8), `model.getBoundingBox()` threw `e.makeEmpty is not a function`
+from `ensureModelBBoxUpToDate`. Moving parts worked after switching to `AutodeskProduction2` +
+`streamingV2`. The usage hint and node grouping changed in the same step, so the env isn't
+confirmed as the only cause. If the app keeps the legacy env (for example, because a derivative
+doesn't load through the streaming endpoint), test moving parts and bounding boxes, and report the
+error to Autodesk (see `references/gaps.md`).
 
 Frameworks (React, Angular, Vue): initialize once per page and await it before creating each viewer.
 
@@ -110,7 +130,15 @@ Rules:
   Initializer on every mount. To tear down, call `viewer.finish()` on every viewer, then
   `Autodesk.Viewing.shutdown()`.
 - Local or offline viewing: pass `{ env: 'Local' }`; no access token is needed.
+- Models hosted by APS: use `env: 'AutodeskProduction2', api: 'streamingV2'`. Treat
+  `env: 'AutodeskProduction'` as legacy (see the known issue above).
+- Remove `webglInitParams` (including `useWebGL2`). v8 renders with WebGPU and falls back to WebGL
+  on its own (P14).
+- Don't call the Initializer each time a model loads. Loading another model needs only
+  `viewer.loadDocumentNode(...)` (or `viewer.loadModel(...)`) on the existing viewer.
 - `viewer.start()` returns a non-zero code when the viewer can't be created; check it.
 - The audit flags files that construct a viewer with no Initializer call (`no Initializer in file`),
-  files that have both (`check ordering`), and Initializer calls that pass a callback. For
-  `check ordering`, trace that every construction site runs after the Initializer resolves.
+  files that have both (`check ordering`), Initializer calls that pass a callback, more than one
+  Initializer call site, and the legacy env. For `check ordering`, trace that every construction
+  site runs after the Initializer resolves. For a single call site, still check that it doesn't
+  sit in a function that runs per model load.

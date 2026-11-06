@@ -19,24 +19,28 @@ const patterns = [
     { id: 'P3', file: 'scene-content.md', title: 'viewer.impl.scene / sceneAfter', regex: /impl\.(scene|sceneAfter)\b/ },
     { id: 'P4', file: 'scene-content.md', title: 'Autodesk.Viewing.SceneBuilder', regex: /Autodesk\.Viewing\.SceneBuilder|addNewModel|modelBuilder\./ },
     { id: 'P5', file: 'scene-content.md', title: 'three.js types', regex: /\bTHREE\.(\w+)/g, classify: true },
+    { id: 'P5', file: 'scene-content.md', title: 'three.js types', regex: /\b(ThreeCSG|ThreeBSP|TransformControls|OrbitControls|TrackballControls|window\.THREE|globalThis\.THREE)\b/, kind: 'needs global THREE' },
     { id: 'P6', file: 'materials-and-appearance.md', title: 'Custom shaders / material manager', regex: /ShaderMaterial|onBeforeCompile|matman\(\)/ },
     { id: 'P7-P9', file: 'loaded-models.md', title: 'Fragment-level access', regex: /getFragmentList|getFragmentProxy|enumNodeFragments|setFragOff|visibilityManager|updateAnimTransform/ },
     { id: 'P10', file: 'camera-and-picking.md', title: 'Camera mutation / three.js camera', regex: /getCamera\(\)\.(position|target|up)\s*\.set|\.lookAt\(|UnifiedCamera|impl\.camera|syncCamera/ },
     { id: 'P11', file: 'camera-and-picking.md', title: 'Raycasting / projection', regex: /Raycaster|rayIntersect|viewportToRay|impl\.hitTest|\.project\(/ },
     { id: 'P12', file: 'extensions-and-renderer.md', title: 'Autodesk.DataVisualization', regex: /Autodesk\.DataVisualization|DataVizCore|ModelStructureInfo|SpriteViewable|ViewableData/ },
     { id: 'P13', file: 'loaded-models.md', title: 'Memory-limited / LME toggles', regex: /MemoryLimited|LargeModelExperience/ },
-    { id: 'P14', file: 'extensions-and-renderer.md', title: 'WebGL-specific code', regex: /glrenderer|getContext\(\s*['"]webgl|webglcontextlost|preserveDrawingBuffer|navigator\.xr|renderer:\s*['"]webgl['"]/ },
+    { id: 'P14', file: 'extensions-and-renderer.md', title: 'WebGL-specific code', regex: /glrenderer|getContext\(\s*['"]webgl|webglcontextlost|preserveDrawingBuffer|navigator\.xr|webglInitParams|useWebGL2|renderer:\s*['"]webgl['"]/ },
     { id: 'P15', file: 'loading-and-init.md', title: 'Non-secure origin', regex: /\bhttp:\/\/(?!localhost\b|127\.0\.0\.1\b|\[::1\])[\w.-]+|\bfile:\/\// },
     { id: 'P16', file: 'extensions-and-renderer.md', title: 'Retired extension', regex: /Autodesk\.(FullScreen|NPR|GoHome|ViewerSettings|BIM360\.GestureDocumentNavigation|Beeline|CAM360|DataPersistence|DOF|Fusion360\.Simulation|MemoryLimitedDebug|MSDF|OMV|PropertyQuery|PropertySearch|Scalaris|ScalarisSimulation|ReCap)\b/ },
-    { id: 'P17', file: 'loaded-models.md', title: 'Internal, removed, or changed API', regex: /viewer\.impl\.|NOP_VIEWER|Autodesk\.Viewing\.Private\b|\bav\.Private\b|\bviewer\w*\.prefs\b|setPropertiesOnSelect|viewer\w*\.searchText\b|getGeometryList|getInstanceTree\(|getProperties2?\(|getBulkProperties2?\(|getPropertySet\(|getExternalIdMapping\(|getLayerToNodeIdMapping\(|getObjectTree\(\s*(function|\(|\w+\s*=>|\w+\s*[,)])|\b(model|viewer)\w*\.search\(|(getInstances\(\)|instances\w*)\.getCount\(\)|setAggregateSelection\(/ },
+    { id: 'P17', file: 'loaded-models.md', title: 'Internal, removed, or changed API', regex: /viewer\.impl\.|\bimpl\.(invalidate|sceneUpdated|matman|getFragmentProxy|getRenderProxy|intersectGround|glrenderer|camera|canvas|getCanvasBoundingClientRect|createOverlayScene|removeOverlayScene|addOverlay|removeOverlay|renderer|hitTest|viewportToRay|rayIntersect)\b|\.instanceTree\b|viewer\w*\.(utilities|autocam)\b|NOP_VIEWER|Autodesk\.Viewing\.Private\b|\bav\.Private\b|\bviewer\w*\.prefs\b|setPropertiesOnSelect|viewer\w*\.searchText\b|getGeometryList|getInstanceTree\(|getProperties2?\(|getBulkProperties2?\(|getPropertySet\(|getExternalIdMapping\(|getLayerToNodeIdMapping\(|getObjectTree\(\s*(function|\(|\w+\s*=>|\w+\s*[,)])|\b(model|viewer)\w*\.search\(|(getInstances\(\)|instances\w*)\.getCount\(\)|setAggregateSelection\(/ },
     { id: 'P19', file: 'loaded-models.md', title: 'Bounding boxes from fragments/instances', regex: /getWorldBounds|getOriginalWorldBounds|getNodeBox|getBoundingBox\(|getFuzzyBox|fragList\.boxes|\.boxes\b/ },
     { id: 'P20', file: 'extensions-and-renderer.md', title: 'ES5-style extension or viewer subclass', regex: /(Autodesk\.Viewing|\bav)\.(UI\.)?\w+\.call\(\s*this\b|Object\.create\(\s*(Autodesk\.Viewing|\bav)\.(UI\.)?\w+\.prototype\s*\)|(Autodesk\.Viewing|\bav)\.(UI\.)?\w+\.prototype\.\w+\.(call|apply)\(\s*this\b/ },
 ];
 
 const viewerConstruction = /new\s+(Autodesk\.Viewing|av)\.(GuiViewer3D|Viewer3D)\s*\(/;
 const initializerCall = /(Autodesk\.Viewing|av)\.Initializer\s*\(/;
-// Initializer(options, callback): the callback form is deprecated in favor of the returned promise.
-const initializerCallback = /(Autodesk\.Viewing|av)\.Initializer\s*\(\s*([\w.$]+|\{[^}]*\})\s*,\s*(function\b|\(|async\b|[\w$]+\s*(=>|\)))/;
+const initializerCalls = /(Autodesk\.Viewing|\bav)\.Initializer\s*\(/g;
+// The legacy SVF endpoint; moving loaded parts is reported to break with it (see loading-and-init.md).
+const legacyEnv = /\benv\s*:\s*['"]AutodeskProduction['"]/;
+// Subclassing three.js types (ES5 or ES6) needs a rewrite, not a namespace rename.
+const threeSubclass = /THREE\.\w+\.(call|apply)\(\s*this\b|Object\.create\(\s*THREE\.\w+\.prototype|extends\s+THREE\.\w+/;
 
 // package.json dependencies that pull three.js or v7 viewer typings into the app.
 const packageDeps = new Set(['three', '@types/three', 'forge-viewer', '@types/forge-viewer']);
@@ -54,6 +58,41 @@ function classifyThree(name) {
     return 'object (P5)';
 }
 
+// Initializer(options, callback): the callback form is deprecated in favor of the returned promise.
+// Balances brackets from the opening parenthesis, so multi-line and nested options are handled.
+function initializerCallbackLines(text) {
+    const lines = [];
+    for (const match of text.matchAll(initializerCalls)) {
+        let depth = 0;
+        for (let i = match.index + match[0].length; i < text.length; i++) {
+            const ch = text[i];
+            if ('([{'.includes(ch)) depth++;
+            else if (')]}'.includes(ch)) {
+                if (depth-- === 0) break;
+            } else if (ch === ',' && depth === 0) {
+                if (/^\s*[^\s)]/.test(text.slice(i + 1))) {
+                    lines.push(text.slice(0, match.index).split(/\r?\n/).length);
+                }
+                break;
+            }
+        }
+    }
+    return lines;
+}
+
+const skipped = [];
+
+// Returns true if a skipped folder contains script files, so the report can say it wasn't scanned.
+function hasScripts(path) {
+    try {
+        return readdirSync(path, { withFileTypes: true }).some(entry => entry.isDirectory()
+            ? entry.name !== 'node_modules' && hasScripts(join(path, entry.name))
+            : /\.(m?js|cjs|ts|tsx|jsx)$/.test(entry.name));
+    } catch {
+        return false;
+    }
+}
+
 function* walk(path) {
     const stats = statSync(path);
     if (stats.isFile()) {
@@ -64,9 +103,13 @@ function* walk(path) {
         if (entry.isDirectory()) {
             if (!skipDirs.has(entry.name) && !entry.name.startsWith('.')) {
                 yield* walk(join(path, entry.name));
+            } else if (entry.name !== 'node_modules' && entry.name !== '.git' && hasScripts(join(path, entry.name))) {
+                skipped.push(`${join(path, entry.name)}/ (folder skipped)`);
             }
         } else if (extensions.has(extname(entry.name)) && !/\.min\.(js|css)$/.test(entry.name) && entry.name !== 'package-lock.json') {
             yield join(path, entry.name);
+        } else if (/\.min\.js$/.test(entry.name) && !/^viewer3D/.test(entry.name)) {
+            skipped.push(`${join(path, entry.name)} (minified)`);
         }
     }
 }
@@ -101,6 +144,7 @@ if (roots.length === 0) {
 
 const findings = new Map(patterns.map(pattern => [pattern.id, []]));
 findings.set('P18', []);
+const initializerSites = [];
 let scanned = 0;
 
 for (const root of roots) {
@@ -108,6 +152,7 @@ for (const root of roots) {
     const base = statSync(root).isFile() ? dirname(resolve(root)) : resolve(root);
     for (const file of walk(root)) {
         if (statSync(file).size > maxFileSize) {
+            skipped.push(`${file} (larger than 2 MB)`);
             continue;
         }
         scanned++;
@@ -119,23 +164,37 @@ for (const root of roots) {
             continue;
         }
         const hasInitializer = initializerCall.test(text);
+        for (const line of initializerCallbackLines(text)) {
+            findings.get('P18').push({ file: location, line, kind: 'callback form, use await', text: lines[line - 1].trim() });
+        }
         lines.forEach((line, index) => {
             for (const pattern of patterns) {
                 if (pattern.classify) {
+                    const subclass = threeSubclass.test(line);
                     for (const match of line.matchAll(pattern.regex)) {
-                        findings.get(pattern.id).push({ file: location, line: index + 1, kind: classifyThree(match[1]), text: line.trim() });
+                        findings.get(pattern.id).push({ file: location, line: index + 1, kind: subclass ? 'subclass, rewrite (P5, P20)' : classifyThree(match[1]), text: line.trim() });
                     }
                 } else if (pattern.regex.test(line)) {
-                    findings.get(pattern.id).push({ file: location, line: index + 1, text: line.trim() });
+                    findings.get(pattern.id).push({ file: location, line: index + 1, kind: pattern.kind, text: line.trim() });
                 }
             }
             if (viewerConstruction.test(line)) {
                 findings.get('P18').push({ file: location, line: index + 1, kind: hasInitializer ? 'check ordering' : 'no Initializer in file', text: line.trim() });
             }
-            if (initializerCallback.test(line)) {
-                findings.get('P18').push({ file: location, line: index + 1, kind: 'callback form, use await', text: line.trim() });
+            if (legacyEnv.test(line)) {
+                findings.get('P18').push({ file: location, line: index + 1, kind: 'legacy env, prefer AutodeskProduction2 + streamingV2', text: line.trim() });
+            }
+            if (initializerCall.test(line)) {
+                initializerSites.push({ file: location, line: index + 1, text: line.trim() });
             }
         });
+    }
+}
+
+// The Initializer must run once per page; more than one call site needs a check.
+if (initializerSites.length > 1) {
+    for (const site of initializerSites) {
+        findings.get('P18').push({ ...site, kind: `${initializerSites.length} Initializer call sites, run once per page` });
     }
 }
 
@@ -143,7 +202,7 @@ const titles = Object.fromEntries(patterns.map(pattern => [pattern.id, `${patter
 titles.P18 = 'Viewer creation and Initializer → references/patterns/loading-and-init.md';
 
 if (asJson) {
-    console.log(JSON.stringify({ scanned, findings: Object.fromEntries(findings) }, null, 2));
+    console.log(JSON.stringify({ scanned, skipped, findings: Object.fromEntries(findings) }, null, 2));
     process.exit(0);
 }
 
@@ -161,6 +220,13 @@ for (const [id, items] of [...findings].sort(([a], [b]) => order(a) - order(b)))
         out.push(`- ${item.file}:${item.line}${kind}: \`${item.text.slice(0, 160)}\``);
     }
     out.push('');
+}
+if (skipped.length > 0) {
+    out.push(`## Not scanned (${skipped.length})`, '', 'Scan these separately if they contain app code (for example a vendored gizmo or a copied helper):', '');
+    out.push(...skipped.map(path => {
+        const shown = relative(process.cwd(), resolve(path));
+        return `- ${shown.startsWith('..') ? resolve(path) : shown}`;
+    }), '');
 }
 out.push(total === 0 ? 'No findings.' : `${total} findings in total.`);
 console.log(out.join('\n'));
