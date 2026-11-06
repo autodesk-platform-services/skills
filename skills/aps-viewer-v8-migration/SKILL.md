@@ -156,8 +156,10 @@ When v8 reaches general availability, it moves to `/viewers/8.*`; check the curr
 - **`setThemingColor` survives.** For "tint by status/value", prefer it over material changes.
 - **Forcing WebGL is a deprecated escape hatch**, never a fix. If you use it, label it as such and
   leave a TODO.
-- **LAN IPs over plain HTTP (`http://192.168.x.x`) and `file://` are not secure contexts**, so v8
-  won't run there. `http://localhost` is fine.
+- **Secure-context availability depends on the host.** LAN IPs over plain HTTP
+  (`http://192.168.x.x`) are not secure contexts; top-level `file://` may be treated as trustworthy.
+  Check `window.isSecureContext` and whether `navigator.gpu` is available in the actual host, and
+  assess Viewer local-model-loading support separately. `http://localhost` is a secure context.
 - **Docs inconsistency:** the Scene API blog post uses `viewer.layers.create(...)`; the reference
   documents `viewer.getRenderLayers()`. Use `getRenderLayers()`.
 

@@ -35,7 +35,9 @@ Medium risk:
 - **Bounds and extents**: per-object or per-selection bounding boxes built from `getFragmentList().getWorldBounds`, `fragList.boxes`, or `enumNodeFragments`. Documented instance and model bounds replace them. (P19)
 - **Performance tuning**: `MemoryLimited` config, LME toggles, WebGL context-loss handlers become no-ops or break. (P13, P14)
 - **Initialization and hosting**: new script URLs, secure context, deprecated feature flags, mandatory Initializer. (P1, P15, P18)
-- **Offline and on-prem viewing**: `file://` and plain-HTTP intranet hosting aren't secure contexts. (P15, P18)
+- **Offline and on-prem viewing**: plain-HTTP intranet hosting isn't a secure context; top-level
+  `file://` may be treated as trustworthy. Check `window.isSecureContext` and `navigator.gpu` in the
+  actual host, separately from Viewer local-model-loading support. (P15, P18)
 - **Embedding in host platforms**: iframes in SharePoint/Dynamics, Power BI visuals, WebView2, Capacitor/Ionic custom schemes may not provide a secure context or WebGPU. TypeScript typings that pull in three.js types break. (P15, P5)
 - **Multi-model alignment**: load options (`placementTransform`, `globalOffset`) aren't called out as changing, but alignment code that builds `THREE.Matrix4` or moves fragments through `viewer.impl` breaks. (P5, P8)
 - **2D sheets and 2D↔3D mapping**: helpers that take or return `THREE.Matrix4`/`THREE.Vector3`, and line-weight/color hacks via internal 2D materials. (P5, P17)
