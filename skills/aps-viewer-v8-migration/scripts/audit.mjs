@@ -144,7 +144,6 @@ if (roots.length === 0) {
 
 const findings = new Map(patterns.map(pattern => [pattern.id, []]));
 findings.set('P18', []);
-const initializerSites = [];
 let scanned = 0;
 
 for (const root of roots) {
@@ -164,6 +163,7 @@ for (const root of roots) {
             continue;
         }
         const hasInitializer = initializerCall.test(text);
+        const initializerSites = [];
         for (const line of initializerCallbackLines(text)) {
             findings.get('P18').push({ file: location, line, kind: 'callback form, use await', text: lines[line - 1].trim() });
         }
@@ -188,13 +188,13 @@ for (const root of roots) {
                 initializerSites.push({ file: location, line: index + 1, text: line.trim() });
             }
         });
-    }
-}
-
-// The Initializer must run once per page; more than one call site needs a check.
-if (initializerSites.length > 1) {
-    for (const site of initializerSites) {
-        findings.get('P18').push({ ...site, kind: `${initializerSites.length} Initializer call sites, run once per page` });
+        // The Initializer must run once per page. Separate pages may each call it once, so only
+        // repeated calls within one file are flagged.
+        if (initializerSites.length > 1) {
+            for (const site of initializerSites) {
+                findings.get('P18').push({ ...site, kind: `${initializerSites.length} Initializer calls in file, run once per page` });
+            }
+        }
     }
 }
 

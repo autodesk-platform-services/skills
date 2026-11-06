@@ -89,8 +89,9 @@ It also reports:
 
 - `three`, `@types/three`, `forge-viewer`, and `@types/forge-viewer` dependencies in `package.json`,
   code that subclasses three.js types, and libraries that need a global `THREE` (P5).
-- Initializer calls that pass a callback, more than one Initializer call site, and the legacy
-  `env: 'AutodeskProduction'` (P18).
+- Initializer calls that pass a callback, files that call the Initializer more than once, and the
+  legacy `env: 'AutodeskProduction'` (P18). Calls spread across files aren't flagged, because
+  separate pages may each call it once; check that each page runs it once.
 - Folders it skipped (`vendor`, `dist`, `build`, …) that contain scripts, and minified or
   oversized files. If app code lives there (a vendored gizmo, a copied helper), scan it explicitly.
 

@@ -138,7 +138,8 @@ Rules:
   `viewer.loadDocumentNode(...)` (or `viewer.loadModel(...)`) on the existing viewer.
 - `viewer.start()` returns a non-zero code when the viewer can't be created; check it.
 - The audit flags files that construct a viewer with no Initializer call (`no Initializer in file`),
-  files that have both (`check ordering`), Initializer calls that pass a callback, more than one
-  Initializer call site, and the legacy env. For `check ordering`, trace that every construction
-  site runs after the Initializer resolves. For a single call site, still check that it doesn't
-  sit in a function that runs per model load.
+  files that have both (`check ordering`), Initializer calls that pass a callback, files that
+  call the Initializer more than once, and the legacy env. For `check ordering`, trace that every
+  construction site runs after the Initializer resolves. Calls in different files aren't flagged;
+  check that each page runs exactly one, and that no call sits in a function that runs per model
+  load.
