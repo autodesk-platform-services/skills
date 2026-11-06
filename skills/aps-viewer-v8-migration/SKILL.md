@@ -112,7 +112,7 @@ Apply the patterns. Read only the reference files that the audit findings point 
 | `references/patterns/loading-and-init.md` | P1 script URLs, P15 non-secure origins, P18 viewer construction |
 | `references/patterns/scene-content.md` | P2 overlays, P3 `impl.scene`/`sceneAfter`, P4 SceneBuilder, P5 `THREE.*` types |
 | `references/patterns/materials-and-appearance.md` | P6 custom materials/shaders, P7 recoloring loaded elements |
-| `references/patterns/loaded-models.md` | P7–P9 fragment access, P13 streaming/LME, P17 internals and removed APIs |
+| `references/patterns/loaded-models.md` | P7–P9 fragment access, P13 streaming/LME, P17 internals and removed APIs, P19 bounding boxes |
 | `references/patterns/camera-and-picking.md` | P10 camera, P11 raycasting and projection |
 | `references/patterns/extensions-and-renderer.md` | P12 DataVisualization, P14 WebGL code, P16 retired extensions |
 | `references/breaking-changes.md` | You need the full list of v8 breaking changes, or the user asks "what changed" |

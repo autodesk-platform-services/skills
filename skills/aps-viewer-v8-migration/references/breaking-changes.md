@@ -32,6 +32,7 @@ Medium risk:
 
 - **Camera and navigation**: code that mutates `camera.position`, calls three.js camera methods, or uses `viewer.impl.camera`. Documented `Navigation`/`getState`/`restoreState` paths are fine. (P10)
 - **Raycasting and spatial queries**: `THREE.Raycaster`, `viewer.impl.rayIntersect`, `viewportToRay`, `vector.project(camera)`. (P11)
+- **Bounds and extents**: per-object or per-selection bounding boxes built from `getFragmentList().getWorldBounds`, `fragList.boxes`, or `enumNodeFragments`. Documented instance and model bounds replace them. (P19)
 - **Performance tuning**: `MemoryLimited` config, LME toggles, WebGL context-loss handlers become no-ops or break. (P13, P14)
 - **Initialization and hosting**: new script URLs, secure context, deprecated feature flags, mandatory Initializer. (P1, P15, P18)
 - **Offline and on-prem viewing**: `file://` and plain-HTTP intranet hosting aren't secure contexts. (P15, P18)
