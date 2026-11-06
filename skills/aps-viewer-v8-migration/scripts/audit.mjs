@@ -84,7 +84,7 @@ for (const root of roots) {
         scanned++;
         const text = readFileSync(file, 'utf8');
         const lines = text.split(/\r?\n/);
-        const location = relative(statSync(root).isFile() ? process.cwd() : root, file) || file;
+        const location = relative(process.cwd(), file) || file;
         lines.forEach((line, index) => {
             for (const pattern of patterns) {
                 if (pattern.classify) {
