@@ -69,7 +69,7 @@ APIs deprecated in v7 are removed or renamed for internal use in v8. Every hit i
 | `model.getInstanceTree()` | `await model.getObjectTreeAsync()` |
 | `model.getProperties(dbId, cb)` | `await model.getPropertiesAsync(dbId)` |
 | `model.getBulkProperties(...)` | `await model.getBulkPropertiesAsync(...)` |
-| `model.getPropertySet(...)` | `await model.getPropertySetAsync(...)` |
+| `model.getPropertySet(...)` | `await model.getPropertySet(...)` |
 | `model.getExternalIdMapping(cb)` | `await model.getExternalIdMappingAsync()` |
 | `model.search(...)` / `viewer.search(...)` | `await model.searchAsync(...)` |
 | `viewer.overlays`, `OverlayManager` | Render layers (`scene-content.md`, P2) |

@@ -15,7 +15,7 @@ v7 Scene API developer guide and reference.
 | B7 | A secure context is required: HTTPS or `localhost`. | P15 |
 | B8 | Retired documented extensions: `Autodesk.FullScreen`, `Autodesk.BIM360.GestureDocumentNavigation`, `Autodesk.NPR`, `Autodesk.Viewing.SceneBuilder`, `Autodesk.DataVisualization`. Retired undocumented extensions: Beeline, CAM360, DataPersistence, DOF, Fusion360.Simulation, MemoryLimited, MemoryLimitedDebug, MSDF, OMV, PropertyQuery, PropertySearch, Scalaris, ScalarisSimulation, ReCap. | P12, P16 |
 | B9 | Preview load URL: `7.*/viewer3D-v8.min.js` and `style-v8.min.css`. GA moves to `/viewers/8.*`. | P1 |
-| B10 | APIs deprecated in v7 are removed or renamed for internal use, not just unsupported: `Model.getInstanceTree`, the sync property methods (`getProperties`, `getBulkProperties`, `getPropertySet`, `getExternalIdMapping`, `search`, …), `OverlayManager`, `Viewer3D.scene`/`sceneAfter`. Existing calls break. | P13, P17 |
+| B10 | APIs deprecated in v7 are removed or renamed for internal use, not just unsupported: `Model.getInstanceTree`, the sync property methods (`getProperties`, `getBulkProperties`, `getExternalIdMapping`, `search`, …), `OverlayManager`, `Viewer3D.scene`/`sceneAfter`. Existing calls break. | P13, P17 |
 | B11 | `Autodesk.Viewing.Initializer` must be called, and its callback reached, before instantiating `Viewer3D`/`GuiViewer3D`. v7 didn't require it. | P18 |
 
 ## What usually breaks, by feature area

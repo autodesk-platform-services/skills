@@ -29,7 +29,7 @@ const patterns = [
     { id: 'P15', file: 'loading-and-init.md', title: 'Non-secure origin', regex: /\bhttp:\/\/(?!localhost\b|127\.0\.0\.1\b|\[::1\])[\w.-]+|\bfile:\/\// },
     { id: 'P16', file: 'extensions-and-renderer.md', title: 'Retired extension', regex: /Autodesk\.(FullScreen|NPR|BIM360\.GestureDocumentNavigation|Beeline|CAM360|DataPersistence|DOF|Fusion360\.Simulation|MemoryLimitedDebug|MSDF|OMV|PropertyQuery|PropertySearch|Scalaris|ScalarisSimulation|ReCap)\b/ },
     { id: 'P19', file: 'loaded-models.md', title: 'Bounding boxes from fragments/instances', regex: /getWorldBounds|getOriginalWorldBounds|getNodeBox|getBoundingBox\(|getFuzzyBox|fragList\.boxes|\.boxes\b/ },
-    { id: 'P17', file: 'loaded-models.md', title: 'Internal or removed API', regex: /viewer\.impl\.|NOP_VIEWER|getGeometryList|getInstanceTree\(|getProperties2?\(|getBulkProperties2?\(|getPropertySet\(|getExternalIdMapping\(|getLayerToNodeIdMapping\(|\b(model|viewer)\w*\.search\(/ },
+    { id: 'P17', file: 'loaded-models.md', title: 'Internal or removed API', regex: /viewer\.impl\.|NOP_VIEWER|getGeometryList|getInstanceTree\(|getProperties2?\(|getBulkProperties2?\(|getExternalIdMapping\(|getLayerToNodeIdMapping\(|\b(model|viewer)\w*\.search\(/ },
 ];
 
 const viewerConstruction = /new\s+(Autodesk\.Viewing|av)\.(GuiViewer3D|Viewer3D)\s*\(/;
