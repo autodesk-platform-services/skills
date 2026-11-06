@@ -49,7 +49,9 @@ Rules:
 - One `Model` per layer. Keep the returned instance id for later edits: `setTransformWorld`,
   `setMaterial`, `setVisibilityState`, `remove`.
 - `removeMesh` → `instances.remove(id)`; `removeScene` → `layers.remove('markers')`;
-  `clearScene` → `layers.clear('markers')`.
+  `clearScene` → remove all instances from the layer's model while keeping the model attached.
+  `layers.clear('markers')` also detaches the models; if used, create and attach a fresh model
+  before adding new content.
 - Render layers draw everything every frame. If the overlay held lots of geometry, move it to the
   main scene (P4).
 
