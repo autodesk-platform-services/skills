@@ -34,7 +34,19 @@ viewer.refresh(true);
 
 For a single instance without hierarchy, `instances.setTransformWorld(id, matrix)` is enough. This
 covers explode-style tools, configurators, and 4D/phasing animations. For multi-model alignment,
-prefer the documented load options (`placementTransform`, `globalOffset`) over moving instances.
+prefer the documented load options (`placementTransform`, `applyScaling`, and `globalOffset` with
+Aggregated View) over moving instances.
+
+Moving a group: either call `group.updateTransformWorld(true)` on the moved node (as the v8
+"Wrapping Loaded Instances" guide does), or `markDirty()` each changed node and call
+`root.updateTransformWorld()` once per frame (the "Detach and Reattach" guide). Use the second form
+when many nodes change per frame.
+
+**Usage hints.** Loaded models default to `avs.UsageHint.Static`: after instances are added,
+removed, moved, or get new geometry, the model is optimized again, and added instances appear only
+once that's done. For animations and other frequent changes, call
+`instances.setUsageHint(avs.UsageHint.Dynamic)` first. Programmatically created models default to
+`Dynamic`. `add` and `remove` work on loaded models only after they've finished loading.
 
 ## P9. Fragment-level visibility → instance visibility states
 
@@ -69,14 +81,43 @@ APIs deprecated in v7 are removed or renamed for internal use in v8. Every hit i
 | `model.getInstanceTree()` | `await model.getObjectTreeAsync()` |
 | `model.getProperties(dbId, cb)` | `await model.getPropertiesAsync(dbId)` |
 | `model.getBulkProperties(...)` | `await model.getBulkPropertiesAsync(...)` |
-| `model.getPropertySet(...)` | `await model.getPropertySet(...)` |
+| `model.getPropertySet(dbIds, ...)` | `await model.getPropertySetAsync(dbIds, options)` |
 | `model.getExternalIdMapping(cb)` | `await model.getExternalIdMappingAsync()` |
+| `model.getLayerToNodeIdMapping(cb)` | `await model.getLayerToNodeIdMappingAsync()` |
+| `model.getObjectTree(cb)` (callbacks) | `await model.getObjectTreeAsync()` |
 | `model.search(...)` / `viewer.search(...)` | `await model.searchAsync(...)` |
-| `viewer.overlays`, `OverlayManager` | Render layers (`scene-content.md`, P2) |
+| `viewer.getProperties(dbId, cb)` | `await model.getPropertiesAsync(dbId)` on the model |
+| `viewer.getObjectTree(cb)` | `await model.getObjectTreeAsync()` on the model |
+| `viewer.overlays`, `viewer.layers`, `OverlayManager` | Render layers via `viewer.getRenderLayers()` (`scene-content.md`, P2) |
 | `viewer.impl.scene`/`sceneAfter` | Main-pass render layers (`scene-content.md`, P3) |
+| `viewer.prefs` | `viewer.getPreferences()` (`get`, `set`, `addListeners`, `removeListeners`) |
+| `GuiViewer3D#setPropertiesOnSelect(value)` | `viewer.getPreferences().set(av.Prefs.OPEN_PROPERTIES_ON_SELECT, value)` |
+| `av.Private.Prefs`, `Prefs2D`, `Prefs3D`, `Preferences` | `av.Prefs`, `av.Prefs2D`, `av.Prefs3D`, `av.Preferences` |
+| `av.Private.PropDbLoader`, `av.Private.PropertyDatabase` | `av.PropDbLoader`, `av.PropertyDatabase` |
+| `av.Private.VIEW_TYPES`, `av.Private.FPS_TARGET_MODES` | `av.VIEW_TYPES`, `av.FPS_TARGET_MODES` |
+| `av.UnifiedCamera` | `av.Camera` (`camera-and-picking.md`, P10) |
+| `viewer.searchText` | Removed. Drop the feature. |
+| `instances.getCount()` | `instances.getMaxIndex()` (highest instance id; doesn't decrease on `remove`) |
 
 Check the exact `*Async` signatures (argument order, options objects) in the reference with the
 `aps-docs-portal` skill before rewriting calls; they're not always a 1:1 callback-to-promise swap.
+When an `*Async` method rejects, the reason is always an `Error`, so replace error callbacks with
+`try/catch` and read `err.message`.
+
+Other members of `Autodesk.Viewing.Private` aren't documented in v8 (the namespace has no reference
+page). Treat any remaining `av.Private.*` use as internal: map it to a documented member or report it.
+
+Behavior changes with no rename (review the calling code, don't just search and replace):
+
+- `viewer.setAggregateSelection(selection)` now **replaces** the selection: models omitted from the
+  array are deselected. Code that called it once per model to add to the selection must pass all
+  models in one call.
+- Preferences (`Prefs`, `Prefs2D`, `Prefs3D`) and `VIEW_TYPES`, `FPS_TARGET_MODES`, `AttributeType`
+  are frozen. Code that adds or overwrites keys on them throws in strict mode.
+- `Preferences#removeListeners(name)` without callbacks no longer removes all listeners of the
+  preference. Pass the callbacks you registered.
+- Dithered ghosting is the default, and the WebGL-only "Ground Reflection" setting is removed.
+  Screenshot-based tests of ghosted views will differ.
 
 Anything else on `viewer.impl`, `model.getFragmentList()`, `model.getGeometryList()`,
 `viewer.impl.matman()`, `viewer.impl.getFragmentProxy`, `NOP_VIEWER`, underscore-prefixed members,

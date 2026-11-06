@@ -12,12 +12,15 @@ APIs. List each one in the "Gaps" section of the migration plan with:
 | Gap | Closest documented option |
 | --- | --- |
 | Custom shaders (`ShaderMaterial`, `RawShaderMaterial`, `onBeforeCompile`) | Built-in materials with `vertexColors`, textures, or `setThemingColor`. There are no plans for custom materials at the moment. |
-| Dashed or textured lines, lines thicker than 1 px | `LineMaterial` (1 px, solid). `viewer.setScreenSpaceLineWidth()` exists but requires WebGPU; check the reference before relying on it. |
+| Dashed or textured lines, lines thicker than 1 px | `LineMaterial` (always 1 px, solid). For thick lines, build thin quads or tubes as triangle geometry. `viewer.setScreenSpaceLineWidth(true)` only keeps line width constant while zooming (WebGPU only); it doesn't make lines thicker. |
 | Gradient heatmaps / surface shading (DataVisualization) | Flat `setThemingColor` per room or element. Heatmap support is planned, with no published date. |
 | Arbitrary-ray intersection (not from a screen point) | None. `viewer.hitTest(x, y)` covers screen-space picking only. |
 | AR/VR/WebXR | None. |
 | WebGL context access, custom post-processing passes | None. Use `viewer.getScreenShot` for image export. |
+| Changing parameters of materials that came from a loaded model | None. `getMaterial()` returns an opaque `avs.InternalMaterial`; replace it with a new built-in material instead. |
+| `viewer.searchText` (property panel highlighting of the last search) | None. Removed in v8. |
 | `Autodesk.NPR` (non-photorealistic rendering) | `viewer.setDisplayEdges(true)` with a light preset and background. |
 | `Autodesk.BIM360.GestureDocumentNavigation` | A custom `ToolInterface` that handles gestures. |
 | Third-party three.js renderers in the viewer scene (Potree, geo-three, map tiles) | Rebuild the content as Scene API geometry (P4/P5), or render it in a separate canvas. |
 | Undocumented extensions (Beeline, CAM360, DataPersistence, DOF, Fusion360.Simulation, MSDF, OMV, PropertyQuery, PropertySearch, Scalaris, ScalarisSimulation, ReCap, MemoryLimited, MemoryLimitedDebug) | None. Recommend removing the dependent feature. |
+| `Autodesk.GoHome`, `Autodesk.ViewerSettings` (not in the v8 reference) | `viewer.fitToView()`/`restoreState()` for home; the built-in settings panel or `viewer.getPreferences()` for settings. |

@@ -6,8 +6,8 @@ description: >
   switching to viewer3D-v8.min.js or /viewers/8.*. Covers three.js removal, viewer.overlays and
   SceneBuilder replacement with the Scene API and render layers, custom materials, fragment and
   viewer.impl internals, camera and raycasting, Autodesk.DataVisualization and other retired
-  extensions, Large Model Experience streaming, WebGPU, secure-context hosting, and the mandatory
-  Initializer call.
+  extensions, ES6-class extensions, removed preferences and Private APIs, Large Model Experience
+  streaming, WebGPU, secure-context hosting, and the mandatory Initializer promise.
 metadata:
   author: Developer Advocates @ Autodesk
   version: "0.1"
@@ -21,7 +21,8 @@ compatibility: Requires Node.js 18+ to run the audit script.
 
 Port an existing APS Viewer v7 app to v8. v8 removes three.js from the public API, replaces
 overlays and SceneBuilder with the Scene API, renders with WebGPU, always streams models (Large
-Model Experience), requires a secure context, and removes APIs that were deprecated in v7.
+Model Experience), requires a secure context and ES6-class extensions, and removes APIs that were
+deprecated in v7.
 
 Conventions in this skill and its references: `av = Autodesk.Viewing`,
 `avs = Autodesk.Viewing.Scene`, `avm = Autodesk.Viewing.Math`.
@@ -30,18 +31,26 @@ Conventions in this skill and its references: `av = Autodesk.Viewing`,
 
 - **Port against v7 first, then switch the script URL.** All v8 code in this skill also runs on
   v7 with the Scene API enabled. Make the app work on v7 + Scene API, verify, and only then load
-  v8. This keeps a working baseline and isolates renderer/loading issues from API issues.
-- **Use only documented APIs.** Only write code that uses members listed in the Viewer reference
-  guide. In v8, `viewer.impl` and other internals can change without notice. When unsure whether a
-  member exists or what its signature is, look it up with the `aps-docs-portal` skill instead of
-  guessing.
+  v8. This keeps a working baseline and isolates renderer/loading issues from API issues. Several
+  replacements (`getRenderLayers()`, `getPreferences()`, the Initializer promise, the `Camera`
+  class) first shipped in v7.131.0, so apps pinned to an older version (for example
+  `/viewers/7.89/`) must move to `7.*` (or 7.131 or later) first.
+- **Use only documented APIs.** Only write code that uses members listed in the
+  [v8 reference](https://aps.autodesk.com/en/docs/viewer/v8/reference/) (docs config
+  `viewer_v8`). In v8, `viewer.impl`, `Autodesk.Viewing.Private`, and other internals can change
+  without notice. When unsure whether a member exists or what its signature is, look it up with the
+  `aps-docs-portal` skill instead of guessing.
+- **The v8 reference and changelog win.** When a blog post, a sample, or a v8 guide page disagrees
+  with the v8 reference or the `v8:` entries in the v7 changelog (7.131.0 and later), follow the
+  reference and the changelog.
 - **Report gaps, don't invent workarounds.** Some v7 capabilities have no v8 equivalent (custom
   shaders, WebXR, arbitrary-ray intersection, gradient heatmaps). List them in the gaps section of
   the report (see `references/gaps.md`). Never reach back into internals or write a fake shader
   workaround to close a gap.
 - **Every v7-deprecated API is a required change.** `getInstanceTree`, the sync property methods,
-  `viewer.overlays`/`OverlayManager`, and `viewer.impl.scene`/`sceneAfter` are removed or renamed
-  for internal use in v8. Existing calls break; treat them as errors, not warnings.
+  `viewer.overlays`/`viewer.layers`/`OverlayManager`, `viewer.impl.scene`/`sceneAfter`,
+  `viewer.prefs`, and `Autodesk.Viewing.Private.*` are removed or renamed for internal use in v8.
+  Existing calls break; treat them as errors, not warnings.
 
 ## Workflow
 
@@ -69,8 +78,10 @@ post-process the output. The regexes are broad on purpose: read every hit in con
 false positives (for example, `.project(` on an unrelated object, or an `http://` URL that is not
 the viewer's host).
 
-Also check `package.json` for a separately installed `three` package or `@types/three`, and for
-`forge-viewer` typings that pull three.js types into TypeScript code.
+It also reports `three`, `@types/three`, `forge-viewer`, and `@types/forge-viewer` dependencies in
+`package.json` (under P5), and Initializer calls that still pass a callback (under P18). Regexes
+work line by line, so multi-line calls (an Initializer callback on the next line, a constructor
+split across lines) can slip through; skim the entry point and every extension file yourself.
 
 ### 2. Plan
 
@@ -99,9 +110,11 @@ Wait for the user to confirm the plan, especially the gaps, before you change co
 - Keep the viewer script and stylesheet URLs in a single config constant, so switching to the v8
   preview, and later to the `8.*` GA path, is one edit.
 - If any code touches loaded models through the Scene API (patterns P7–P9), enable
-  `av.PublicFeatureFlags.SceneAPI` on v7 **before** calling the Initializer.
-- Make sure `av.Initializer` runs once per page and that every viewer is created after its
-  callback (P18). v7 tolerated skipping it; v8 doesn't.
+  `av.PublicFeatureFlags.SceneAPI` on v7 **before** calling the Initializer. Remove the flag again
+  when you switch to v8; it doesn't exist there.
+- Make sure `av.Initializer` runs once per page, is awaited (the callback form is deprecated), and
+  that every viewer is created after it resolves (P18). v7 tolerated skipping it; v8 throws.
+- Convert ES5-style extensions and viewer subclasses to ES6 classes (P20). Both forms run on v7.
 
 ### 4. Port
 
@@ -112,9 +125,9 @@ Apply the patterns. Read only the reference files that the audit findings point 
 | `references/patterns/loading-and-init.md` | P1 script URLs, P15 non-secure origins, P18 viewer construction |
 | `references/patterns/scene-content.md` | P2 overlays, P3 `impl.scene`/`sceneAfter`, P4 SceneBuilder, P5 `THREE.*` types |
 | `references/patterns/materials-and-appearance.md` | P6 custom materials/shaders, P7 recoloring loaded elements |
-| `references/patterns/loaded-models.md` | P7–P9 fragment access, P13 streaming/LME, P17 internals and removed APIs, P19 bounding boxes |
+| `references/patterns/loaded-models.md` | P7–P9 fragment access, P13 streaming/LME, P17 internals, removed APIs, preferences, `Private` namespace, and behavior changes, P19 bounding boxes |
 | `references/patterns/camera-and-picking.md` | P10 camera, P11 raycasting and projection |
-| `references/patterns/extensions-and-renderer.md` | P12 DataVisualization, P14 WebGL code, P16 retired extensions |
+| `references/patterns/extensions-and-renderer.md` | P12 DataVisualization, P14 WebGL code, P16 retired extensions, P20 ES5-style extensions and subclasses |
 | `references/breaking-changes.md` | You need the full list of v8 breaking changes, or the user asks "what changed" |
 | `references/gaps.md` | A feature has no documented v8 equivalent |
 
@@ -130,16 +143,24 @@ warnings and errors back. Fix the issues, then repeat. After v7 works, switch th
 <link href="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/style-v8.min.css" rel="stylesheet">
 ```
 
-When v8 reaches general availability, it moves to `/viewers/8.*`; check the current URL with the
-`aps-docs-portal` skill.
+When v8 reaches general availability, it moves to `/viewers/8.*/viewer3D.min.js` (the v8
+getting-started guide already shows that path); check the current URL with the `aps-docs-portal`
+skill. Confirm the loaded version with `LMV_VIEWER_VERSION` in the console.
 
 ## Gotchas
 
-- **Every Scene API mutation needs `viewer.refresh(true)`**; nothing redraws on its own.
+- **Every Scene API mutation needs a refresh**; nothing redraws on its own. Use
+  `viewer.refresh(true)` for main-scene and main-pass changes, `viewer.refresh(false)` when only
+  overlay-layer content changed.
+- **Loaded models optimize after every change.** Their default `UsageHint` is `Static`, so added or
+  moved instances appear only after re-optimization. Call
+  `instances.setUsageHint(avs.UsageHint.Dynamic)` before animating.
 - **Render layers draw everything every frame.** Large custom content belongs in the main scene as
   a dynamic model (P4), not in an overlay layer (P2).
 - **`viewer.showModel(model)` must come before** touching a dynamic model's instances.
 - **Geometries and materials belong to one model.** Clone them before reusing across models.
+  Materials read from a loaded model are opaque `InternalMaterial`s: reusable within that model
+  only, not editable, not cloneable into another model.
 - **`StandardMaterial` needs normals.** Geometry without normals renders incorrectly; use
   `UnlitMaterial` or compute normals.
 - **Don't read typed arrays back after `instances.add()`.** Use `getVertexCount()` and
@@ -154,14 +175,22 @@ When v8 reaches general availability, it moves to `/viewers/8.*`; check the curr
   `GEOMETRY_LOADED_EVENT` timing; apply object-level state by `dbId` and await
   `model.getObjectTreeAsync()`.
 - **`setThemingColor` survives.** For "tint by status/value", prefer it over material changes.
-- **Forcing WebGL is a deprecated escape hatch**, never a fix. If you use it, label it as such and
-  leave a TODO.
+- **WebGL fallback is automatic.** Forcing it with the Initializer option `renderer: 'webgl'` is a
+  deprecated escape hatch, never a fix. If you use it, label it as such and leave a TODO.
 - **Secure-context availability depends on the host.** LAN IPs over plain HTTP
   (`http://192.168.x.x`) are not secure contexts; top-level `file://` may be treated as trustworthy.
   Check `window.isSecureContext` and whether `navigator.gpu` is available in the actual host, and
   assess Viewer local-model-loading support separately. `http://localhost` is a secure context.
-- **Docs inconsistency:** the Scene API blog post uses `viewer.layers.create(...)`; the reference
-  documents `viewer.getRenderLayers()`. Use `getRenderLayers()`.
+- **Docs inconsistencies:**
+  - The Scene API blog post uses `viewer.layers.create(...)`. `viewer.layers` is removed in v8; use
+    `viewer.getRenderLayers()`.
+  - The v8 getting-started page still says "the Viewer has a hard dependency on three.js R71". v8 exposes
+    no three.js types in its public API, so treat this as a leftover. Don't add a `three`
+    dependency.
+  - The v8 "Hello Triangle" guide calls `viewer.getCamera().setView(...)` on the active camera. The
+    `Camera` reference says to prefer `viewer.navigation.setView(...)`; use that.
+  - The getting-started page says to "verify that WebGL support is available" via `viewer.start()`.
+    The return-code check still applies; the renderer is WebGPU with a WebGL fallback.
 
 ## Out of scope
 

@@ -19,12 +19,17 @@ Rules:
 
 - Camera properties are read-only. Writes go through `viewer.navigation` (`setView`,
   `setPivotPoint`, …) or `viewer.setFOV`.
-- Check whether `Navigation.setView` takes positional arguments or a view-params object in the
-  current reference before writing the call.
-- For "what-if" math (frustum tests, projecting points), use `cam.clone()` and
-  `updateCameraMatrices()` on the clone.
+- `Navigation.setView(from, to, up)` takes positional `avm.Vector3` arguments. `setPosition`,
+  `setTarget`, `setPivotPoint`, and `fitBounds` are also on `Navigation`.
+- Writing to `viewer.getCamera().position` etc. "is not guaranteed to take effect", per the
+  reference. Note: the v8 "Hello Triangle" guide calls `viewer.getCamera().setView({...})` on the
+  active camera; the `Camera` reference says to prefer `Navigation#setView`. Follow the reference.
+- For "what-if" math (frustum tests, projecting points), use `cam.clone()`, then
+  `clone.setView(viewParams)` or `updateCameraMatrices()` on the clone. Changes to a clone don't
+  affect the viewer. `camera.pixelsPerUnitAtDistance(dist)` replaces manual screen-size math.
 - Saved views: keep `viewer.getState()`/`viewer.restoreState()`.
-- `Autodesk.Viewing.UnifiedCamera` is deprecated; use `Autodesk.Viewing.Camera`.
+- `Autodesk.Viewing.UnifiedCamera` is removed in v8; use `Autodesk.Viewing.Camera`. `AggregatedView#setCamera`
+  accepts a `Camera` or a `ViewParams` object.
 - Replace `viewer.impl.camera` with `viewer.getCamera()`.
 
 ## P11. Raycasting, hit-testing, and screen projection
@@ -33,7 +38,7 @@ Rules:
 | --- | --- |
 | `new THREE.Raycaster(...)`, `viewer.impl.viewportToRay`, `viewer.impl.rayIntersect` | `viewer.hitTest(x, y, ignoreTransparent)` → `Intersection` |
 | `viewer.impl.hitTest(...)` | `viewer.hitTest(...)` or `viewer.clientToWorld(clientX, clientY, ignoreTransparent)` |
-| `point.clone().project(camera)` + manual NDC→pixel conversion | `viewer.worldToClient(point)` (check that it's in the v8 reference) |
+| `point.clone().project(camera)` + manual NDC→pixel conversion | `viewer.worldToClient(point, camera)` (camera optional, defaults to the viewer's camera) |
 | Picking custom overlay meshes via raycaster | Give instances a `dbId` (`scene-content.md`, P4) so built-in selection and hit-testing return them |
 
 - Arbitrary-ray intersection (a ray that doesn't start at a screen point, for example "find

@@ -1,6 +1,6 @@
 # APS Viewer v8 Migration Skill
 
-Migrate [APS Viewer](https://aps.autodesk.com/viewer-sdk) apps from v7 to v8. The skill audits your code for v7 APIs that break in v8, proposes a migration plan, and ports the code pattern by pattern: three.js types and overlays to the Scene API and render layers, custom materials to built-in materials, `viewer.impl` and fragment internals to documented APIs, `Autodesk.DataVisualization` and other retired extensions to v8 alternatives, and initialization and hosting to v8 requirements (mandatory `Initializer`, secure context, WebGPU).
+Migrate [APS Viewer](https://aps.autodesk.com/viewer-sdk) apps from v7 to v8. The skill audits your code for v7 APIs that break in v8, proposes a migration plan, and ports the code pattern by pattern: three.js types and overlays to the Scene API and render layers, custom materials to built-in materials, `viewer.impl`, fragment internals, `viewer.prefs`, and `Autodesk.Viewing.Private` to documented APIs, ES5-style extensions to ES6 classes, `Autodesk.DataVisualization` and other retired extensions to v8 alternatives, and initialization and hosting to v8 requirements (awaited `Initializer`, secure context, WebGPU, WebSockets).
 
 The skill ports against v7 with the Scene API enabled first, then switches to the v8 script URL, and reports features that have no documented v8 equivalent instead of working around them with internals.
 

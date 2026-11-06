@@ -7,7 +7,9 @@ Custom content lives in a `Model` (a "dynamic model" when you create it with `ne
 transform, ..., dbId)` adds an instance and returns its id, which replaces the v7 mesh reference.
 You place a model either in the **main scene** (`viewer.showModel(model)`, rendered progressively
 like a loaded design) or in a **render layer** (`viewer.getRenderLayers()`, drawn every frame).
-Every mutation needs `viewer.refresh(true)`.
+Nothing redraws on its own after a mutation: call `viewer.refresh(true)` when main-scene or
+main-pass content changed. When only overlay-layer content changed (for example, an animated
+marker), `viewer.refresh(false)` redraws just the overlays, which is much cheaper on heavy scenes.
 
 Choose:
 
@@ -37,7 +39,7 @@ layers.addModel(markers, 'markers');
 
 const instances = markers.getInstances();
 const id = instances.add(
-    avs.GeometryFactory.createBox(10, 10, 10),   // check the createBox signature in the reference
+    avs.GeometryFactory.createBox(10, 10, 10),   // (width, height, depth, generateEdges)
     new avs.StandardMaterial({ color: 0xff0000 }),
     new avm.Matrix4().makeTranslation(0, 0, 10)
 );
@@ -54,6 +56,12 @@ Rules:
   before adding new content.
 - Render layers draw everything every frame. If the overlay held lots of geometry, move it to the
   main scene (P4).
+- Overlay layers are refreshed with every main pass but can also be refreshed alone with
+  `viewer.refresh(false)`; use that for overlay animation loops.
+- Layer options: `renderTarget`, `renderOrder`, `visible`, and `clearDepthAfter` (main target only).
+  Toggle a layer with `layers.setLayerOptions(id, { visible: false })` instead of removing it.
+- `viewer.layers` is removed in v8. The Scene API blog post uses `viewer.layers.create(...)`; use
+  `viewer.getRenderLayers()`.
 
 ## P3. `viewer.impl.scene`/`sceneAfter` → main-pass render layer
 
@@ -90,10 +98,22 @@ viewer.refresh(true);
 
 - Main-scene models render progressively, like loaded designs, so this is the right home for large
   custom content.
-- A `dbId` passed to `add()` affects selection and isolation only if that `dbId` exists in the
-  model's object tree. The recommended way to give a dynamic model an object tree isn't confirmed
-  yet; if the user needs custom content to be clickable, look up the current guidance with the
-  `aps-docs-portal` skill and report it as a gap if there's none.
+- A `dbId` passed to `add()` affects selection, isolation, and theming only if that `dbId` exists
+  in the model's object tree. A dynamic model has no object tree by default. Build one with
+  `ObjectTreeBuilder` and install it with `model.setObjectTree(tree)`:
+
+  ```js
+  const builder = new av.ObjectTreeBuilder(1, 'Equipment');   // root dbId must be a non-zero int32
+  const pumpId = builder.createNode(undefined, builder.getRootId(), 'Pump 1');   // dbId auto-allocated
+  model.setObjectTree(builder.build());
+  instances.add(pumpGeometry, pumpMaterial, pumpTransform, undefined, pumpId);
+  // or link an existing instance: instances.setDbId(instanceId, pumpId)
+  ```
+
+  `setObjectTree` replaces any existing tree and fires `OBJECT_TREE_CREATED_EVENT`. Instance
+  membership comes from the instances' `dbId`s, not from the tree. Check the `NODE_TYPE` values and
+  whether the property panel shows anything for these objects (there's no property database) in
+  the reference.
 
 ## P5. three.js types → Scene API and math types
 
@@ -114,6 +134,13 @@ Rules:
 - `StandardMaterial` requires normals.
 - Don't read typed arrays back after `add()`; use `getVertexCount()` and `getPosition(i, target)`.
 - Geometries and materials belong to one model; clone before reusing across models.
+- `GeometryFactory` creators: `createSphere(radius, widthSegments, heightSegments)`,
+  `createBox(width, height, depth, generateEdges)`, `createCylinder(radius, height, radialSegments,
+  generateEdges)`, `createCone(radiusTop, radiusBottom, height, radialSegments, generateEdges)`,
+  `createPlane(width, height, widthSegments, heightSegments, generateEdges)`.
+- Hierarchies authored in code: `new avs.InstanceNode3D(geometry, material)` creates an instance
+  node you can `add()` to any `Node3D` under `instances.getSceneGraph(true)`. Node transforms are
+  relative to the parent; `remove()` then `add()` reparents a subtree without recreating it.
 - `avm` types keep three.js-compatible method names, but those of r71 (bundled with v7), not current
   three.js. Code written against the bundled `THREE` migrates by renaming the namespace. Code
   written against newer three.js (helpers copied from current docs, a separately installed `three`
