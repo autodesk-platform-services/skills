@@ -44,8 +44,10 @@ try {
 
 - Development: `http://localhost` works; LAN IPs (`http://192.168.x.x`) and custom hostnames over
   plain HTTP don't.
-- Electron and other desktop apps loading from `file://`: serve the app from a privileged custom
-  protocol or a local `http://localhost` server.
+- Electron and other desktop apps loading from `file://`: check `window.isSecureContext` and
+  `navigator.gpu` in the actual host; top-level `file://` may be trustworthy. Assess Viewer
+  local-model-loading support separately. If the host isn't a secure context, serve the app from
+  a privileged custom protocol or a local `http://localhost` server.
 - Embedded hosts (SharePoint/Dynamics iframes, Power BI visuals, WebView2, Capacitor/Ionic custom
   schemes): ask the user to check `window.isSecureContext` and `navigator.gpu` inside the host.
 - On-prem and offline deployments: serve the intranet app over HTTPS.
