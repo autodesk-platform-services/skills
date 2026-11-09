@@ -1,4 +1,4 @@
-# Extensions and renderer-specific code (P12, P14, P16, P20)
+# Extensions and renderer-specific code (P12, P14, P16, P20, P22)
 
 ## P12. `Autodesk.DataVisualization` replacement
 
@@ -80,6 +80,20 @@ fullscreenButton.onClick = () => {
 document.addEventListener('fullscreenchange', () => viewer.resize());
 ```
 
+Built-in extensions that older apps load, and where they stand in the v8 reference:
+
+| Extension | Status in v8 | What to do |
+| --- | --- | --- |
+| `Autodesk.DocumentBrowser` | Documented | Keep. |
+| Explode, BimWalk, FusionOrbit, Geolocation, ViewCubeUi, ZoomWindow, LayerManager, ModelStructure, NavTools, PDF, Popout, PropertiesManager, RollCamera, Hyperlink, Animation, Section, Snapping, Wireframes, Minimap, Measure, SplitScreen, Edit2D, MarkupsCore, glTF, CrossFadeEffects | Documented (class pages in the reference) | Keep. Port any subclass or three.js use (P5, P20). |
+| `Autodesk.DiffTool` | In the v8 guide ("Using DiffTool"), no reference class | Keep; ask the user to test it. |
+| `Autodesk.Viewing.WebVR`, `webVR` | Removed in v7 (changelog) | Delete the load call (also when commented out) and report VR as unsupported. `experimental: ['webVR_orbitModel']` goes with it. |
+| `Autodesk.AEC.LevelsExtension`, `FloorSelector` | Not in the v8 reference | Ask the user to test early. Code that reads a private `_floorSelectorFilter` has no documented replacement; report it. |
+| `Autodesk.BIM360.Extension.PushPin` (the `loadItems` shape) | Not in the v8 reference | No documented replacement. Rebuild pushpins as HTML markers or overlay instances (P12 and P2), or report the gap. |
+| `Autodesk.Viewing.MarkupsGui` | Not in the v8 reference (only `MarkupsCore`) | Ask the user to test the markup UI early. |
+| `VisualClusters`, `StringExtractor`, `BoxSelection`, other `Autodesk.*` IDs not listed above | Not in the v8 reference | Treat as unverified: ask the user to test on the v8 preview. If one fails to load, report it with the extension ID. |
+| `Autodesk.Snapping` / `Snapper` internals (`Snapping.Snapper` members beyond the documented ones) | Documented class only | Check each member used against the reference. |
+
 Undocumented retired extensions: report them and recommend removing the dependent feature (see
 `../gaps.md`).
 
@@ -133,3 +147,37 @@ Rules:
 - Transpiled code: make sure the build doesn't down-level classes to ES5 functions (for example,
   Babel `preset-env` targeting old browsers, or TypeScript `target: "ES5"`). Target ES2015 or later.
 - Both forms run on v7, so port extensions to classes while you're still on v7.
+
+## P22. UI subclasses and viewer DOM coupling
+
+**Subclassing.** The v8 reference documents `Autodesk.Viewing.UI.PropertyPanel` (its `options` are
+"currently unused"), `ObjectContextMenu`, `Tree`, `DataTable`, `DockingPanel`, `Button`,
+`ComboButton`, `ControlGroup`, `ToolBar`, `ModelStructurePanel`, and `SettingsPanel`. It doesn't
+document these, and each is a gap to report when the app subclasses or calls it:
+
+- `ViewerPropertyPanel` (and `Autodesk.Viewing.Extensions.ViewerPropertyPanel`), including
+  `setAggregatedProperties.call(this, ...)`, `requestProperties`, `this.tree.createElement_`, and
+  `myRootContainer`. Property-panel customization has no documented pattern. Closest: extend
+  `PropertyPanel`, and use the Properties Manager extension (`Autodesk.PropertiesManager`) for
+  the stock panel. Keep the customization on v7 until the user confirms behavior on v8.
+- `ViewerObjectContextMenu` (use `ObjectContextMenu`), `UI.TreeDelegate`, and
+  `registerContextMenuCallback` (check it against `ObjectContextMenu` and the Viewer3D reference).
+- Protected `DockingPanel` members (`createTitleBar`, `initializeMoveHandlers`, `createFooter`,
+  `createScrollContainer`, `dockRight`): only `initialize` is documented. Builds that call them
+  work only if the member survives; ask the user to test and report it.
+
+Port these to ES6 classes (P20) in the same pass.
+
+**DOM and CSS coupling.** Don't depend on the viewer's own DOM or class names. Selectors such as
+`.adsk-viewing-viewer`, `docking-panel-container-solid-color-a`, `.adsk-button-icon`,
+`button.container.children[0]`, jQuery injection into the viewer's inner elements, and direct
+edits of `viewer.canvas.width` or `viewer.clientContainer` can change without notice.
+
+- Add your own elements to the container element you passed to the viewer constructor,
+  and size the viewer by resizing that element, then call `viewer.resize()`.
+- Style your own classes. For toolbar buttons use the `Button` API (`setIcon`, `setToolTip`,
+  `onClick`) instead of reaching into `button.container`.
+- Writing to the canvas size directly (the "resizer" extension pattern) isn't a documented way to
+  size the viewer; replace it with a container resize plus `viewer.resize()`.
+- Where a style override is unavoidable, scope it to your own wrapper and ask the user to check it
+  on v8.

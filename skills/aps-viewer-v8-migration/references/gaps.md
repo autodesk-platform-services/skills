@@ -25,6 +25,13 @@ APIs. List each one in the "Gaps" section of the migration plan with:
 | `Autodesk.BIM360.GestureDocumentNavigation` | A custom `ToolInterface` that handles gestures. |
 | Third-party three.js renderers in the viewer scene (Potree, geo-three, map tiles) | Rebuild the content as Scene API geometry (P4/P5), or render it in a separate canvas. |
 | Undocumented extensions (Beeline, CAM360, DataPersistence, DOF, Fusion360.Simulation, MSDF, OMV, PropertyQuery, PropertySearch, Scalaris, ScalarisSimulation, ReCap, MemoryLimited, MemoryLimitedDebug) | None. Recommend removing the dependent feature. |
+| Multi-hit picking (`impl.castRayViewport`) and hit-testing restricted to some models (`impl.hitTest(..., modelIds)`) | `viewer.hitTest(x, y)` returns the nearest hit only. For model filtering, hiding the other models with `viewer.hideModel` while picking, to be tested. |
+| Hover-only highlight (`impl.highlightObjectNode`, `clearHighlight`) | `viewer.select(...)` or `setThemingColor`. |
+| `Autodesk.BIM360.Extension.PushPin` | HTML markers or overlay instances (`patterns/extensions-and-renderer.md`, P12). |
+| `ViewerPropertyPanel` customization, protected `DockingPanel` members | A subclass of the documented `PropertyPanel`; the Properties Manager extension for the stock panel. |
+| Camera transition tuning (`autocam.shotParams`), `navigation.toOrthographic`, `viewer.utilities.transitionView` | `viewer.restoreState`, `viewer.fitToView()`. |
+| Load options `skipPropertyDb`, `extendStringsFetching`, `preserveView`, `useConsolidation`, `useADP`; Initializer options `isAEC`, `document`; `doc.downloadAecModelData` | None documented. |
+| Official TypeScript typings for v8 | None named in the docs. Local minimal declarations. |
 | `Autodesk.GoHome`, `Autodesk.ViewerSettings` (not in the v8 reference) | `viewer.fitToView()`/`restoreState()` for home; the built-in settings panel or `viewer.getPreferences()` for settings. |
 
 ## Known issues to report

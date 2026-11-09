@@ -45,6 +45,17 @@ Camera write-backs and helpers that aren't in the v8 `Navigation` reference:
 | `viewer.utilities.fitToView(...)` | `viewer.fitToView(objectIds, model, immediate)` |
 | `viewer.utilities.setPivotPoint(...)` | `navigation.setPivotPoint(point)` |
 
+More camera, navigation, and utility members seen in older apps:
+
+| v7 | v8 |
+| --- | --- |
+| `viewer.utilities.getHitPoint(x, y)` | `viewer.clientToWorld(x, y, ignoreTransparent)` or `viewer.hitTest(x, y)` |
+| `viewer.utilities.transitionView(...)`, `viewer.utilities.goHome()` | `ViewingUtilities` is documented, but `viewer.utilities` isn't on the `Viewer3D` page. Prefer `viewer.restoreState(state)` (animated unless told otherwise) or `viewer.fitToView()`; if the user needs the transition itself, report it. |
+| `viewer.autocam.shotParams.destinationPercent`, `.duration` | No documented equivalent. Remove the tuning and accept the default transition. |
+| `navigation.toOrthographic()`, `toPerspective()` | Not on the `Navigation` reference. Report as a gap, or use a saved state with `isPerspective` set. |
+| `navigation.fitBounds(immediate, THREE.Box3)` | `navigation.fitBounds(immediate, bounds, reorient, force)` with an `avm.Box3` |
+| `viewer.setActiveNavigationTool('bimwalk')` | Same call, documented. The BimWalk extension (`Autodesk.BimWalk`) is documented too. |
+
 ## P11. Raycasting, hit-testing, and screen projection
 
 | v7 | v8 |
@@ -54,6 +65,12 @@ Camera write-backs and helpers that aren't in the v8 `Navigation` reference:
 | `point.clone().project(camera)` + manual NDC→pixel conversion | `viewer.worldToClient(point, camera)` (camera optional, defaults to the viewer's camera) |
 | Picking custom overlay meshes via raycaster | Give instances a `dbId` (`scene-content.md`, P4) so built-in selection and hit-testing return them |
 
+- Multi-hit picking (every surface along a ray, `impl.castRayViewport` with `clientToViewport`) and
+  hit-testing restricted to some models (`impl.hitTest(x, y, true, null, modelIds)`) have no
+  documented v8 equivalent. `viewer.hitTest` returns the nearest hit only. Report both as gaps
+  (`../gaps.md`). The closest documented option for model filtering is hiding the other models
+  with `viewer.hideModel(modelId)` while picking; ask the user to test whether hidden models are
+  skipped.
 - Arbitrary-ray intersection (a ray that doesn't start at a screen point, for example "find
   neighboring elements" or sensor placement) has no documented v8 API. Report it as a gap; don't
   reach into internals.

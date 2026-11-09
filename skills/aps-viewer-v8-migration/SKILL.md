@@ -10,7 +10,7 @@ description: >
   streaming, WebGPU, secure-context hosting, and the mandatory Initializer promise.
 metadata:
   author: Developer Advocates @ Autodesk
-  version: "0.2"
+  version: "0.3"
   products: "APS, Viewer"
   technologies: "JavaScript, TypeScript, WebGPU, three.js"
   industries: "AEC, Manufacturing, Media & Entertainment"
@@ -35,7 +35,8 @@ Conventions in this skill and its references: `av = Autodesk.Viewing`,
   stand-in, not the v8 runtime: math types, loading, and renderer behavior differ, so verify on v8
   too. Several replacements (`getRenderLayers()`, `getPreferences()`, the Initializer promise, the
   `Camera` class) first shipped in v7.131.0, so apps pinned to an older version (for example
-  `/viewers/7.89/`) must move to `7.*` (or 7.131 or later) first.
+  `/viewers/7.89/`, `6.*`, or the `viewingservice/v1/...?v=` form) must move to `7.*` (or 7.131 or
+  later) first; see the legacy baseline table in `loading-and-init.md` (P1).
 - **Alternative: go straight to v8.** Offer this in the plan when the user doesn't need the app to
   keep running on v7, or when v7 + Scene API behaves differently from v8 for the code being ported.
   Switch the URLs first (step 6), then port and verify on v8 only.
@@ -87,11 +88,15 @@ the viewer's host).
 
 It also reports:
 
-- `three`, `@types/three`, `forge-viewer`, and `@types/forge-viewer` dependencies in `package.json`,
+- `three`, `@types/three`, `forge-viewer`, and `@types/forge-viewer` dependencies in `package.json`
+  and `/// <reference types="forge-viewer" />` lines,
   code that subclasses three.js types, and libraries that need a global `THREE` (P5).
 - Initializer calls that pass a callback, files that call the Initializer more than once, and the
   legacy `env: 'AutodeskProduction'` (P18). Calls spread across files aren't flagged, because
   separate pages may each call it once; check that each page runs it once.
+- Scripts loaded from non-APS hosts that may touch `Autodesk.Viewing` (third-party or
+  closed-source extensions, utility libraries, vendored gizmos). The audit can't read their code;
+  list each one in the plan and verify v8 compatibility with its owner (see step 2).
 - Folders it skipped (`vendor`, `dist`, `build`, …) that contain scripts, and minified or
   oversized files. If app code lives there (a vendored gizmo, a copied helper), scan it explicitly.
 
@@ -121,6 +126,10 @@ Path: v7 first (default) / v8 only
 - <undocumented extension / internal API>: recommend removing <feature>
 ```
 
+Include a short "Scripts to verify with their owners" list for every non-APS script that touches
+`Autodesk.Viewing` (for example a vendored `TransformControls.js` or Potree, a company-hosted
+`...Extension.js`, a `forge-viewer-utils` helper). You can't port code you can't read; say so.
+
 Wait for the user to confirm the plan, especially the gaps, before you change code.
 
 ### 3. Prepare v7
@@ -142,12 +151,12 @@ Apply the patterns. Read only the reference files that the audit findings point 
 
 | Read | When the audit reports |
 | --- | --- |
-| `references/patterns/loading-and-init.md` | P1 script URLs, P15 non-secure origins, P18 viewer construction |
+| `references/patterns/loading-and-init.md` | P1 script URLs and legacy baselines, Initializer options (regions, tokens), P15 non-secure origins and embedded hosts, P18 viewer construction, P21 `ViewingApplication`, load options, injected viewer scripts |
 | `references/patterns/scene-content.md` | P2 overlays, P3 `impl.scene`/`sceneAfter`, P4 SceneBuilder, P5 `THREE.*` types |
-| `references/patterns/materials-and-appearance.md` | P6 custom materials/shaders, P7 recoloring loaded elements |
-| `references/patterns/loaded-models.md` | P7–P9 fragment access, P13 streaming/LME, P17 internals, removed APIs, preferences, `Private` namespace, mesh read-back, selection events, and behavior changes, P19 bounding boxes |
-| `references/patterns/camera-and-picking.md` | P10 camera, `autocam`/`utilities`, P11 raycasting, projection, plane picking (`intersectGround`), and `TransformControls` gizmos |
-| `references/patterns/extensions-and-renderer.md` | P12 DataVisualization, P14 WebGL code, P16 retired extensions, P20 ES5-style extensions and subclasses |
+| `references/patterns/materials-and-appearance.md` | P6 custom materials/shaders, P7 recoloring loaded elements, color and vector arguments to viewer methods |
+| `references/patterns/loaded-models.md` | P7–P9 fragment access, P13 streaming/LME, P17 internals, removed APIs, `ObjectTree` methods, model internals, viewer setters, preferences, `Private` namespace, property API variants, mesh read-back, selection events, and behavior changes, P19 bounding boxes |
+| `references/patterns/camera-and-picking.md` | P10 camera, `autocam`/`utilities`, navigation leftovers, P11 raycasting, multi-hit picking, projection, plane picking (`intersectGround`), and `TransformControls` gizmos |
+| `references/patterns/extensions-and-renderer.md` | P12 DataVisualization, P14 WebGL code, P16 retired and unverified built-in extensions, P20 ES5-style extensions and subclasses, P22 property panel/UI subclasses and viewer DOM coupling |
 | `references/breaking-changes.md` | You need the full list of v8 breaking changes, or the user asks "what changed" |
 | `references/gaps.md` | A feature has no documented v8 equivalent |
 
@@ -189,6 +198,8 @@ skill. Confirm the loaded version with `LMV_VIEWER_VERSION` in the console.
   with v7). For example, `avm.Box3` has `getCenter`, `getSize`, and `intersectsBox`, not `center`,
   `size`, and `isIntersectionBox`. Some r71 names still work but log deprecation warnings. Renaming
   the namespace isn't enough; apply the renames in `scene-content.md` (P5).
+- **Initialize before touching `Autodesk`.** When the app injects the viewer script itself, wait for
+  its `load` event first (`loading-and-init.md`, P21). Read `window.Autodesk` only after that.
 - **Colors: pass hex numbers** (`0xff5522`) in material options and `setColor`. The reference
   documents `new avs.Color(colorOrRed, green, blue)`, but a migration reported
   `undefined is not a constructor` at runtime; `avm.Color` doesn't exist. Use `avs.Color` only if

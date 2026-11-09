@@ -18,6 +18,15 @@ reported missing at runtime (see the gotchas in `SKILL.md`). `opacity` below 1 n
 
 Never invent a shader workaround. List the gap (see `../gaps.md`) and move on.
 
+### Color and vector arguments to viewer methods
+
+| Method | Argument on v8 |
+| --- | --- |
+| `viewer.setThemingColor(dbId, color, model, recursive)` | `avm.Vector4(r, g, b, intensity)`, all in [0, 1] (the reference says `Vector4`). Replace `new THREE.Vector4(...)`. |
+| `viewer.setSelectionColor(color, selectionType)` | The reference still says `THREE.Color`, which v8 doesn't expose. Leave the call in place, wrap it in a try/catch, and ask the user to test which argument works (a hex number, or `{ r, g, b }`). Report the docs gap. |
+| Section planes, `setCutPlanes` | `avm.Vector4` (P5) |
+| Text hit-testing helpers using `THREE.Vector2`/`Box2` | `avm.Vector2`/`avm.Box2` |
+
 ## P7. Recoloring or re-materialing loaded elements
 
 Decision rule: if the goal is "tint by status/value", use

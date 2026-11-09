@@ -161,8 +161,13 @@ Rules:
   in a separate three.js copy and convert its output to `avs.BufferGeometry`.
 - Custom loaders (glTF via three.js loaders, point clouds) should parse into `avs.BufferGeometry`
   and add instances to a dynamic model (P4), not into an overlay.
-- TypeScript: remove `@types/three` imports from viewer-facing code and type against the viewer's
-  own typings.
+- TypeScript: remove `@types/three` imports from viewer-facing code. The v8 docs don't name a
+  typings package, and `@types/forge-viewer` describes the v7 API (including three.js types), so
+  it won't cover the Scene API or `avm` types. Don't pull in `three` to satisfy it. Remove
+  `/// <reference types="forge-viewer" />` lines and the package once the app stops using v7 types,
+  declare minimal local types for the v8 members you call (the geometry-exporter sample ships its
+  own `scene-api.d.ts`), and ask Autodesk about official typings. Public props typed as
+  `THREE.Camera` (for example in a React component) become `Autodesk.Viewing.Camera`.
 
 ### Math method renames (r71 → v8)
 

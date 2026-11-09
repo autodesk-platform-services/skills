@@ -121,6 +121,19 @@ APIs deprecated in v7 are removed or renamed for internal use in v8. Every hit i
 | `viewer.impl.camera`, `viewer.autocam`, `viewer.utilities` | `camera-and-picking.md` (P10) |
 | `viewer.impl.canvas`, `viewer.impl.getCanvasBoundingClientRect()` | `getBoundingClientRect()` on the container element you passed to the viewer constructor |
 | `viewer.impl.glrenderer()` | None (P14) |
+| `new Autodesk.Viewing.Private.GuiViewer3D(...)` | `new Autodesk.Viewing.GuiViewer3D(...)` (documented). Common in older samples. |
+| `Private.logger`, `Private.analytics` | Drop. Not documented; use `console` or the app's own logging. |
+| `Private.OptionSlider`, `Private.OptionDropDown`, `Private.formatValueWithUnits` | Not documented. Build the control with the documented `UI` classes or plain DOM; format units with `model.getDisplayUnit()` and your own formatter. Report it if the user needs the helper itself. |
+| `model.getProperties2(dbId, ...)` / `getBulkProperties2(...)` (and the `PropDbLoader` versions) | `await model.getPropertiesAsync(dbId, options)` / `getBulkPropertiesAsync(dbIds, options)`. The `*2` variants only skipped `externalId`; the async methods take `needsExternalId` (properties) and `propFilter` (bulk) options. |
+| `model.getBulkProperties(ids, ['externalId'], cb)` (array filter) | `await model.getBulkPropertiesAsync(ids, { propFilter: ['externalId'] })`. `propFilter: null` means no filtering. |
+| `model.getPropertyDb().executeUserFunction(fn, userData)` | Same call. `PropDbLoader#executeUserFunction(code, userData)` is documented in v8; the function runs on the worker against the `PropertyDatabase`. |
+| `propertyDb.getObjectIds(...)`, `getObjectProperties(...)` | Not documented on `PropDbLoader`/`PropertyDatabase`. Use `model.searchAsync` and `getPropertiesAsync`. |
+| `viewer.model` | Not documented. Use `viewer.getFirstModel()`, `viewer.getAllModels()`, or the model from the event or `loadDocumentNode` result. |
+| `viewer.impl.visibilityManager.aggregateIsolate(...)` | `viewer.isolate(ids, model)` per model, or `viewer.setAggregateIsolation(...)` / `getAggregateIsolation()` |
+| `viewer.getAggregateHiddenNodes()` | Same name, documented. Returns `{ model, ids }[]`. |
+| `viewer.impl.unloadModel(model)`, `viewer.impl.findModel(id)` | `viewer.unloadModel(model)`; find a model with `viewer.getAllModels()` |
+| `viewer.impl.worldToClient(point)` | `viewer.worldToClient(point, camera?)` |
+| `viewer.impl.layers.showAllLayers()` and layer hacks | `viewer.setLayerVisible(nodes, visible, isolate)` / `isLayerVisible(node)` (layer nodes, not dbIds); the Layer Manager extension for UI |
 
 Check the exact `*Async` signatures (argument order, options objects) in the reference with the
 `aps-docs-portal` skill before rewriting calls; they're not always a 1:1 callback-to-promise swap.
@@ -147,6 +160,79 @@ Anything else on `viewer.impl`, `model.getFragmentList()`, `model.getGeometryLis
 or members that aren't in the reference guide: map it to a documented equivalent, or report "no
 documented equivalent" in the plan. `NOP_VIEWER` is a debugging global; pass the viewer instance
 explicitly instead.
+
+### ObjectTree methods and "all dbIds" recipes
+
+The v8 `ObjectTree` reference documents `getRootId`, `getNodeName`, `getNodeParentId`,
+`getChildCount`, `getInstanceCount`, `getNodeType`, `isNodeHidden`, `isNodeSelectable`,
+`isNodeVisibleLocked`, `isNodeExplodeLocked`, `getNodeBox`, `enumNodeChildren`,
+`enumNodeInstances`, and `search(text)`.
+
+| v7 `InstanceTree` | v8 `ObjectTree` |
+| --- | --- |
+| `getRootId`, `getNodeName`, `getNodeParentId`, `getChildCount`, `getNodeType`, `isNodeHidden`, `getNodeBox` | Same names |
+| `enumNodeChildren(id, cb, recursive)` | Same name |
+| `enumNodeFragments(id, cb, recursive)` | `enumNodeInstances(id, cb, recursive)` (P8, P19) |
+| `isNodeOff(dbId)` | Not documented. Use `viewer.getAggregateHiddenNodes()` or `viewer.isNodeVisible(dbId, model)`. |
+| `nodeAccess.dbIdToIndex`, `nodeAccess.*` | Not documented. Don't read it; the recipes below cover the common uses. |
+
+```js
+const tree = await model.getObjectTreeAsync();
+
+// All dbIds (including the root and group nodes)
+const all = [];
+tree.enumNodeChildren(tree.getRootId(), (dbId) => { all.push(dbId); }, true);
+all.push(tree.getRootId());
+
+// Leaf nodes only (usually the objects with geometry)
+const leaves = all.filter((dbId) => tree.getChildCount(dbId) === 0);
+```
+
+Don't return a truthy value from an enumeration callback unless you want to stop the loop (the
+reference says a truthy result interrupts it); the braces above avoid an accidental `push` return.
+
+### Model internals
+
+| v7 | v8 |
+| --- | --- |
+| `model.getData().urn`, `model.myData.urn`, `model.loader.svfUrn`, `getSeedUrn()` | `model.getDocumentNode()?.urn()` (`BubbleNode#urn`, `lineageUrn`). For models loaded by path there's no bubble; keep the URL you passed to `loadModel`. |
+| `model.getData().loadOptions.bubbleNode` | `model.getDocumentNode()` |
+| `model.getData().globalOffset`, `.modelSpaceBBox` | Not documented. For aligning models, use `placementTransform`/`applyScaling` (P21) and `model.getBoundingBox(ignoreTransform)` (P19). `MultipleModelUtil`-style helpers that copy `globalOffset` between models need a rewrite. |
+| `model.getData().getPDF()` | Not documented. Report it. |
+| `model.getPlacementTransform()` / `setPlacementTransform(m)` (or editing `elements[12]` directly) | Not documented on `Model`. Set `placementTransform` in the load options, or move instances (P8). |
+| `model.getDisplayUnit()` | Same name |
+| `model.getData()` | Documented, but returns an opaque `Object`. Don't read members from it. |
+
+`viewer.model` is not documented; see the row in the P17 table.
+
+### Visibility, highlight, and click internals
+
+- `viewer.impl.highlightObjectNode(...)`, `viewer.impl.clearHighlight()`: no documented
+  equivalent. Closest: `viewer.select(dbIds, model)` (shows selection color) or
+  `setThemingColor`. Report as a gap if the app needs a hover-only highlight.
+- Monkey-patching `viewer.clickHandler.handleSingleClick`: use `viewer.setCanvasClickBehavior(...)`
+  / `setClickConfig(...)` for the documented click options, or a `ToolInterface` for custom
+  handling.
+- `viewer.impl.fragments.fragId2dbId`, `model.getFragmentMap`, raw `fragments.boxes`: fragments
+  aren't a v8 concept. Map between instances and `dbId`s with `tree.enumNodeInstances` and
+  `instances.getDbId(id)`.
+
+### Viewer settings and lifecycle
+
+Documented on `Viewer3D` in v8: `setQualityLevel(useSAO, useFXAA)`, `setSwapBlackAndWhite`,
+`setEnvMapBackground`, `setGhosting`, `setDisplayEdges`, `setGroundShadow*`, `setLightPreset`,
+`setBackgroundColor`, `setTheme`, `setProgressiveRendering`, `setOptimizeNavigation`,
+`setScreenSpaceLineWidth` (WebGPU only), `tearDown`, and `setUp`. Keep them.
+
+Not documented in v8, or removed with the "Ground Reflection" setting: `setScreenMode` on
+the viewer, `showModelStructurePanel` (use the Model Structure extension), and
+`Private.Prefs3D.GROUND_REFLECTION` (removed with the Prefs rename above). `setGroundReflection`,
+`setGroundReflectionAlpha`, and `setGroundReflectionColor` are still on the reference page even
+though the setting is removed; treat them as no-ops and don't rely on them (B13).
+
+`viewer.restoreState(state)` with a state saved on v7 may carry render options (tone mapping,
+`renderOptions`, or a `seedURN` from another model) that mean nothing to the WebGPU renderer. Test
+restoring saved states early, and re-save them from v8 where they matter.
 
 ### Reading a loaded element's mesh
 
