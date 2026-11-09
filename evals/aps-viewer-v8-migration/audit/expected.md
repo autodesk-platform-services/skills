@@ -2,7 +2,7 @@
 
 Scanned 5 files.
 
-## P1: v7 viewer script/stylesheet URL, removed feature flags → references/patterns/loading-and-init.md (3)
+## P1: v7 or older viewer script/stylesheet URL (legacy forms, pinned versions), removed feature flags → references/patterns/loading-and-init.md (3)
 
 - index.html:4: `<link rel="stylesheet" href="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/style.min.css">`
 - index.html:5: `<script src="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/viewer3D.min.js"></script>`
@@ -60,7 +60,7 @@ Scanned 5 files.
 
 - index.html:6: `<script src="http://intranet.example.com/models/config.js"></script>`
 
-## P16: Retired extension → references/patterns/extensions-and-renderer.md (1)
+## P16: Retired or unverified extension → references/patterns/extensions-and-renderer.md (1)
 
 - src/main.js:9: `viewer.loadExtension('Autodesk.ViewerSettings');`
 
