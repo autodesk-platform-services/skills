@@ -77,6 +77,7 @@ npx skills add autodesk-platform-services/skills --project --skill <skill-name>
 | [`acad-dotnet`](skills/acad-dotnet/) | Scaffold and develop AutoCAD 2027 .NET plugins (AutoCAD, Civil 3D, Plant 3D) targeting .NET 10 / x64. Covers csproj patterns, bundle packaging, desktop testing, and Design Automation deployment. |
 | [`aps-docs-portal`](skills/aps-docs-portal/) | Navigate the APS documentation portal — decode glossary terms, index TOC JSON trees, extract content from static HTML pages, and build valid portal links. |
 | [`aps-mcp-server-gen`](skills/aps-mcp-server-gen/) | Scaffold a custom MCP (Model Context Protocol) server that integrates with APS. Supports Node.js/TypeScript, .NET/C#, and Python. |
+| [`aps-viewer-v8-migration`](skills/aps-viewer-v8-migration/) | Migrate APS Viewer apps from v7 to v8 — audit for breaking changes, then port three.js overlays, SceneBuilder, custom materials, internals, and retired extensions to the Scene API and documented APIs. |
 | [`flow-ptr-app`](skills/flow-ptr-app/) | Guide for developing Flow Production Tracking (FPTR) / ShotGrid Toolkit apps following a spec-driven lifecycle — capture intent, write and validate a spec, plan, implement, verify, release, and maintain. |
 
 ## Contributing

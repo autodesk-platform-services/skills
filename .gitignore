@@ -4,3 +4,6 @@ Thumbs.db
 **/obj/
 **/bin/
 /evals/**/results/
+
+# Internal review notes for the viewer engineering team (not published)
+/skills/*/review/

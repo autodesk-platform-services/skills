@@ -103,6 +103,7 @@ Use the source table below to pick the TOC(s) to open. For example:
 | `tokenflex_v1` | Token Flex Usage Data API |
 | `vaultdataapi_v2` | Vault Data API |
 | `viewer_v7` | Viewer |
+| `viewer_v8` | Viewer v8 |
 | `webhooks_v1` | Webhooks API |
 
 **Portal URL ↔ source ID:** a portal URL `https://aps.autodesk.com/en/docs/{api}/{version}/…` always belongs to source ID `{api}_{version}` (e.g. `/en/docs/acc/v1/…` → `acc_v1`).
