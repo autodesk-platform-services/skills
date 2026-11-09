@@ -9,7 +9,7 @@ class MyExtension extends av.Extension {
 }
 av.theExtensionManager.registerExtension('MyExtension', MyExtension);
 
-await av.Initializer(options);
+// Initialization is covered by main.js in this combined audit fixture.
 const prefs = viewer.getPreferences();
 const tree = await model.getObjectTreeAsync();
 const props = await model.getPropertySetAsync([1, 2]);
