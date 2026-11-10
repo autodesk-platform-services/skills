@@ -78,6 +78,7 @@ npx skills add autodesk-platform-services/skills --project --skill <skill-name>
 | [`aps-docs-portal`](skills/aps-docs-portal/) | Navigate the APS documentation portal — decode glossary terms, index TOC JSON trees, extract content from static HTML pages, and build valid portal links. |
 | [`aps-mcp-server-gen`](skills/aps-mcp-server-gen/) | Scaffold a custom MCP (Model Context Protocol) server that integrates with APS. Supports Node.js/TypeScript, .NET/C#, and Python. |
 | [`aps-viewer-v8-migration`](skills/aps-viewer-v8-migration/) | Migrate APS Viewer apps from v7 to v8 — audit for breaking changes, then port three.js overlays, SceneBuilder, custom materials, internals, and retired extensions to the Scene API and documented APIs. |
+| [`aps-utilities`](skills/aps-utilities/) | Python utility skills that call APS REST APIs: authentication, OSS buckets and objects, hubs/projects/folders, Model Derivative, Viewer, Design Automation and Manufacturing Data Model. Routes by API family and confirms before any modification. |
 | [`flow-ptr-app`](skills/flow-ptr-app/) | Guide for developing Flow Production Tracking (FPTR) / ShotGrid Toolkit apps following a spec-driven lifecycle — capture intent, write and validate a spec, plan, implement, verify, release, and maintain. |
 
 ## Contributing

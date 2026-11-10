@@ -7,3 +7,9 @@ Thumbs.db
 
 # Internal review notes for the viewer engineering team (not published)
 /skills/*/review/
+
+# APS credentials and cached tokens
+.env
+.aps_tokens.json
+__pycache__/
+*.pyc

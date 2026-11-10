@@ -62,6 +62,17 @@
       "license": "MIT"
     },
     {
+      "name": "aps-utilities",
+      "source": "./skills/aps-utilities",
+      "description": "Python utility skills that call APS REST APIs: authentication, OSS buckets and objects, hubs/projects/folders, Model Derivative, Viewer, Design Automation and Manufacturing Data Model. Routes by API family and confirms before any modification.",
+      "category": "aps",
+      "tags": ["aps", "forge", "python", "oss", "model-derivative", "viewer", "data-management"],
+      "author": { "name": "Autodesk" },
+      "homepage": "https://github.com/autodesk-platform-services/skills/tree/main/skills/aps-utilities",
+      "repository": "https://github.com/autodesk-platform-services/skills",
+      "license": "MIT"
+    },
+    {
       "name": "aps-viewer-v8-migration",
       "source": "./skills/aps-viewer-v8-migration",
       "description": "Migrate APS Viewer apps from v7 to v8 — audit for breaking changes, then port three.js overlays, SceneBuilder, custom materials, internals, and retired extensions to the Scene API and documented APIs.",
