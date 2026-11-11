@@ -66,6 +66,7 @@ updateMarkers();
 | `Autodesk.FullScreen` | Browser Fullscreen API on the viewer container: `viewer.container.requestFullscreen()`, then `viewer.resize()` on `fullscreenchange`. |
 | `Autodesk.BIM360.GestureDocumentNavigation` | None. A custom `ToolInterface` that handles gestures, if needed. |
 | `Autodesk.NPR` | None. Closest: `viewer.setDisplayEdges(true)` with a light preset and background. Report as a gap. |
+| `Autodesk.DWF` | None. The extension isn't available in v8. Delete the load call, and report DWF viewing as unsupported. |
 | `Autodesk.Viewing.SceneBuilder` | `scene-content.md`, P4 |
 | `Autodesk.DataVisualization` | P12 above |
 | `Autodesk.MemoryLimited` | Remove; LME is always on (`loaded-models.md`, P13). |
@@ -99,7 +100,7 @@ Undocumented retired extensions: report them and recommend removing the dependen
 
 Documented in v8: `Autodesk.glTF` ("Loading glTF 2.0 Models" guide), Wireframes, DiffTool, Edit2D,
 Markups, Measure, Section, Snapping, SplitScreen, Minimap, and the other extension classes in the v8
-reference. Not in the v8 reference: DWF and SmartSection. If the app uses an extension that isn't
+reference. Not in the v8 reference: SmartSection. `Autodesk.DWF` is retired (see the table above). If the app uses an extension that isn't
 in the v8 reference, ask the user to test it on the v8 preview early.
 
 ## P20. Custom extensions and viewer subclasses must be ES6 classes

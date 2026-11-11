@@ -23,6 +23,7 @@ APIs. List each one in the "Gaps" section of the migration plan with:
 | `viewer.searchText` (property panel highlighting of the last search) | None. Removed in v8. |
 | `Autodesk.NPR` (non-photorealistic rendering) | `viewer.setDisplayEdges(true)` with a light preset and background. |
 | `Autodesk.BIM360.GestureDocumentNavigation` | A custom `ToolInterface` that handles gestures. |
+| `Autodesk.DWF` (DWF viewing) | None. The extension isn't available in v8. |
 | Third-party three.js renderers in the viewer scene (Potree, geo-three, map tiles) | Rebuild the content as Scene API geometry (P4/P5), or render it in a separate canvas. |
 | Undocumented extensions (Beeline, CAM360, DataPersistence, DOF, Fusion360.Simulation, MSDF, OMV, PropertyQuery, PropertySearch, Scalaris, ScalarisSimulation, ReCap, MemoryLimited, MemoryLimitedDebug) | None. Recommend removing the dependent feature. |
 | Multi-hit picking (`impl.castRayViewport`) and hit-testing restricted to some models (`impl.hitTest(..., modelIds)`) | `viewer.hitTest(x, y)` returns the nearest hit only. For model filtering, hiding the other models with `viewer.hideModel` while picking, to be tested. |
