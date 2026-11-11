@@ -10,7 +10,7 @@ Each skill is a folder inside [`skills/`](skills/) containing a `SKILL.md` file 
 
 ### Agent plugin
 
-This repository is a plugin marketplace called `aps-skills`, with a single plugin, also called `aps-skills`, that bundles all the skills. The same marketplace works with Claude Code, Codex and GitHub Copilot. The repository is also an [Agent Plugin](https://agent-plugins.org) (see [`plugin.json`](plugin.json)), so any client that supports the spec can load the skills from `skills/`.
+This repository is a plugin marketplace called `aps-plugins`, with a single plugin, `aps-skills`, that bundles all the skills. The same marketplace works with Claude Code, Codex and GitHub Copilot. The repository is also an [Agent Plugin](https://agent-plugins.org) (see [`plugin.json`](plugin.json)), so any client that supports the spec can load the skills from `skills/`.
 
 #### Claude Code
 
@@ -20,21 +20,21 @@ See [Discover and install plugins](https://code.claude.com/docs/en/discover-plug
 
 ```bash
 claude plugin marketplace add autodesk-platform-services/skills
-claude plugin install aps-skills@aps-skills
+claude plugin install aps-skills@aps-plugins
 ```
 
 **From an existing Claude Code session:** run these commands, then pick an installation scope when prompted:
 
 ```
 /plugin marketplace add autodesk-platform-services/skills
-/plugin install aps-skills@aps-skills
+/plugin install aps-skills@aps-plugins
 ```
 
 On Claude Code 2.1.275 or later, you can also do both in one step with `/plugin install aps-skills --marketplace autodesk-platform-services/skills`, or browse and install interactively with `/plugin`.
 
 **From the desktop app:** add the marketplace first, using either of the options above (the desktop app shares settings with the CLI). Then, in a local session in the **Code** tab, click **+** next to the prompt box, select **Add plugins** (or **Plugins** > **Browse plugins**), select `aps-skills`, and choose an installation scope.
 
-To get the latest changes later, run `claude plugin update aps-skills@aps-skills`.
+To get the latest changes later, run `claude plugin update aps-skills@aps-plugins`.
 
 #### Codex
 
@@ -44,14 +44,14 @@ See [Codex plugins](https://developers.openai.com/codex/plugins) for details.
 
 ```bash
 codex plugin marketplace add autodesk-platform-services/skills
-codex plugin add aps-skills@aps-skills
+codex plugin add aps-skills@aps-plugins
 ```
 
-**From an existing Codex session:** run `/plugins`, open the **Add marketplace** tab, and enter `autodesk-platform-services/skills`. Then switch to the `aps-skills` marketplace tab, open the `aps-skills` plugin, and install it.
+**From an existing Codex session:** run `/plugins`, open the **Add marketplace** tab, and enter `autodesk-platform-services/skills`. Then switch to the `aps-plugins` marketplace tab, open the `aps-skills` plugin, and install it.
 
-**From the desktop app:** add the marketplace first, using either of the options above (the desktop app shares configuration with the CLI), and restart the app if it's running. Then open **Plugins**, choose the `aps-skills` marketplace, open the `aps-skills` plugin, and install it.
+**From the desktop app:** add the marketplace first, using either of the options above (the desktop app shares configuration with the CLI), and restart the app if it's running. Then open **Plugins**, choose the `aps-plugins` marketplace, open the `aps-skills` plugin, and install it.
 
-To get the latest changes later, run `codex plugin marketplace upgrade aps-skills`.
+To get the latest changes later, run `codex plugin marketplace upgrade aps-plugins`.
 
 #### GitHub Copilot
 
@@ -61,17 +61,17 @@ See [Finding and installing plugins](https://docs.github.com/en/copilot/how-tos/
 
 ```bash
 copilot plugin marketplace add autodesk-platform-services/skills
-copilot plugin install aps-skills@aps-skills
+copilot plugin install aps-skills@aps-plugins
 ```
 
 **From an existing Copilot CLI session:**
 
 ```
 /plugin marketplace add autodesk-platform-services/skills
-/plugin install aps-skills@aps-skills
+/plugin install aps-skills@aps-plugins
 ```
 
-To get the latest changes later, run `copilot plugin update aps-skills@aps-skills`.
+To get the latest changes later, run `copilot plugin update aps-skills@aps-plugins`.
 
 **From VS Code:** plugins installed with the Copilot CLI show up in VS Code automatically. To install from VS Code instead, make sure [agent plugins](https://code.visualstudio.com/docs/copilot/customization/agent-plugins) are enabled (`chat.plugins.enabled`), and add the repository to the `chat.plugins.marketplaces` setting:
 
