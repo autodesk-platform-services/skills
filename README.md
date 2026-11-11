@@ -6,28 +6,74 @@ https://github.com/user-attachments/assets/7126310c-4ef6-4b21-9b29-a702dfc0a16d
 
 ## Installation
 
-Each skill is a folder inside [`skills/`](skills/) containing a `SKILL.md` file and optional supporting reference documents.
+Each skill is a folder inside [`skills/`](skills/) containing a `SKILL.md` file and optional supporting reference documents. You can install all of them at once as an agent plugin, pick individual skills with `npx skills`, or copy them manually.
 
-### Claude Code plugin marketplace
+### Agent plugin
 
-This repository is also a [Claude Code plugin marketplace](https://code.claude.com/docs/en/plugins/install) called `aps-skills`, with a single plugin, `aps-skills`, that bundles all the skills. Add the marketplace once, then install the plugin:
+This repository is a plugin marketplace called `aps-skills`, with a single plugin, also called `aps-skills`, that bundles all the skills. The same marketplace works with Claude Code, Codex and GitHub Copilot. The repository is also an [Agent Plugin](https://agent-plugins.org) (see [`plugin.json`](plugin.json)), so any client that supports the spec can load the skills from `skills/`.
+
+#### Claude Code
+
+See [Discover and install plugins](https://code.claude.com/docs/en/discover-plugins) for details.
+
+**From the shell:** add the marketplace once, then install the plugin:
 
 ```bash
 claude plugin marketplace add autodesk-platform-services/skills
 claude plugin install aps-skills@aps-skills
 ```
 
-Or do both from inside a Claude Code session:
+**From an existing Claude Code session:** run these commands, then pick an installation scope when prompted:
 
 ```
-/plugin install aps-skills --marketplace autodesk-platform-services/skills
+/plugin marketplace add autodesk-platform-services/skills
+/plugin install aps-skills@aps-skills
 ```
 
-You can also browse and install the plugin interactively with `/plugin`. To get the latest changes later, run `claude plugin update aps-skills@aps-skills`.
+On Claude Code 2.1.275 or later, you can also do both in one step with `/plugin install aps-skills --marketplace autodesk-platform-services/skills`, or browse and install interactively with `/plugin`.
 
-### GitHub Copilot plugin marketplace
+**From the desktop app:** add the marketplace first, using either of the options above (the desktop app shares settings with the CLI). Then, in a local session in the **Code** tab, click **+** next to the prompt box, select **Add plugins** (or **Plugins** > **Browse plugins**), select `aps-skills`, and choose an installation scope.
 
-The same marketplace works with GitHub Copilot. The repository is also an [Agent Plugin](https://agent-plugins.org) (see [`plugin.json`](plugin.json)), so any client that supports the spec can load all the skills from `skills/`. In VS Code, add the repository to the [`chat.plugins.marketplaces`](https://code.visualstudio.com/docs/agent-customization/agent-plugins#_configure-plugin-marketplaces) setting:
+To get the latest changes later, run `claude plugin update aps-skills@aps-skills`.
+
+#### Codex
+
+See [Codex plugins](https://developers.openai.com/codex/plugins) for details.
+
+**From the shell:** add the marketplace once, then install the plugin:
+
+```bash
+codex plugin marketplace add autodesk-platform-services/skills
+codex plugin add aps-skills@aps-skills
+```
+
+**From an existing Codex session:** run `/plugins`, open the **Add marketplace** tab, and enter `autodesk-platform-services/skills`. Then switch to the `aps-skills` marketplace tab, open the `aps-skills` plugin, and install it.
+
+**From the desktop app:** add the marketplace first, using either of the options above (the desktop app shares configuration with the CLI), and restart the app if it's running. Then open **Plugins**, choose the `aps-skills` marketplace, open the `aps-skills` plugin, and install it.
+
+To get the latest changes later, run `codex plugin marketplace upgrade aps-skills`.
+
+#### GitHub Copilot
+
+See [Finding and installing plugins](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-finding-installing) for details.
+
+**From the shell:** add the marketplace once, then install the plugin with the [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli):
+
+```bash
+copilot plugin marketplace add autodesk-platform-services/skills
+copilot plugin install aps-skills@aps-skills
+```
+
+**From an existing Copilot CLI session:**
+
+```
+/plugin marketplace add autodesk-platform-services/skills
+/plugin install aps-skills@aps-skills
+```
+
+To get the latest changes later, run `copilot plugin update aps-skills@aps-skills`.
+
+**From VS Code:** plugins installed with the Copilot CLI show up in VS Code automatically. To install from VS Code instead, make sure [agent plugins](https://code.visualstudio.com/docs/copilot/customization/agent-plugins) are enabled (`chat.plugins.enabled`), and add the repository to the `chat.plugins.marketplaces` setting:
 
 ```json
 "chat.plugins.marketplaces": [
@@ -35,38 +81,47 @@ The same marketplace works with GitHub Copilot. The repository is also an [Agent
 ]
 ```
 
-Then search for `@agentPlugins` in the Extensions view (or run **Chat: Open Customizations** and go to **Plugins** > **Browse Marketplace**), and install the `aps-skills` plugin.
+Then run **Chat: Open Customizations** from the Command Palette, go to **Plugins** > **Browse Marketplace**, and install the `aps-skills` plugin.
 
-With the [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-marketplace), add the marketplace and install the plugin from the terminal:
+### Individual skills with `npx skills`
+
+Use the [skills](https://www.npmjs.com/package/skills) utility to install and manage individual skills for most coding agents, either in the current project or globally:
 
 ```bash
-copilot plugin marketplace add autodesk-platform-services/skills
-copilot plugin install aps-skills@aps-skills
+# List the available skills
+npx skills add autodesk-platform-services/skills --list
+
+# Pick skills and agents interactively, and install them into the current project
+npx skills add autodesk-platform-services/skills
+
+# Install a single skill into the current project
+npx skills add autodesk-platform-services/skills --skill <skill-name>
+
+# Install all skills globally (user-level)
+npx skills add autodesk-platform-services/skills --skill '*' --global
 ```
 
-Plugins installed with the Copilot CLI also show up in VS Code automatically.
+Add `--agent <agent>` (for example, `--agent claude-code`) to skip the agent selection prompt. To get the latest changes later, run `npx skills update`.
 
 ### Manual installation
 
-Clone this repository and copy the skill folder to wherever your AI agent looks for skills. For example, for Claude Code:
+Clone this repository and copy the skill folders you want to wherever your agent looks for skills:
 
 ```bash
 git clone https://github.com/autodesk-platform-services/skills.git
 cd skills
+
+# Claude Code
 cp -r skills/<skill-name> ~/.claude/skills/
+
+# Codex
+cp -r skills/<skill-name> ~/.agents/skills/
+
+# GitHub Copilot
+cp -r skills/<skill-name> ~/.copilot/skills/
 ```
 
-### Automated installation
-
-Use the [skills](https://www.npmjs.com/package/skills) utility to install and manage skills globally or per project:
-
-```bash
-# Install all skills globally (user-level)
-npx skills add autodesk-platform-services/skills --global
-
-# Install a single skill into the current project
-npx skills add autodesk-platform-services/skills --project --skill <skill-name>
-```
+To make a skill available only in a specific project, copy it into the project's `.claude/skills/`, `.agents/skills/` or `.github/skills/` folder instead. Create the target folder first if it doesn't exist.
 
 ## Available Skills
 
