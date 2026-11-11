@@ -34,12 +34,29 @@ async function fetchText(path, optional = false) {
     return response.text();
 }
 
-// Builds the skill list from the plugin marketplace on the main branch, enriched with each
-// skill's SKILL.md frontmatter and README.md title.
+// Lists the skill folders (those with a SKILL.md) under skills/ on the main branch.
+async function listSkillPaths() {
+    const response = await fetch(`https://api.github.com/repos/${REPO}/git/trees/${BRANCH}?recursive=1`);
+    if (!response.ok) {
+        throw new Error(`Failed to list skills: ${response.status}`);
+    }
+    const { tree } = await response.json();
+    return tree
+        .map(entry => entry.path.match(/^skills\/[^/]+(?=\/SKILL\.md$)/)?.[0])
+        .filter(Boolean);
+}
+
+// The repository is a single plugin that bundles every folder under skills/, so the category
+// comes from the skill name prefix (e.g. acad-dotnet -> acad).
+function categoryOf(name) {
+    return { acad: 'autocad', aps: 'aps', flow: 'flow' }[name.split('-')[0]] ?? '';
+}
+
+// Builds the skill list from the skills/ folders on the main branch, using each skill's
+// SKILL.md frontmatter and README.md title.
 export async function loadSkills() {
-    const marketplace = JSON.parse(await fetchText('.claude-plugin/marketplace.json'));
-    const loaded = await Promise.all(marketplace.plugins.map(async plugin => {
-        const path = plugin.source.replace(/^\.\//, '').replace(/\/$/, '');
+    const loaded = await Promise.all((await listSkillPaths()).map(async path => {
+        const name = path.split('/').pop();
         const [skillMd, readme] = await Promise.all([
             fetchText(`${path}/SKILL.md`),
             fetchText(`${path}/README.md`, true),
@@ -48,11 +65,11 @@ export async function loadSkills() {
         const metadata = frontmatter.metadata ?? {};
         const heading = readme.match(/^#\s+(.+)$/m)?.[1];
         return {
-            name: plugin.name,
-            title: heading ? heading.replace(/\s+Skill\b/i, '').trim() : plugin.name,
-            summary: plugin.description ?? frontmatter.description ?? '',
+            name,
+            title: heading ? heading.replace(/\s+Skill\b/i, '').trim() : name,
+            summary: frontmatter.description ?? '',
             description: frontmatter.description ?? '',
-            category: plugin.category ?? '',
+            category: categoryOf(name),
             compatibility: frontmatter.compatibility ?? '',
             ...Object.fromEntries(tagFields.map(field => [field, splitTags(metadata[field])])),
             url: `${REPO_URL}/tree/${BRANCH}/${path}`,

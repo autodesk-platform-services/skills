@@ -1,7 +1,8 @@
 import MiniSearch from 'minisearch';
 import { loadSkills, REPO } from './skills.mjs';
 
-const MARKETPLACE = 'aps-skills';
+const MARKETPLACE = 'aps-plugins';
+const PLUGIN = 'aps-skills';
 const COLLAPSED_FACET_SIZE = 10;
 
 const GROUPS = [
@@ -281,12 +282,16 @@ function renderDetails(skill) {
         <h3>Install</h3>
         <div class="install">
             <div>
-                <p class="install__label">Claude Code</p>
-                ${codeBlock(`claude plugin marketplace add ${REPO}\nclaude plugin install ${skill.name}@${MARKETPLACE}`)}
+                <p class="install__label">Claude Code (installs all skills)</p>
+                ${codeBlock(`claude plugin marketplace add ${REPO}\nclaude plugin install ${PLUGIN}@${MARKETPLACE}`)}
             </div>
             <div>
-                <p class="install__label">GitHub Copilot CLI</p>
-                ${codeBlock(`copilot plugin marketplace add ${REPO}\ncopilot plugin install ${skill.name}@${MARKETPLACE}`)}
+                <p class="install__label">Codex (installs all skills)</p>
+                ${codeBlock(`codex plugin marketplace add ${REPO}\ncodex plugin add ${PLUGIN}@${MARKETPLACE}`)}
+            </div>
+            <div>
+                <p class="install__label">GitHub Copilot CLI (installs all skills)</p>
+                ${codeBlock(`copilot plugin marketplace add ${REPO}\ncopilot plugin install ${PLUGIN}@${MARKETPLACE}`)}
             </div>
             <div>
                 <p class="install__label">Any agent, with the <a href="https://www.npmjs.com/package/skills">skills</a> CLI</p>
