@@ -36,7 +36,7 @@ Conventions in this skill and its references: `av = Autodesk.Viewing`,
   too. Several replacements (`getRenderLayers()`, `getPreferences()`, the Initializer promise, the
   `Camera` class) first shipped in v7.131.0, so apps pinned to an older version (for example
   `/viewers/7.89/`, `6.*`, or the `viewingservice/v1/...?v=` form) must move to `7.*` (or 7.131 or
-  later) first; see the legacy baseline table in `loading-and-init.md` (P1).
+  later) first; see the legacy baseline table in `P01-script-urls-and-baselines.md`.
 - **Alternative: go straight to v8.** Offer this in the plan when the user doesn't need the app to
   keep running on v7, or when v7 + Scene API behaves differently from v8 for the code being ported.
   Switch the URLs first (step 6), then port and verify on v8 only.
@@ -147,16 +147,35 @@ Skip the Scene API flag on the v8-only path; do the rest.
 
 ### 4. Port
 
-Apply the patterns. Read only the reference files that the audit findings point to:
+Apply the patterns. Each pattern has its own file; read only the ones the audit findings point to:
 
 | Read | When the audit reports |
 | --- | --- |
-| `references/patterns/loading-and-init.md` | P1 script URLs and legacy baselines, Initializer options (regions, tokens), P15 non-secure origins and embedded hosts, P18 viewer construction, P21 `ViewingApplication`, load options, injected viewer scripts |
-| `references/patterns/scene-content.md` | P2 overlays, P3 `impl.scene`/`sceneAfter`, P4 SceneBuilder, P5 `THREE.*` types |
-| `references/patterns/materials-and-appearance.md` | P6 custom materials/shaders, P7 recoloring loaded elements, color and vector arguments to viewer methods |
-| `references/patterns/loaded-models.md` | P7–P9 fragment access, P13 streaming/LME, P17 internals, removed APIs, `ObjectTree` methods, model internals, viewer setters, preferences, `Private` namespace, property API variants, mesh read-back, selection events, and behavior changes, P19 bounding boxes |
-| `references/patterns/camera-and-picking.md` | P10 camera, `autocam`/`utilities`, navigation leftovers, P11 raycasting, multi-hit picking, projection, plane picking (`intersectGround`), and `TransformControls` gizmos |
-| `references/patterns/extensions-and-renderer.md` | P12 DataVisualization, P14 WebGL code, P16 retired and unverified built-in extensions, P20 ES5-style extensions and subclasses, P22 property panel/UI subclasses and viewer DOM coupling |
+| `references/patterns/P01-script-urls-and-baselines.md` | P1 script/stylesheet URLs, legacy baselines (`viewers/6.*`, `viewingservice`), feature flags |
+| `references/patterns/_shared-scene-api-primer.md` | Before P2–P4: Scene API concepts and which target to choose |
+| `references/patterns/P02-overlays-to-render-layers.md` | P2 `viewer.overlays`, `viewer.layers`, `OverlayManager` |
+| `references/patterns/P03-impl-scene-to-main-pass-layer.md` | P3 `viewer.impl.scene`/`sceneAfter` |
+| `references/patterns/P04-scenebuilder-to-dynamic-model.md` | P4 `SceneBuilder` |
+| `references/patterns/P05-three-types-to-scene-api.md` | P5 `THREE.*` types, `three` dependencies, v7 typings |
+| `references/patterns/P05-math-method-renames.md` | P5 math types (`avm.*`) and r71 → current method renames |
+| `references/patterns/P06-custom-materials-and-shaders.md` | P6 custom materials/shaders, color and vector arguments to viewer methods |
+| `references/patterns/P07-recolor-loaded-elements.md` | P7 recoloring or re-materialing loaded elements |
+| `references/patterns/P08-move-or-animate-loaded-parts.md` | P8 moving/animating loaded parts (fragment proxies) |
+| `references/patterns/P09-fragment-visibility.md` | P9 fragment-level visibility |
+| `references/patterns/P10-camera.md` | P10 camera, `autocam`/`utilities`, navigation leftovers |
+| `references/patterns/P11-raycasting-and-picking.md` | P11 raycasting, multi-hit picking, projection, plane picking (`intersectGround`) |
+| `references/patterns/P11-transform-controls-gizmos.md` | P11 `TransformControls` gizmos |
+| `references/patterns/P12-datavisualization.md` | P12 `Autodesk.DataVisualization` |
+| `references/patterns/P13-streaming-lme.md` | P13 streaming/LME, `MemoryLimited` |
+| `references/patterns/P14-webgl-specific-code.md` | P14 WebGL-specific code |
+| `references/patterns/P15-secure-context-and-hosting.md` | P15 non-secure origins, embedded hosts |
+| `references/patterns/P16-retired-extensions.md` | P16 retired and unverified built-in extensions |
+| `references/patterns/P17-internal-and-removed-apis.md` | P17 internal/removed API hits; routes to P17a–P17e (properties and object tree, `viewer.impl`, preferences and `Private`, model internals and mesh read-back, selection and behavior changes) |
+| `references/patterns/P18-initializer-and-viewer-creation.md` | P18 Initializer (options, regions, tokens) and viewer construction |
+| `references/patterns/P19-bounding-boxes.md` | P19 bounding boxes from fragment lists |
+| `references/patterns/P20-es6-class-extensions.md` | P20 ES5-style extensions and viewer subclasses |
+| `references/patterns/P21-legacy-loading-and-injected-scripts.md` | P21 `ViewingApplication`, load options, injected viewer scripts |
+| `references/patterns/P22-ui-subclasses-and-dom-coupling.md` | P22 property panel/UI subclasses, viewer DOM coupling |
 | `references/breaking-changes.md` | You need the full list of v8 breaking changes, or the user asks "what changed" |
 | `references/gaps.md` | A feature has no documented v8 equivalent |
 
@@ -197,9 +216,9 @@ skill. Confirm the loaded version with `LMV_VIEWER_VERSION` in the console.
 - **`avm` math types use current three.js method names**, not those of r71 (the version bundled
   with v7). For example, `avm.Box3` has `getCenter`, `getSize`, and `intersectsBox`, not `center`,
   `size`, and `isIntersectionBox`. Some r71 names still work but log deprecation warnings. Renaming
-  the namespace isn't enough; apply the renames in `scene-content.md` (P5).
+  the namespace isn't enough; apply the renames in `P05-math-method-renames.md`.
 - **Initialize before touching `Autodesk`.** When the app injects the viewer script itself, wait for
-  its `load` event first (`loading-and-init.md`, P21). Read `window.Autodesk` only after that.
+  its `load` event first (`P21-legacy-loading-and-injected-scripts.md`). Read `window.Autodesk` only after that.
 - **Colors: pass hex numbers** (`0xff5522`) in material options and `setColor`. The reference
   documents `new avs.Color(colorOrRed, green, blue)`, but a migration reported
   `undefined is not a constructor` at runtime; `avm.Color` doesn't exist. Use `avs.Color` only if

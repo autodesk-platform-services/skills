@@ -14,8 +14,8 @@ APIs. List each one in the "Gaps" section of the migration plan with:
 | Custom shaders (`ShaderMaterial`, `RawShaderMaterial`, `onBeforeCompile`) | Built-in materials with `vertexColors`, textures, or `setThemingColor`. There are no plans for custom materials at the moment. |
 | Dashed or textured lines, lines thicker than 1 px | `LineMaterial` (always 1 px, solid). For thick lines, build thin quads or tubes as triangle geometry. `viewer.setScreenSpaceLineWidth(true)` only keeps line width constant while zooming (WebGPU only); it doesn't make lines thicker. |
 | Gradient heatmaps / surface shading (DataVisualization) | Flat `setThemingColor` per room or element. Heatmap support is planned, with no published date. |
-| Arbitrary-ray intersection (not from a screen point) | None. `viewer.hitTest(x, y)` covers screen-space picking only. For a point on a plane under the cursor, see the plane picking recipe in `patterns/camera-and-picking.md`. |
-| Three.js `TransformControls` gizmos | Handles in an overlay render layer plus a drag on a plane (`patterns/camera-and-picking.md`). |
+| Arbitrary-ray intersection (not from a screen point) | None. `viewer.hitTest(x, y)` covers screen-space picking only. For a point on a plane under the cursor, see the plane picking recipe in `patterns/P11-raycasting-and-picking.md`. |
+| Three.js `TransformControls` gizmos | Handles in an overlay render layer plus a drag on a plane (`patterns/P11-transform-controls-gizmos.md`). |
 | Libraries that need a global `THREE` (ThreeCSG/ThreeBSP and similar) | None in the viewer. Run them on a separate three.js copy and convert the output to `avs.BufferGeometry`, or drop the feature. |
 | AR/VR/WebXR | None. |
 | WebGL context access, custom post-processing passes | None. Use `viewer.getScreenShot` for image export. |
@@ -28,7 +28,7 @@ APIs. List each one in the "Gaps" section of the migration plan with:
 | Undocumented extensions (Beeline, CAM360, DataPersistence, DOF, Fusion360.Simulation, MSDF, OMV, PropertyQuery, PropertySearch, Scalaris, ScalarisSimulation, ReCap, MemoryLimited, MemoryLimitedDebug) | None. Recommend removing the dependent feature. |
 | Multi-hit picking (`impl.castRayViewport`) and hit-testing restricted to some models (`impl.hitTest(..., modelIds)`) | `viewer.hitTest(x, y)` returns the nearest hit only. For model filtering, hiding the other models with `viewer.hideModel` while picking, to be tested. |
 | Hover-only highlight (`impl.highlightObjectNode`, `clearHighlight`) | `viewer.select(...)` or `setThemingColor`. |
-| `Autodesk.BIM360.Extension.PushPin` | HTML markers or overlay instances (`patterns/extensions-and-renderer.md`, P12). |
+| `Autodesk.BIM360.Extension.PushPin` | HTML markers or overlay instances (`P12-datavisualization.md`). |
 | `ViewerPropertyPanel` customization, protected `DockingPanel` members | A subclass of the documented `PropertyPanel`; the Properties Manager extension for the stock panel. |
 | Camera transition tuning (`autocam.shotParams`), `navigation.toOrthographic`, `viewer.utilities.transitionView` | `viewer.restoreState`, `viewer.fitToView()`. |
 | Load options `skipPropertyDb`, `extendStringsFetching`, `preserveView`, `useConsolidation`, `useADP`; Initializer options `isAEC`, `document`; `doc.downloadAecModelData` | None documented. |
@@ -43,6 +43,6 @@ them.
 
 | Issue | Workaround |
 | --- | --- |
-| With `env: 'AutodeskProduction'`, moving loaded instances makes `model.getBoundingBox()` throw `e.makeEmpty is not a function` (from `ensureModelBBoxUpToDate`). Not isolated: the usage hint and node grouping changed in the same step. | `env: 'AutodeskProduction2', api: 'streamingV2'` (`patterns/loading-and-init.md`, P18). |
+| With `env: 'AutodeskProduction'`, moving loaded instances makes `model.getBoundingBox()` throw `e.makeEmpty is not a function` (from `ensureModelBBoxUpToDate`). Not isolated: the usage hint and node grouping changed in the same step. | `env: 'AutodeskProduction2', api: 'streamingV2'` (`P18-initializer-and-viewer-creation.md`). |
 | `new avs.Color(...)` reportedly throws `undefined is not a constructor`, although the reference documents it. | Hex numbers for colors. |
 | `viewer.navigation` and `model.getInstances()` are used in the v8 guides but missing from the `Viewer3D`/`Model` reference pages. | Use them; mention the docs gap. |
