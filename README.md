@@ -10,24 +10,24 @@ Each skill is a folder inside [`skills/`](skills/) containing a `SKILL.md` file 
 
 ### Claude Code plugin marketplace
 
-This repository is also a [Claude Code plugin marketplace](https://code.claude.com/docs/en/plugins/install) called `aps-skills`, with one plugin per skill. Add the marketplace once, then install the skills you need:
+This repository is also a [Claude Code plugin marketplace](https://code.claude.com/docs/en/plugins/install) called `aps-skills`, with a single plugin, `aps-skills`, that bundles all the skills. Add the marketplace once, then install the plugin:
 
 ```bash
 claude plugin marketplace add autodesk-platform-services/skills
-claude plugin install <skill-name>@aps-skills
+claude plugin install aps-skills@aps-skills
 ```
 
 Or do both from inside a Claude Code session:
 
 ```
-/plugin install <skill-name> --marketplace autodesk-platform-services/skills
+/plugin install aps-skills --marketplace autodesk-platform-services/skills
 ```
 
-You can also browse and install the skills interactively with `/plugin`. To get the latest changes later, run `claude plugin update <skill-name>@aps-skills`.
+You can also browse and install the plugin interactively with `/plugin`. To get the latest changes later, run `claude plugin update aps-skills@aps-skills`.
 
 ### GitHub Copilot plugin marketplace
 
-The same marketplace works with GitHub Copilot. In VS Code, add the repository to the [`chat.plugins.marketplaces`](https://code.visualstudio.com/docs/agent-customization/agent-plugins#_configure-plugin-marketplaces) setting:
+The same marketplace works with GitHub Copilot. The repository is also an [Agent Plugin](https://agent-plugins.org) (see [`plugin.json`](plugin.json)), so any client that supports the spec can load all the skills from `skills/`. In VS Code, add the repository to the [`chat.plugins.marketplaces`](https://code.visualstudio.com/docs/agent-customization/agent-plugins#_configure-plugin-marketplaces) setting:
 
 ```json
 "chat.plugins.marketplaces": [
@@ -35,13 +35,13 @@ The same marketplace works with GitHub Copilot. In VS Code, add the repository t
 ]
 ```
 
-Then search for `@agentPlugins` in the Extensions view (or run **Chat: Open Customizations** and go to **Plugins** > **Browse Marketplace**), and install the skills you need.
+Then search for `@agentPlugins` in the Extensions view (or run **Chat: Open Customizations** and go to **Plugins** > **Browse Marketplace**), and install the `aps-skills` plugin.
 
-With the [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-marketplace), add the marketplace and install skills from the terminal:
+With the [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-marketplace), add the marketplace and install the plugin from the terminal:
 
 ```bash
 copilot plugin marketplace add autodesk-platform-services/skills
-copilot plugin install <skill-name>@aps-skills
+copilot plugin install aps-skills@aps-skills
 ```
 
 Plugins installed with the Copilot CLI also show up in VS Code automatically.

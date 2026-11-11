@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 // Checks that every skill folder is consistently registered across the repository:
 // SKILL.md frontmatter (including gallery filter tags), skill README, main README table,
-// and the plugin marketplace.
+// and the single bundled plugin (plugin.json and the plugin marketplace).
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const root = new URL('..', import.meta.url).pathname;
 const skillsDir = join(root, 'skills');
+const plugin = JSON.parse(readFileSync(join(root, 'plugin.json'), 'utf8'));
 const marketplace = JSON.parse(readFileSync(join(root, '.claude-plugin', 'marketplace.json'), 'utf8'));
 const readme = readFileSync(join(root, 'README.md'), 'utf8');
 
@@ -93,17 +94,23 @@ for (const skill of skills) {
     if (!readme.includes(`(skills/${skill}/)`)) {
         errors.push(`${skill}: no row in the "Available Skills" table of README.md`);
     }
-    const entry = marketplace.plugins.find(plugin => plugin.name === skill);
-    if (!entry) {
-        errors.push(`${skill}: no entry in .claude-plugin/marketplace.json`);
-    } else if (entry.source !== `./skills/${skill}`) {
-        errors.push(`${skill}: marketplace entry source is "${entry.source}", expected "./skills/${skill}"`);
-    }
 }
 
-for (const plugin of marketplace.plugins) {
-    if (!skills.includes(plugin.name)) {
-        errors.push(`marketplace.json: entry "${plugin.name}" has no matching folder in skills/`);
+if (plugin.$schema !== 'https://agent-plugins.org/schemas/1.0.0/plugin.schema.json') {
+    errors.push('plugin.json: $schema must be https://agent-plugins.org/schemas/1.0.0/plugin.schema.json');
+}
+if (!/^[a-z0-9]([a-z0-9.-]{0,62}[a-z0-9])?$/.test(plugin.name ?? '') || /--|\.\./.test(plugin.name)) {
+    errors.push(`plugin.json: invalid plugin name "${plugin.name}"`);
+}
+if (marketplace.plugins.length !== 1) {
+    errors.push('marketplace.json: expected exactly one plugin entry that bundles all skills');
+} else {
+    const entry = marketplace.plugins[0];
+    if (entry.name !== plugin.name) {
+        errors.push(`marketplace.json: entry name "${entry.name}" must match plugin.json name "${plugin.name}"`);
+    }
+    if (entry.source !== './') {
+        errors.push(`marketplace.json: entry source is "${entry.source}", expected "./"`);
     }
 }
 

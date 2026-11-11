@@ -13,29 +13,16 @@ To add a new skill, create a folder under `skills/` with:
 
 Then add a row for the new skill to the "Available Skills" table in the main [README.md](README.md), with a short description and a link to the skill's folder. Keep all other skill-specific information (requirements, installation, usage) in the skill's own `README.md`. The main README should only contain general information about the repository.
 
-Finally, register the skill in the plugin marketplace (used by both Claude Code and GitHub Copilot) by adding an entry to the `plugins` array in [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json). Copy an existing entry and update it:
+There's no separate registration step for the plugin. The repository is a single [Agent Plugin](https://agent-plugins.org) called `aps-skills`, defined by [`plugin.json`](plugin.json) and listed in [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) (used by both Claude Code and GitHub Copilot). Every folder under `skills/` that contains a `SKILL.md` is bundled automatically.
 
-```json
-{
-  "name": "<skill-name>",
-  "source": "./skills/<skill-name>",
-  "description": "<same short description as in the README table>",
-  "category": "aps",
-  "tags": ["aps", "<product>", "<topic>"],
-  "author": { "name": "Autodesk" },
-  "homepage": "https://github.com/autodesk-platform-services/skills/tree/main/skills/<skill-name>",
-  "repository": "https://github.com/autodesk-platform-services/skills",
-  "license": "MIT"
-}
-```
-
-- `name` must match the skill folder name and the `name` in its `SKILL.md` frontmatter. Users install the skill as `<skill-name>@aps-skills`, so treat the name as permanent: renaming it later breaks existing installs.
-- Use `aps`, `autocad`, or `flow` as the `category`, or introduce a new one if none fits.
-- Don't add a `version` field, and don't add a `plugin.json` to the skill folder. The marketplace entry serves as the plugin manifest, and without a `version` Claude Code uses the git commit SHA, so users get updates on every push. GitHub Copilot reads the same `.claude-plugin/marketplace.json` and also falls back to the `SKILL.md` in the plugin root, so don't add a separate `.github/plugin/marketplace.json` either.
+- The `name` in the `SKILL.md` frontmatter must match the skill folder name.
+- Don't add a `version` field to `plugin.json` or the marketplace entry. Without a `version` Claude Code uses the git commit SHA, so users get updates on every push.
+- Don't add a `plugin.json` to individual skill folders, and don't add a separate `.github/plugin/marketplace.json`. GitHub Copilot reads the same `.claude-plugin/marketplace.json`.
+- Keep the plugin `name` permanent: renaming it breaks existing installs.
 
 ### Gallery tags
 
-The skill gallery (a static site hosted with GitHub Pages from the [`docs`](https://github.com/autodesk-platform-services/skills/tree/docs) branch) loads the list of skills from the `main` branch of this repository at runtime (from the plugin marketplace, each skill's `SKILL.md` frontmatter, and its `README.md` title), and lets users search skills and filter them by product, industry, and technology. Add these tags to the `metadata` block of the skill's `SKILL.md` frontmatter as comma-separated strings:
+The skill gallery (a static site hosted with GitHub Pages from the [`docs`](https://github.com/autodesk-platform-services/skills/tree/docs) branch) loads the list of skills from the `main` branch of this repository at runtime (from each skill's `SKILL.md` frontmatter and its `README.md` title), and lets users search skills and filter them by product, industry, and technology. Add these tags to the `metadata` block of the skill's `SKILL.md` frontmatter as comma-separated strings:
 
 ```yaml
 metadata:
