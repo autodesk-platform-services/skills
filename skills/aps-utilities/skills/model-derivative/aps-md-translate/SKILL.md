@@ -1,34 +1,51 @@
 ---
 name: aps-md-translate
-description: Start a Model Derivative translation job (SVF2 by default; also SVF, OBJ, STL, STEP, IGES, IFC, thumbnail) for an OSS object or an ACC/BIM 360/Fusion file, and optionally wait for the manifest to finish. Use for "translate to SVF2", "prepare for the Viewer", "convert to OBJ/STL", "re-translate". A modification — needs user approval first.
+description: Start a Model Derivative translation job with curl (SVF2 by default; also SVF, OBJ, STL, STEP, IGES, IFC, thumbnail) for an OSS object or an ACC/BIM 360/Fusion file, and poll the manifest until it finishes. Use for "translate to SVF2", "prepare for the Viewer", "convert to OBJ/STL", "re-translate". A modification, so it needs user approval first.
 ---
 
-# Translate a model (Model Derivative)
+# Translate a model (Model Derivative, curl)
+
+Spec: `modelderivative/modelderivative.yaml` in https://github.com/autodesk-platform-services/aps-sdk-openapi
 
 ## Prerequisites
-- `.env` credentials. 2-legged (`data:read data:write viewables:read`) for OSS objects; add `--three-legged` for ACC/BIM 360/Fusion sources (browser login opens if needed).
+- 2-legged token (`data:read data:write viewables:read`) for OSS objects. For ACC/BIM 360/Fusion sources use a 3-legged token (`aps-auth-3legged`, scope `data:read data:write viewables:read`).
 - Source already uploaded (`aps-oss-upload-object` or `aps-dm-upload-file-to-folder`).
+- `curl`, `jq`.
 
-## Usage
+## URN
+URL-safe base64 (no padding) of the OSS `objectId`, or of the version URN for project files:
 ```bash
-python scripts/translate.py --bucket my-bucket --key house.rvt --wait
-python scripts/translate.py --object-id "urn:adsk.objects:os.object:b/k.ipt" --format svf2 --views 2d 3d --wait --yes
-python scripts/translate.py --urn <base64url urn> --format obj
-python scripts/translate.py --urn <urn> --force --yes        # overwrite existing derivatives
+URN=$(printf %s "urn:adsk.objects:os.object:my-bucket/house.rvt" | base64 | tr -d '=\n' | tr '+/' '-_')
 ```
-URN = URL-safe base64 (no padding) of the OSS `objectId`; the script encodes `--object-id` / `--bucket --key` for you.
 
-## Request
+## Start the job (POST, needs approval)
 `POST /modelderivative/v2/designdata/job`
-```json
-{"input":{"urn":"…"},"output":{"destination":{"region":"us"},"formats":[{"type":"svf2","views":["2d","3d"]}]}}
-```
-Optional `x-ads-force: true` (overwrite), ZIP sources need `"compressedUrn":true,"rootFilename"`. `--wait` polls `GET …/manifest` until `success|failed|timeout`.
+```bash
+APS=https://developer.api.autodesk.com
+TOKEN=$(python skills/authentication/aps-auth-2legged/scripts/get_token.py --raw --scope "data:read data:write viewables:read")
 
-## Approval rule (enforced in code)
-Prints the plan and refuses non-interactively without `--yes`. **Agents: describe it, wait for an explicit "yes", then add `--yes`.** `--force` is called out in the plan because it overwrites derivatives.
+curl -sS -X POST "$APS/modelderivative/v2/designdata/job" \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d "{\"input\":{\"urn\":\"$URN\"},
+       \"output\":{\"destination\":{\"region\":\"us\"},\"formats\":[{\"type\":\"svf2\",\"views\":[\"2d\",\"3d\"]}]}}"
+```
+`200` = job created, `201` = the derivative already exists (nothing new generated). Other `type` values: `svf`, `obj`, `stl`, `step`, `iges`, `ifc`, `thumbnail`; the supported input to output matrix is `GET /modelderivative/v2/designdata/formats`.
+
+Variants:
+- **Overwrite existing derivatives**: add header `-H "x-ads-force: true"`. Call this out in the approval request, because it replaces the current derivatives.
+- **ZIP source (e.g. composite design)**: `"input":{"urn":"…","compressedUrn":true,"rootFilename":"main.iam"}`.
+- **Different region**: `destination.region` is lowercase (`us`, `emea`); reads need a matching `x-ads-region`.
+
+## Wait for completion (GET, no approval)
+```bash
+until s=$(curl -sS "$APS/modelderivative/v2/designdata/$URN/manifest" -H "Authorization: Bearer $TOKEN" | jq -r '.status'); \
+      [ "$s" = success ] || [ "$s" = failed ] || [ "$s" = timeout ]; do echo "status=$s"; sleep 10; done
+echo "final status: $s"
+```
+The manifest has `status`, `progress` and per-derivative `status`/`messages`.
 
 ## Pitfalls
-- Result `success` can still carry per-derivative `messages` — inspect them (`aps-md-inspect manifest`).
-- Region must match where the derivatives should live (`destination.region` is lowercase: `us`, `emea`); reads need the same `x-ads-region`.
-- Inventor `.ipt` etc. translate fine from OSS; deleted source buckets make the URN dead.
+- `success` can still carry per-derivative `messages`. Inspect them (`aps-md-inspect`).
+- Region must match where the derivatives should live; reads need the same `x-ads-region`.
+- Deleted source buckets make the URN dead.
+- `403`: token lacks scope, or for project files the token is 2-legged and the app is not a Custom Integration. Use the 3-legged token.

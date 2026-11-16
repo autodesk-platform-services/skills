@@ -10,13 +10,13 @@ metadata:
 
 # APS utilities — umbrella skill
 
-All implementations are **Python 3 + `requests`** against the raw REST endpoints (no APS SDK). Every leaf skill is self-contained: `SKILL.md` + `scripts/` (CLI-runnable and importable) + a vendored `aps_common.py` (tokens, region header, retries, pagination). Credentials come from `APS_CLIENT_ID`, `APS_CLIENT_SECRET`, optional `APS_ACCESS_TOKEN`, `APS_REGION` — read automatically from a git-ignored `.env` file (see [Credentials](#credentials-env-file)).
+Only **access tokens** come from a script (`skills/authentication/*/scripts/`, Python 3 + `requests`). **Everything else is plain `curl` (plus `jq`)** against the raw REST endpoints, following the OpenAPI specs in https://github.com/autodesk-platform-services/aps-sdk-openapi (no APS SDK). Every leaf skill is a single `SKILL.md` with copy-paste curl recipes. Credentials come from `APS_CLIENT_ID`, `APS_CLIENT_SECRET`, optional `APS_ACCESS_TOKEN`, `APS_REGION` — read automatically from a git-ignored `.env` file (see [Credentials](#credentials-env-file)).
 
 ## How to route a request
 
 1. **Decide the auth type first.** App-owned resources (OSS buckets, Model Derivative, Design Automation, Webhooks) → 2-legged. User-owned data (hubs, projects, folders, files in ACC / BIM 360 / Fusion Team) → 3-legged. Read `skills/authentication/…` if unsure.
 2. **Pick the API family** from the table below and open its reference file — it lists every skill in that family, the endpoints each wraps, and the build status.
-3. **Open the leaf skill's `SKILL.md`** and run or import its script — but if the call is anything other than `GET`, first follow [Confirm before any modification](#confirm-before-any-modification-mandatory). Compose several leaf skills for end-to-end workflows (e.g. upload → translate → view).
+3. **Open the leaf skill's `SKILL.md`** and run its curl recipe — but if the call is anything other than `GET`, first follow [Confirm before any modification](#confirm-before-any-modification-mandatory). Compose several leaf skills for end-to-end workflows (e.g. upload → translate → view). For an endpoint no leaf skill covers, look it up in the OpenAPI spec (see [Calling APS with curl](#calling-aps-with-curl)).
 4. If no leaf skill exists yet, follow the family's reference to find the closest one and the conventions in `references/conventions.md`.
 
 ## API families → references
@@ -40,9 +40,9 @@ All implementations are **Python 3 + `requests`** against the raw REST endpoints
 Every script auto-loads variables from a `.env` file (nearest one walking up from the CWD, then from the script's location upward; `APS_ENV_FILE` overrides the path). Real environment variables win over `.env`. Template: [`.env.example`](.env.example). `.env` is git-ignored.
 
 Agent rules:
-0. **Prefer the leaf-skill scripts over hand-written curl**; use curl only where no script exists yet.
-1. **Just run the scripts** — do not export, echo or re-pass credentials yourself; the helper reads `.env`.
-2. **If `.env` is missing, or the scripts fail with "Fill in these values in …/.env" / "No .env file found"**: create `.env` from `.env.example` if it does not exist, then **ask the user to open it and fill in the listed values** (`APS_CLIENT_ID`, `APS_CLIENT_SECRET`; client credentials from https://aps.autodesk.com/myapps). Stop and wait until they say it is done, then retry.
+0. **Get tokens with the auth scripts, never by hand-building a token request** (`get_token.py --raw`, `ensure_token.py`). They read `.env`, so the client secret never appears in a curl command.
+1. **Do not export, echo or re-pass credentials yourself.** Only the token flows into curl, as `Authorization: Bearer $TOKEN`.
+2. **If `.env` is missing, or the token scripts fail with "Fill in these values in …/.env" / "No .env file found"**: create `.env` from `.env.example` if it does not exist, then **ask the user to open it and fill in the listed values** (`APS_CLIENT_ID`, `APS_CLIENT_SECRET`; client credentials from https://aps.autodesk.com/myapps). Stop and wait until they say it is done, then retry.
 3. **Never ask the user to paste a secret or token into the chat**, and never print values from `.env` (show key names only). If they paste one anyway, tell them to put it in `.env` instead and treat it as exposed (rotate it).
 
 ## Confirm before any modification (mandatory)
@@ -53,16 +53,31 @@ Only `GET` (and `HEAD`) calls may run without asking. **Before sending any other
 2. **Wait for confirmation — the user's original request is never the confirmation.** "Delete X", "create Y", "upload Z" is a request; it only starts step 1. The action runs only after the user replies to your description with an explicit approval ("yes", "confirm", "go ahead"). If you asked for specific wording (e.g. for irreversible deletes), anything else — including repeating the command or naming the target — means ask again. A typo'd or ambiguous target is never resolved by guessing. A fresh request each time; approval for one modification does not cover the next, or a repeat with different targets. Never infer consent from earlier approvals, from a background-task notification, or from the user having supplied credentials.
 3. **Batch carefully**: for a multi-step job (e.g. upload → translate) list all the modifying steps in one message and ask once; anything not listed needs a new confirmation.
 4. **Read-only `POST`s are exempt** because they change nothing in the user's data: token requests (`/authentication/v2/token`) and read-only queries sent by `POST` (AEC / Manufacturing Data Model GraphQL queries — but **not** GraphQL mutations). If unsure whether a call modifies anything, treat it as a modification and ask.
-5. **Scripts enforce this**: every modifying script (create bucket, upload, bucket protect/unprotect/delete, upload-to-folder, translate) prints its plan and refuses to run non-interactively without `--yes`. Pass `--yes` **only after** the user approved that exact action.
-6. Prefer a dry run when one exists (print the request without sending it) so the user can see exactly what will be sent.
+5. **Nothing enforces this for you**: curl has no confirmation prompt, so the agent is the only guard. Show the exact curl command (token as `$TOKEN`, never its value) in the description, and run it only after the user approved that exact command.
+6. The description is the dry run: print the method, URL, headers and body you intend to send. Don't send anything to "see what happens".
+
+## Calling APS with curl
+
+```bash
+APS=https://developer.api.autodesk.com
+TOKEN=$(python skills/authentication/aps-auth-2legged/scripts/get_token.py --raw --scope "bucket:read data:read")   # app-owned data
+TOKEN=$(python skills/authentication/aps-auth-3legged/scripts/ensure_token.py --scope "data:read")                  # user data (opens the browser if needed)
+curl -sS "$APS/oss/v2/buckets" -H "Authorization: Bearer $TOKEN" -H "x-ads-region: US" | jq .
+```
+
+- Run from the `aps-utilities` folder (paths above are relative to it), or use absolute paths.
+- `jq` is used for JSON parsing and URL-encoding (`jq -rn --arg v "$X" '$v|@uri'`).
+- **Spec lookup** for endpoints without a leaf skill: clone or browse https://github.com/autodesk-platform-services/aps-sdk-openapi (`authentication`, `datamanagement`, `modelderivative`, `oss`, `webhooks`, `secureserviceaccount`, `forma/{accountadmin,forms,issues}`). Each YAML has parameters, bodies, scopes and a cURL sample per operation. Design Automation, GraphQL (AEC / Manufacturing Data Model) and others are not in that repo; use the docs at https://aps.autodesk.com/en/docs/.
+- Check `-w '%{http_code}'` or `-i` when debugging. APS error bodies are JSON and say what is wrong.
+- Read-only paging: follow `next` (OSS) or `links.next.href` (JSON:API) in a loop; recipes are in `aps-oss-list-objects` and `aps-dm-browse`.
 
 ## Cross-cutting conventions (apply to every family)
 
 - **Regions**: `x-ads-region: US | EMEA | AUS` on OSS and some ACC calls; hubs/projects are region-bound. Set `APS_REGION`.
 - **IDs & URNs**: hub/project IDs prefixed `b.`; folder/item/version URNs `urn:adsk.wipprod:…`; OSS `objectId` → URL-safe base64 for Model Derivative. See `references/conventions.md`.
 - **Pagination**: JSON:API `links.next` for `/project/v1` & `/data/v1`; `next` cursor for `/oss/v2`; `page[number]`/`page[limit]` params.
-- **Errors**: 401 = bad/expired token; 403 = missing scope or no permission; 404 can mean wrong region; 429 honours `Retry-After` (handled in `aps_common.request`).
-- **Secrets** never go into logs or the chat; the only place they live is the git-ignored `.env` (or real env vars). Scripts read env vars only.
+- **Errors**: 401 = bad/expired token; 403 = missing scope or no permission; 404 can mean wrong region; 429 means wait for the `Retry-After` header and retry (use `curl --retry 5 --retry-all-errors` for idempotent reads).
+- **Secrets** never go into logs or the chat; the only place they live is the git-ignored `.env` (or real env vars). Only the token scripts read them.
 
 ## Repository layout
 
@@ -70,7 +85,7 @@ Only `GET` (and `HEAD`) calls may run without asking. **Before sending any other
 SKILL.md                     ← this file (router)
 references/<api>.md          ← per-API skill inventory, endpoints, status
 references/conventions.md    ← IDs, URNs, regions, pagination, error handling
-_shared/aps_common.py        ← source of truth for the helper; vendored by _shared/vendor.py
-skills/<api>/<skill-name>/   ← leaf skills: SKILL.md + scripts/
+_shared/aps_common.py        ← token helper; vendored by _shared/vendor.py into skills/authentication/*/scripts/ only
+skills/<api>/<skill-name>/   ← leaf skills: SKILL.md (curl recipes); only authentication/* also has scripts/
 ```
 Skill names are prefixed by family: `aps-auth-*`, `aps-oss-*` / `aps-dm-*`, `aps-md-*`, `aps-da-*`, `aps-wh-*`, `aps-acc-*`, `aps-aecdm-*`, `aps-mfgdm-*`, `aps-rc-*`.

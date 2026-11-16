@@ -8,12 +8,12 @@ A set of [Agent Skills](https://docs.claude.com/en/docs/agents-and-tools/agent-s
 
 ## What the skills are for
 
-The skills are not an SDK or an app. They are instructions (`SKILL.md`) plus small Python scripts that teach an agent how to use the APS REST APIs correctly: which authentication type to use, which endpoints to call, how to handle regions, pagination and errors, and when to ask you before changing anything.
+The skills are not an SDK or an app. They are instructions (`SKILL.md`) with ready-to-run `curl` recipes, plus two small Python scripts that get access tokens. They teach an agent how to use the APS REST APIs correctly: which authentication type to use, which endpoints to call, how to handle regions, pagination and errors, and when to ask you before changing anything.
 
-- **Python 3 and `requests` only.** Scripts call the raw REST endpoints. No APS SDK is needed.
-- **Self-contained.** Each skill has a `SKILL.md` and a `scripts/` folder. You can run the scripts from the command line or import them.
+- **curl for everything except tokens.** Skills call the raw REST endpoints, following the [APS OpenAPI specifications](https://github.com/autodesk-platform-services/aps-sdk-openapi). No APS SDK is needed. Only the authentication skills use Python (3 and `requests`) to get 2-legged and 3-legged tokens, so the client secret never appears in a command.
+- **Self-contained.** Each skill is one `SKILL.md`. The recipes are plain shell, so you can also copy them into your terminal.
 - **Routed from one entry point.** The root [`SKILL.md`](SKILL.md) identifies which APS API a request needs and hands off to the matching skill. It doesn't call APIs itself.
-- **Safe by default.** Only read-only calls (`GET`) run without asking. Anything that creates, uploads, translates, protects or deletes is described first and runs only after you explicitly approve it. Modifying scripts refuse to run non-interactively without `--yes`.
+- **Safe by default.** Only read-only calls (`GET`) run without asking. Anything that creates, uploads, translates, protects or deletes is described first and runs only after you explicitly approve it. The agent shows the exact request first, because curl has no confirmation prompt of its own.
 - **Secrets stay local.** Credentials are read from a git-ignored `.env` file. The agent never asks you to paste secrets into the chat.
 
 ## Available skills
@@ -55,7 +55,8 @@ The agent explains any change it's about to make and waits for your approval bef
 
 ### Prerequisites
 
-- Python 3 with `requests`
+- Python 3 with `requests` (token scripts only)
+- `curl` and `jq`
 - An APS app: create one at https://aps.autodesk.com/myapps to get a client ID and secret
 - For hubs, projects, folders and files: access to ACC, BIM 360 or Fusion Team, with your app provisioned there
 
@@ -63,7 +64,11 @@ The agent explains any change it's about to make and waits for your approval bef
 
 1. Create a `.env` file in the repository root.
 2. Add `APS_CLIENT_ID` and `APS_CLIENT_SECRET`. Optionally set `APS_ACCESS_TOKEN` and `APS_REGION` (`US`, `EMEA` or `AUS`).
-3. Run a script, for example `python skills/data-management/aps-oss-list-objects/scripts/list_objects.py`.
+3. Get a token and call an API, for example:
+   ```bash
+   TOKEN=$(python skills/authentication/aps-auth-2legged/scripts/get_token.py --raw --scope "bucket:read")
+   curl -sS https://developer.api.autodesk.com/oss/v2/buckets -H "Authorization: Bearer $TOKEN" | jq .
+   ```
 
 `.env` is git-ignored. Real environment variables override values in `.env`.
 
@@ -73,17 +78,17 @@ The agent explains any change it's about to make and waits for your approval bef
 SKILL.md                     Entry point and router
 references/<api>.md          Per-API skill inventory, endpoints and status
 references/conventions.md    IDs, URNs, regions, pagination and error handling
-_shared/aps_common.py        Source of truth for the shared helper (tokens, retries, pagination)
-_shared/vendor.py            Copies the helper into each skill's scripts/ folder
-skills/<api>/<skill-name>/   Leaf skills: SKILL.md and scripts/
+_shared/aps_common.py        Source of truth for the token helper
+_shared/vendor.py            Copies the helper into the authentication skills' scripts/ folders
+skills/<api>/<skill-name>/   Leaf skills: SKILL.md with curl recipes (authentication/* also has scripts/)
 ```
 
-Each skill vendors its own copy of `aps_common.py`, so edit `_shared/aps_common.py` and run `_shared/vendor.py` rather than changing the copies.
+The two authentication skills vendor their own copy of `aps_common.py`, so edit `_shared/aps_common.py` and run `_shared/vendor.py` rather than changing the copies.
 
 ### Known limitations
 
 - Fusion Team items can't be deleted through the API. Delete them in the Fusion UI.
-- Many families are still planned. Where no skill exists, the agent follows the relevant reference and `references/conventions.md`.
+- Many families are still planned. Where no skill exists, the agent follows the relevant reference and `references/conventions.md`, and builds a curl call from the OpenAPI spec.
 
 ## License
 

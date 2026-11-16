@@ -1,33 +1,40 @@
 ---
 name: aps-mfgdm-hubs-projects-folders
-description: List hubs through the Manufacturing Data Model GraphQL API (`POST /mfg/graphql`) with a 3-legged token. Use for "list my hubs with the Manufacturing Data Model", "MFG DM / GraphQL hubs", "Fusion Team hubs via GraphQL". Read-only queries over POST; currently implements `hubs` only (projects/folders/items planned). Opens the browser login when no token is stored.
+description: List hubs through the Manufacturing Data Model GraphQL API (`POST /mfg/graphql`) with curl and a 3-legged token. Use for "list my hubs with the Manufacturing Data Model", "MFG DM / GraphQL hubs", "Fusion Team hubs via GraphQL". Read-only queries sent by POST; shows the `hubs` query (projects/folders/items follow the same pattern). Opens the browser login when no token is stored.
 ---
 
-# Navigate hubs (Manufacturing Data Model, GraphQL)
+# Navigate hubs (Manufacturing Data Model, GraphQL, curl)
+
+No OpenAPI spec for the Manufacturing Data Model is in https://github.com/autodesk-platform-services/aps-sdk-openapi (it is GraphQL; use the schema explorer at https://aps.autodesk.com/en/docs/fusiondata/v1/developers_guide/).
 
 ## Prerequisites
-- `.env` with `APS_CLIENT_ID` / `APS_CLIENT_SECRET`; callback `http://localhost:8080/callback` registered (see `aps-auth-3legged`).
-- **3-legged**, scope `data:read`. Stored token → silent refresh → browser sign-in.
-
-## Usage
-```bash
-python scripts/mfgdm.py hubs            # id | name, then a count
-python scripts/mfgdm.py hubs --json     # [{"id": …, "name": …}]
-```
-Import form: `from mfgdm import graphql, iter_hubs`.
+- `.env` credentials; callback `http://localhost:8080/callback` registered (see `aps-auth-3legged`).
+- **3-legged**, scope `data:read`. Stored token, silent refresh, then browser sign-in.
+- `curl`, `jq`.
 
 ## Request
 `POST https://developer.api.autodesk.com/mfg/graphql`
-```json
-{"query":"query($cursor:String){ hubs(pagination:{cursor:$cursor}){ pagination{cursor} results{ id name } } }","variables":{"cursor":null}}
+```bash
+APS=https://developer.api.autodesk.com
+TOKEN=$(python skills/authentication/aps-auth-3legged/scripts/ensure_token.py --scope "data:read")
+
+CURSOR=null
+while :; do
+  R=$(curl -sS -X POST "$APS/mfg/graphql" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+    -d "{\"query\":\"query(\$cursor:String){ hubs(pagination:{cursor:\$cursor}){ pagination{cursor} results{ id name } } }\",\"variables\":{\"cursor\":$CURSOR}}")
+  echo "$R" | jq -e '.errors' >/dev/null && { echo "$R" | jq .errors; break; }
+  echo "$R" | jq -r '.data.hubs.results[] | [.id,.name] | @tsv'
+  NEXT=$(echo "$R" | jq -r '.data.hubs.pagination.cursor // empty'); [ -z "$NEXT" ] && break
+  CURSOR=$(jq -n --arg c "$NEXT" '$c')
+done
 ```
-Pagination: pass `pagination.cursor` as `cursor` until it is empty (`iter_hubs` does this).
+Pagination: pass `pagination.cursor` back as `cursor` until it is empty.
 
 ## Approval
-Queries only read, but they are `POST`. **Agents: describe the request and wait for an explicit "yes" before running** (project rule: no non-GET APS call without approval). Mutations (`set…`, `create…`) are not implemented here and always need approval.
+Queries only read, but they are `POST`. Per the root rule they are exempt from the confirmation step (read-only GraphQL **queries**). **Mutations** (`set…`, `create…`) are not exempt and always need approval.
 
 ## Pitfalls
-- GraphQL failures return HTTP 200 with an `errors` array; `graphql()` raises on it.
-- Hub IDs are `urn:adsk.ace:prod.scope:<guid>` — **not** the `a.`/`b.` IDs of the Data Management API (`aps-dm-browse`); don't mix them.
-- Observed: the hub list differed from `aps-dm-browse hubs` (24 vs 26; two ACC accounts in GBR/CAN were absent). Cause not verified — compare both when a hub seems missing.
+- GraphQL failures return HTTP 200 with an `errors` array. Always check `.errors`.
+- Hub IDs are `urn:adsk.ace:prod.scope:<guid>`, **not** the `a.`/`b.` IDs of the Data Management API (`aps-dm-browse`). Don't mix them.
+- Observed: the hub list differed from `aps-dm-browse` (24 vs 26; two ACC accounts in GBR/CAN were absent). Cause not verified. Compare both when a hub seems missing.
 - "No hubs" usually means the wrong Autodesk account was used to sign in.

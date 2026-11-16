@@ -1,7 +1,7 @@
 # Data Management API — skill reference
 
 Part of the [`aps`](../SKILL.md) umbrella skill. Skills live in `skills/data-management/<skill-name>/`.
-Conventions (naming, Python-only, vendored `aps_common.py`, env vars) are in [`conventions.md`](conventions.md); auth skills are in [`authentication.md`](authentication.md).
+Conventions (naming, curl recipes, token scripts, env vars) are in [`conventions.md`](conventions.md); auth skills are in [`authentication.md`](authentication.md).
 
 Scope: OSS (Buckets & Objects), Hubs & Projects, Folders, Items & Versions, Commands. Other APIs appear only where a DM workflow hands off to them.
 
@@ -11,7 +11,7 @@ Status legend: ✅ built · 🔜 next · ⬜ planned
 
 ## 0. Foundation (cross-cutting — see `conventions.md`; no separate skills)
 
-Identifier/URN rules, pagination, regions and error handling are documented once in `references/conventions.md` and implemented in `_shared/aps_common.py` (`enc`, `b64url`, `iter_jsonapi_pages`, `iter_oss_pages`, `request` with retry). Tokens come from the Authentication family (`aps-auth-2legged`, `aps-auth-3legged`).
+Identifier/URN rules, pagination, regions and error handling are documented once in `references/conventions.md` and shown as curl/jq snippets inside the leaf skills. Tokens come from the Authentication family (`aps-auth-2legged`, `aps-auth-3legged`).
 
 ---
 
@@ -105,7 +105,7 @@ Identifier/URN rules, pagination, regions and error handling are documented once
 
 ## 7. Suggested build order
 
-1. ✅ Foundation (`aps-auth-*`, `_shared/aps_common.py`).
+1. ✅ Foundation (`aps-auth-*` token scripts; everything else is curl).
 2. ✅ OSS core: `create-bucket`, `upload-object`, `download-object`, `list-objects`.
 3. Hubs/Projects/Folders read path: `list-hubs`, `list-projects`, `get-top-folders`, `list-folder-contents`, `walk-folder-tree`.
 4. File write path: `create-storage`, `upload-file-to-folder`, `upload-new-version`, `download-file`.
