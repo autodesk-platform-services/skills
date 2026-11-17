@@ -34,6 +34,7 @@ The skills are not an SDK or an app. They are instructions (`SKILL.md`) with rea
 | Model Derivative | `aps-md-inspect` | Reads manifest status, views, object tree and all properties of a translated model | 2-legged or 3-legged |
 | Viewer | `aps-viewer-view-model` | Opens a translated model in the APS Viewer through a small local server | 2-legged |
 | Design Automation | `aps-da-list-appbundles` | Lists AppBundles visible to your app | 2-legged |
+| Design Automation | `aps-da-list-engines` | Lists the engines (AutoCAD, Revit, Inventor, 3ds Max, Fusion versions) available to your app | 2-legged |
 | Manufacturing Data Model | `aps-mfgdm-hubs-projects-folders` | Lists hubs through the GraphQL API (projects and folders planned) | 3-legged |
 
 More families are planned: Webhooks, ACC/BIM 360, AEC Data Model, Reality Capture and other APIs. See the per-API files in [`references/`](references) for endpoints and build status.

@@ -3,11 +3,12 @@
 Part of the [`aps`](../SKILL.md) umbrella skill. Skills will live in `skills/design-automation/`.
 Base: `https://developer.api.autodesk.com/da/us-east/v3` · Skill prefix: `aps-da-*` · Conventions: [`conventions.md`](conventions.md)
 
-Status legend: ✅ built · 🔜 next · ⬜ planned — **1 built (`aps-da-list-appbundles`); the rest planned.**
+Status legend: ✅ built · 🔜 next · ⬜ planned — **2 built (`aps-da-list-appbundles`, `aps-da-list-engines`); the rest planned.**
 
 | Status | Skill | Purpose | Endpoints / notes |
 |---|---|---|---|
-| ⬜ | `aps-da-nickname-and-engines` | Set app nickname, list engines (AutoCAD/Revit/Inventor/3dsMax versions) | `PATCH /forgeapps/me, GET /engines` |
+| ✅ | `aps-da-list-engines` | List engines (AutoCAD/Revit/Inventor/3ds Max/Fusion versions), auto-paginated, filter by product | `GET /engines, GET /engines/{id}` |
+| ⬜ | `aps-da-nickname` | Set the app nickname (owner prefix for AppBundles and Activities) | `PATCH /forgeapps/me` |
 | ✅ | `aps-da-list-appbundles` | List AppBundles (own + shared), auto-paginated, `--mine` filter | `GET /appbundles, GET /forgeapps/me` |
 | ⬜ | `aps-da-appbundle` | Create/version/alias an AppBundle and upload the ZIP | `POST /appbundles, POST /appbundles/{id}/versions, …/aliases, S3 form upload` |
 | ⬜ | `aps-da-activity` | Create/version/alias an Activity (command line, parameters, engine) | `POST /activities, …/versions, …/aliases` |
