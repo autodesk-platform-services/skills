@@ -22,7 +22,8 @@ URN=$(printf %s "urn:adsk.objects:os.object:my-bucket/house.rvt" | base64 | tr -
 `POST /modelderivative/v2/designdata/job`
 ```bash
 APS=https://developer.api.autodesk.com
-TOKEN=$(python skills/authentication/aps-auth-2legged/scripts/get_token.py --raw --scope "data:read data:write viewables:read")
+# token: see "Getting an access token" in aps-utilities/SKILL.md (run from the aps-utilities folder)
+TOKEN=$(python3 skills/authentication/aps-auth-2legged/scripts/get_token.py --raw --scope "data:read data:write viewables:read")
 
 curl -sS -X POST "$APS/modelderivative/v2/designdata/job" \
   -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \

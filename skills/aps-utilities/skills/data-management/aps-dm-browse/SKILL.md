@@ -14,7 +14,8 @@ Spec: `datamanagement/datamanagement.yaml` in https://github.com/autodesk-platfo
 
 ```bash
 APS=https://developer.api.autodesk.com
-TOKEN=$(python skills/authentication/aps-auth-3legged/scripts/ensure_token.py --scope "data:read")
+# token: see "Getting an access token" in aps-utilities/SKILL.md (run from the aps-utilities folder)
+TOKEN=$(python3 skills/authentication/aps-auth-3legged/scripts/ensure_token.py --scope "data:read")
 H=(-H "Authorization: Bearer $TOKEN")
 enc() { jq -rn --arg v "$1" '$v|@uri'; }      # URL-encode ids/URNs for path segments
 ```

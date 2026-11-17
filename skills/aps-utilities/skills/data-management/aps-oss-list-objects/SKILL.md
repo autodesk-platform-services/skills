@@ -16,7 +16,8 @@ Spec: `oss/oss.yaml` in https://github.com/autodesk-platform-services/aps-sdk-op
 
 ```bash
 APS=https://developer.api.autodesk.com
-TOKEN=$(python skills/authentication/aps-auth-2legged/scripts/get_token.py --raw --scope "bucket:read data:read")
+# token: see "Getting an access token" in aps-utilities/SKILL.md (run from the aps-utilities folder)
+TOKEN=$(python3 skills/authentication/aps-auth-2legged/scripts/get_token.py --raw --scope "bucket:read data:read")
 ```
 
 ## Endpoints

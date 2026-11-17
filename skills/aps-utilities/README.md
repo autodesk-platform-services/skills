@@ -66,7 +66,7 @@ The agent explains any change it's about to make and waits for your approval bef
 2. Add `APS_CLIENT_ID` and `APS_CLIENT_SECRET`. Optionally set `APS_ACCESS_TOKEN` and `APS_REGION` (`US`, `EMEA` or `AUS`).
 3. Get a token and call an API, for example:
    ```bash
-   TOKEN=$(python skills/authentication/aps-auth-2legged/scripts/get_token.py --raw --scope "bucket:read")
+   TOKEN=$(python3 skills/authentication/aps-auth-2legged/scripts/get_token.py --raw --scope "bucket:read")
    curl -sS https://developer.api.autodesk.com/oss/v2/buckets -H "Authorization: Bearer $TOKEN" | jq .
    ```
 

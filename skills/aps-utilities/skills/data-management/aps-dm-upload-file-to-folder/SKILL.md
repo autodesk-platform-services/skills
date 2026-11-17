@@ -21,7 +21,8 @@ Extension types: `items|versions:autodesk.core:File` for Fusion Team (`a.` ids),
 ## Recipe
 ```bash
 APS=https://developer.api.autodesk.com
-TOKEN=$(python skills/authentication/aps-auth-3legged/scripts/ensure_token.py --scope "data:read data:write data:create")
+# token: see "Getting an access token" in aps-utilities/SKILL.md (run from the aps-utilities folder)
+TOKEN=$(python3 skills/authentication/aps-auth-3legged/scripts/ensure_token.py --scope "data:read data:write data:create")
 enc() { jq -rn --arg v "$1" '$v|@uri'; }
 PROJ=b.yyyy; FOLDER="urn:adsk.wipprod:fs.folder:co.xxx"; FILE=./a.rvt; NAME=$(basename "$FILE")
 EXT=autodesk.bim360                         # autodesk.core for a.-prefixed (Fusion Team) projects

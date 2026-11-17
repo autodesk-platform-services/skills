@@ -24,7 +24,8 @@ Spec: `oss/oss.yaml` in https://github.com/autodesk-platform-services/aps-sdk-op
 ## Script-free recipe
 ```bash
 APS=https://developer.api.autodesk.com
-TOKEN=$(python skills/authentication/aps-auth-2legged/scripts/get_token.py --raw --scope "data:read data:write data:create")
+# token: see "Getting an access token" in aps-utilities/SKILL.md (run from the aps-utilities folder)
+TOKEN=$(python3 skills/authentication/aps-auth-2legged/scripts/get_token.py --raw --scope "data:read data:write data:create")
 B=my-bucket; R=US; FILE=./house.rvt
 KEY=$(basename "$FILE")                       # objectKey; URL-encode it if it has spaces, +, #
 KEYENC=$(jq -rn --arg k "$KEY" '$k|@uri')

@@ -12,6 +12,26 @@ metadata:
 
 Only **access tokens** come from a script (`skills/authentication/*/scripts/`, Python 3 + `requests`). **Everything else is plain `curl` (plus `jq`)** against the raw REST endpoints, following the OpenAPI specs in https://github.com/autodesk-platform-services/aps-sdk-openapi (no APS SDK). Every leaf skill is a single `SKILL.md` with copy-paste curl recipes. Credentials come from `APS_CLIENT_ID`, `APS_CLIENT_SECRET`, optional `APS_ACCESS_TOKEN`, `APS_REGION` — read automatically from a git-ignored `.env` file (see [Credentials](#credentials-env-file)).
 
+## Getting an access token (every API call needs one)
+
+Every leaf skill starts with a `TOKEN=$(…)` line. That line is the only supported way to get a token; run it from this folder (the `aps-utilities` folder), in the same shell command as the `curl` that uses it (shell state does not persist between agent tool calls).
+
+| Data you touch | Command | Notes |
+|---|---|---|
+| App-owned: OSS buckets, Model Derivative, Design Automation, Webhooks, Viewer tokens | `TOKEN=$(python3 skills/authentication/aps-auth-2legged/scripts/get_token.py --raw --scope "<scopes>")` | Needs only `APS_CLIENT_ID` and `APS_CLIENT_SECRET` |
+| User-owned: hubs, projects, folders, files (ACC, BIM 360, Fusion), GraphQL data models | `TOKEN=$(python3 skills/authentication/aps-auth-3legged/scripts/ensure_token.py --scope "<scopes>")` | Opens the browser for login the first time, then reuses and refreshes the stored token |
+
+Then call the API with `-H "Authorization: Bearer $TOKEN"`. Never print `$TOKEN`.
+
+Common scopes: `bucket:read data:read` (read OSS), `bucket:create data:write data:create` (create and upload), `data:read viewables:read` (Model Derivative, Viewer), `code:all` (Design Automation), `data:read` (browse hubs/projects). Full list: [`references/authentication.md`](references/authentication.md).
+
+Before the first token request:
+1. Use `python3`, not `python`. Many machines (macOS) have no `python` command. The leaf recipes write `python`; substitute `python3` if it isn't found.
+2. The scripts need `requests`: `pip3 install requests` (ask before installing).
+3. Credentials come from `.env` in this folder. The scripts read it themselves, so a shell where `APS_CLIENT_ID` is unset is fine. If the scripts report "Fill in these values in …/.env" or "No .env file found", follow the [Credentials](#credentials-env-file) rules.
+
+Errors: `401` = wrong or expired credentials, rerun the command; `403` with a valid token = missing scope, add it to `--scope`. Tokens last about 60 minutes and are cached per scope string.
+
 ## How to route a request
 
 1. **Decide the auth type first.** App-owned resources (OSS buckets, Model Derivative, Design Automation, Webhooks) → 2-legged. User-owned data (hubs, projects, folders, files in ACC / BIM 360 / Fusion Team) → 3-legged. Read `skills/authentication/…` if unsure.
@@ -60,8 +80,8 @@ Only `GET` (and `HEAD`) calls may run without asking. **Before sending any other
 
 ```bash
 APS=https://developer.api.autodesk.com
-TOKEN=$(python skills/authentication/aps-auth-2legged/scripts/get_token.py --raw --scope "bucket:read data:read")   # app-owned data
-TOKEN=$(python skills/authentication/aps-auth-3legged/scripts/ensure_token.py --scope "data:read")                  # user data (opens the browser if needed)
+TOKEN=$(python3 skills/authentication/aps-auth-2legged/scripts/get_token.py --raw --scope "bucket:read data:read")   # app-owned data
+TOKEN=$(python3 skills/authentication/aps-auth-3legged/scripts/ensure_token.py --scope "data:read")                  # user data (opens the browser if needed)
 curl -sS "$APS/oss/v2/buckets" -H "Authorization: Bearer $TOKEN" -H "x-ads-region: US" | jq .
 ```
 

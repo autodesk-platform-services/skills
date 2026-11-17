@@ -25,13 +25,15 @@ The list includes Autodesk and shared bundles, not only yours.
 ## Recipe
 ```bash
 APS=https://developer.api.autodesk.com
-TOKEN=$(python skills/authentication/aps-auth-2legged/scripts/get_token.py --raw --scope "code:all")
+# token: see "Getting an access token" in aps-utilities/SKILL.md (run from the aps-utilities folder)
+TOKEN=$(python3 skills/authentication/aps-auth-2legged/scripts/get_token.py --raw --scope "code:all")
 H=(-H "Authorization: Bearer $TOKEN")
 
 # all visible bundles, paginated
 PAGE=""
 while :; do
-  R=$(curl -sS -G "$APS/da/us-east/v3/appbundles" "${H[@]}" ${PAGE:+--data-urlencode "page=$PAGE"})
+  Q=(); [ -n "$PAGE" ] && Q=(--data-urlencode "page=$PAGE")   # array form works in bash and zsh
+  R=$(curl -sS -G "$APS/da/us-east/v3/appbundles" "${H[@]}" "${Q[@]}")
   echo "$R" | jq -r '.data[]'
   PAGE=$(echo "$R" | jq -r '.paginationToken // empty'); [ -z "$PAGE" ] && break
 done

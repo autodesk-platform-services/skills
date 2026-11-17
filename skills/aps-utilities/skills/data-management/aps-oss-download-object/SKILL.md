@@ -24,7 +24,8 @@ Returns `{"status":"complete","url":"https://…","size":123,"sha1":"…"}`, or 
 ## Script-free recipe
 ```bash
 APS=https://developer.api.autodesk.com
-TOKEN=$(python skills/authentication/aps-auth-2legged/scripts/get_token.py --raw --scope "data:read")   # or 3-legged: ensure_token.py
+# token: see "Getting an access token" in aps-utilities/SKILL.md (run from the aps-utilities folder)
+TOKEN=$(python3 skills/authentication/aps-auth-2legged/scripts/get_token.py --raw --scope "data:read")   # or 3-legged: ensure_token.py
 B=my-bucket; KEY=house.rvt; R=US
 KEYENC=$(jq -rn --arg k "$KEY" '$k|@uri')
 

@@ -14,7 +14,8 @@ Spec: `oss/oss.yaml` in https://github.com/autodesk-platform-services/aps-sdk-op
 ```bash
 APS=https://developer.api.autodesk.com
 B=my-bucket; R=US
-TOKEN=$(python skills/authentication/aps-auth-2legged/scripts/get_token.py --raw --scope "bucket:read bucket:update bucket:delete")
+# token: see "Getting an access token" in aps-utilities/SKILL.md (run from the aps-utilities folder)
+TOKEN=$(python3 skills/authentication/aps-auth-2legged/scripts/get_token.py --raw --scope "bucket:read bucket:update bucket:delete")
 H=(-H "Authorization: Bearer $TOKEN" -H "x-ads-region: $R")
 ```
 

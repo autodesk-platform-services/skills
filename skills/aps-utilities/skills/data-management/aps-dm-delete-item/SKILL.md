@@ -16,7 +16,8 @@ Name the item and its folder, get an explicit "yes", then run the POST.
 Data Management has no `DELETE` for items. Read the item name (GET), then post a version of type `Deleted`:
 ```bash
 APS=https://developer.api.autodesk.com
-TOKEN=$(python skills/authentication/aps-auth-3legged/scripts/ensure_token.py --scope "data:read data:write data:create")
+# token: see "Getting an access token" in aps-utilities/SKILL.md (run from the aps-utilities folder)
+TOKEN=$(python3 skills/authentication/aps-auth-3legged/scripts/ensure_token.py --scope "data:read data:write data:create")
 enc() { jq -rn --arg v "$1" '$v|@uri'; }
 PROJ=b.yyyy; ITEM="urn:adsk.wipprod:dm.lineage:xxxx"        # find with aps-dm-browse
 
