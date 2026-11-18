@@ -1,6 +1,6 @@
 # Manufacturing Data Model API (GraphQL) & Fusion — skill reference
 
-Part of the [`aps`](../SKILL.md) umbrella skill. Skills will live in `skills/manufacturing-data-model/`.
+Part of the [`aps`](../SKILL.md) umbrella skill. Skills will live in `skills/`.
 Base: `https://developer.api.autodesk.com/mfg/graphql` · Skill prefix: `aps-mfgdm-*` · Conventions: [`conventions.md`](conventions.md)
 
 Status legend: ✅ built · 🔜 next · ⬜ planned — **1 built (`aps-mfgdm-hubs-projects-folders`, hubs only so far); the rest planned.**

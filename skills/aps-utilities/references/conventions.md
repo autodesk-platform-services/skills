@@ -6,9 +6,9 @@ Part of the [`aps`](../SKILL.md) umbrella skill. Every leaf skill in `skills/<ap
 
 - **Granularity**: one skill = one task a developer asks for ("upload a file to an ACC folder"), not one endpoint. Each `SKILL.md` lists the endpoints it wraps.
 - **Naming**: `aps-<family>-<verb>-<noun>`, kebab-case. Family prefixes: `auth`, `oss`, `dm`, `md` (Model Derivative), `viewer`, `da` (Design Automation), `wh` (Webhooks), `acc`, `aecdm`, `mfgdm`, `rc` (Reality Capture).
-- **Layout**: `skills/<api>/<skill-name>/SKILL.md` (frontmatter `name`, `description`; sections: When to use, Prerequisites, Endpoint(s), Recipe, Pitfalls) + optional `references/` for payload samples. No `scripts/` folder except in `skills/authentication/*`.
+- **Layout**: flat, `skills/<skill-name>/SKILL.md` (plugins discover one level only, so no family sub-folders; the family is the name prefix) (frontmatter `name`, `description`; sections: Prerequisites, Endpoint(s), Recipe, Gotchas; no "When to use" section, the `description` already carries triggers) + optional `references/` for payload samples. No `scripts/` folder except in `skills/aps-auth-*`.
 - **Language**: `curl` + `jq` against the raw REST endpoints (no APS SDK), written to match the OpenAPI specs at https://github.com/autodesk-platform-services/aps-sdk-openapi. State the spec file the recipe is based on. For APIs not in that repo (Design Automation, GraphQL), cite the docs page.
-- **Tokens**: always from the authentication scripts (`get_token.py --raw`, `ensure_token.py`) so secrets stay in `.env`. Recipes use `TOKEN=$(...)` and `-H "Authorization: Bearer $TOKEN"`. Never print the token. Every leaf recipe puts the `TOKEN=$(...)` line first in its Recipe block and links to "Getting an access token" in the root `SKILL.md`. Write `python3`, not `python`.
+- **Tokens**: always from the authentication scripts (`get_token.py --raw`, `ensure_token.py`) so secrets stay in `.env`. Recipes use `TOKEN=$(...)` and `-H "Authorization: Bearer $TOKEN"`. Never print the token. Every leaf recipe puts the `TOKEN=$(...)` line first in its Recipe block and names the `aps-auth-*` skill that holds credentials and scopes. Write `python3`, not `python`.
 - **Token helper**: `_shared/aps_common.py` is the source of truth; `python _shared/vendor.py` copies it into the two authentication `scripts/` folders. Never edit the vendored copies.
 - **Recipes**: define `APS=https://developer.api.autodesk.com`, URL-encode IDs/URNs with `jq -rn --arg v "$X" '$v|@uri'`, loop on `next` / `links.next.href` for pagination, and mark every non-GET step as needing approval.
 - **Auth declaration**: each SKILL.md states 2-legged / 3-legged / either, and the exact scopes.
@@ -57,3 +57,25 @@ APS error bodies are JSON with a readable message. Print the body (drop `-f`/`--
 ## Regions
 
 Buckets, hubs and projects are region-bound. OSS calls need `x-ads-region`; DM hub/project/folder calls infer the region from the URN (`wipprod`/`wipemea`) but some ACC endpoints need an explicit `region` query/header. When a call 404s on a known resource, try the other region first.
+
+## Spec lookup
+
+For endpoints without a leaf skill, clone or browse https://github.com/autodesk-platform-services/aps-sdk-openapi (`authentication`, `datamanagement`, `modelderivative`, `oss`, `webhooks`, `secureserviceaccount`, `forma/{accountadmin,forms,issues}`). Each YAML has parameters, bodies, scopes and a cURL sample per operation. Design Automation, GraphQL (AEC / Manufacturing Data Model) and others are not in that repo; use https://aps.autodesk.com/en/docs/.
+
+## Pagination styles
+
+JSON:API `links.next.href` for `/project/v1` and `/data/v1`; `next` cursor for `/oss/v2`; `page[number]`/`page[limit]` params.
+
+## Repository layout
+
+```
+SKILL.md                     router + token + confirmation rules
+references/<api>.md          per-API skill inventory, endpoints, status
+references/conventions.md    this file
+_shared/aps_common.py        token helper; vendored by _shared/vendor.py into skills/*/scripts/
+skills/<skill-name>/   leaf skills: SKILL.md (curl recipes); only aps-auth-* has scripts/
+```
+
+## Debugging curl
+
+Add `-i` or `-w '%{http_code}'`; APS error bodies are JSON and say what is wrong.

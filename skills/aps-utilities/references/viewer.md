@@ -1,6 +1,6 @@
 # Viewer — skill reference
 
-Part of the [`aps`](../SKILL.md) umbrella skill. Skills will live in `skills/viewer/`.
+Part of the [`aps`](../SKILL.md) umbrella skill. Skills will live in `skills/`.
 Base: `https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/` · Skill prefix: `aps-viewer-*` · Conventions: [`conventions.md`](conventions.md)
 
 Status legend: ✅ built · 🔜 next · ⬜ planned — **1 built (`aps-viewer-view-model`); the rest planned.**

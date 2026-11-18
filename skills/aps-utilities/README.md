@@ -67,7 +67,7 @@ The agent explains any change it's about to make and waits for your approval bef
 2. Add `APS_CLIENT_ID` and `APS_CLIENT_SECRET`. Optionally set `APS_ACCESS_TOKEN` and `APS_REGION` (`US`, `EMEA` or `AUS`).
 3. Get a token and call an API, for example:
    ```bash
-   TOKEN=$(python3 skills/authentication/aps-auth-2legged/scripts/get_token.py --raw --scope "bucket:read")
+   TOKEN=$(python3 skills/aps-auth-2legged/scripts/get_token.py --raw --scope "bucket:read")
    curl -sS https://developer.api.autodesk.com/oss/v2/buckets -H "Authorization: Bearer $TOKEN" | jq .
    ```
 
@@ -81,7 +81,7 @@ references/<api>.md          Per-API skill inventory, endpoints and status
 references/conventions.md    IDs, URNs, regions, pagination and error handling
 _shared/aps_common.py        Source of truth for the token helper
 _shared/vendor.py            Copies the helper into the authentication skills' scripts/ folders
-skills/<api>/<skill-name>/   Leaf skills: SKILL.md with curl recipes (authentication/* also has scripts/)
+skills/<skill-name>/   Leaf skills: SKILL.md with curl recipes (aps-auth-* also has scripts/)
 ```
 
 The two authentication skills vendor their own copy of `aps_common.py`, so edit `_shared/aps_common.py` and run `_shared/vendor.py` rather than changing the copies.

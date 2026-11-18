@@ -1,6 +1,6 @@
 # Data Management API — skill reference
 
-Part of the [`aps`](../SKILL.md) umbrella skill. Skills live in `skills/data-management/<skill-name>/`.
+Part of the [`aps`](../SKILL.md) umbrella skill. Skills live in `skills/<skill-name>/`.
 Conventions (naming, curl recipes, token scripts, env vars) are in [`conventions.md`](conventions.md); auth skills are in [`authentication.md`](authentication.md).
 
 Scope: OSS (Buckets & Objects), Hubs & Projects, Folders, Items & Versions, Commands. Other APIs appear only where a DM workflow hands off to them.

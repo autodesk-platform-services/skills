@@ -1,6 +1,6 @@
 # Authentication API — skill reference
 
-Part of the [`aps`](../SKILL.md) umbrella skill. Skills live in `skills/authentication/`.
+Part of the [`aps`](../SKILL.md) umbrella skill. Skills live in `skills/`.
 Base: `https://developer.api.autodesk.com/authentication/v2`
 
 Status legend: ✅ built · 🔜 next · ⬜ planned

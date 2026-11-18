@@ -7,6 +7,6 @@ from pathlib import Path
 
 root = Path(__file__).resolve().parent.parent
 src = root / "_shared" / "aps_common.py"
-for scripts in sorted((root / "skills" / "authentication").glob("*/scripts")):
+for scripts in sorted((root / "skills").glob("aps-auth-*/scripts")):
     shutil.copy2(src, scripts / "aps_common.py")
     print(f"vendored -> {scripts.relative_to(root)}/aps_common.py")

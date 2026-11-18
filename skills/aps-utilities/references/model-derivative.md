@@ -1,6 +1,6 @@
 # Model Derivative API — skill reference
 
-Part of the [`aps`](../SKILL.md) umbrella skill. Skills will live in `skills/model-derivative/`.
+Part of the [`aps`](../SKILL.md) umbrella skill. Skills will live in `skills/`.
 Base: `https://developer.api.autodesk.com/modelderivative/v2` · Skill prefix: `aps-md-*` · Conventions: [`conventions.md`](conventions.md)
 
 Status legend: ✅ built · 🔜 next · ⬜ planned — **2 built (`aps-md-translate`, `aps-md-inspect`); the rest planned.**

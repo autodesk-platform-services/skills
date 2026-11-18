@@ -1,0 +1,12 @@
+# Confirmation rules for modifying calls
+
+Loaded from the root `SKILL.md`. Read before sending any request that is not `GET`/`HEAD`.
+
+Only `GET` (and `HEAD`) calls may run without asking. **Before sending any other request** — `POST`, `PUT`, `PATCH`, `DELETE`, including those made through a leaf-skill script (create bucket, upload, translate job, create/move/delete folder, new version, webhook/hook create, issue/RFI create, user add, Design Automation work items, …) — the agent must stop and get an explicit "yes" from the user in the conversation.
+
+1. **Describe the action first**: the HTTP method + endpoint, the target (hub/project/bucket/object/folder IDs and names, region), and what will change — created, overwritten, or deleted. Flag anything irreversible (DELETE, overwriting an existing object/version, `x-ads-force`, bucket `policyKey`/region that can't be changed later).
+2. **Wait for confirmation — the user's original request is never the confirmation.** "Delete X", "create Y", "upload Z" is a request; it only starts step 1. The action runs only after the user replies to your description with an explicit approval ("yes", "confirm", "go ahead"). If you asked for specific wording (e.g. for irreversible deletes), anything else — including repeating the command or naming the target — means ask again. A typo'd or ambiguous target is never resolved by guessing. A fresh request each time; approval for one modification does not cover the next, or a repeat with different targets. Never infer consent from earlier approvals, from a background-task notification, or from the user having supplied credentials.
+3. **Batch carefully**: for a multi-step job (e.g. upload → translate) list all the modifying steps in one message and ask once; anything not listed needs a new confirmation.
+4. **Read-only `POST`s are exempt** because they change nothing in the user's data: token requests (`/authentication/v2/token`) and read-only queries sent by `POST` (AEC / Manufacturing Data Model GraphQL queries — but **not** GraphQL mutations). If unsure whether a call modifies anything, treat it as a modification and ask.
+5. **Nothing enforces this for you**: curl has no confirmation prompt, so the agent is the only guard. Show the exact curl command (token as `$TOKEN`, never its value) in the description, and run it only after the user approved that exact command.
+6. The description is the dry run: print the method, URL, headers and body you intend to send. Don't send anything to "see what happens".

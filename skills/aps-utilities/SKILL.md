@@ -1,6 +1,7 @@
 ---
 name: aps-utilities
-description: Entry point for anything involving Autodesk Platform Services (APS, formerly Forge) — authentication, Data Management (OSS buckets, hubs, projects, folders, files), Model Derivative, Viewer, Design Automation, Webhooks, ACC/BIM 360, Fusion, AEC Data Model, Reality Capture, and the rest. Use whenever the user mentions APS, Forge, developer.api.autodesk.com, an APS client ID/secret, OSS buckets, hubs/projects, ACC or BIM 360 APIs, SVF/translation, the Viewer, or Design Automation. This skill identifies which APS API the task needs and routes to the specialised skill under skills/<api>/; it does not implement API calls itself.
+description: Entry point for anything involving Autodesk Platform Services (APS, formerly Forge) — authentication, Data Management (OSS buckets, hubs, projects, folders, files), Model Derivative, Viewer, Design Automation, Webhooks, ACC/BIM 360, Fusion, AEC Data Model, Reality Capture, and the rest. Use whenever the user mentions APS, Forge, developer.api.autodesk.com, an APS client ID/secret, OSS buckets, hubs/projects, ACC or BIM 360 APIs, SVF/translation, the Viewer, or Design Automation. This skill identifies which APS API the task needs and routes to the specialised skill under skills/<name>/; it does not implement API calls itself.
+compatibility: Requires python3 with the requests package (token scripts only), curl, jq, and network access to developer.api.autodesk.com.
 metadata:
   author: Developer Advocates @ Autodesk
   products: "APS, Data Management, Model Derivative, Viewer, Design Automation, Manufacturing Data Model"
@@ -8,104 +9,36 @@ metadata:
   technologies: "Python, REST"
 ---
 
-# APS utilities — umbrella skill
+# APS utilities (router)
 
-Only **access tokens** come from a script (`skills/authentication/*/scripts/`, Python 3 + `requests`). **Everything else is plain `curl` (plus `jq`)** against the raw REST endpoints, following the OpenAPI specs in https://github.com/autodesk-platform-services/aps-sdk-openapi (no APS SDK). Every leaf skill is a single `SKILL.md` with copy-paste curl recipes. Credentials come from `APS_CLIENT_ID`, `APS_CLIENT_SECRET`, optional `APS_ACCESS_TOKEN`, `APS_REGION` — read automatically from a git-ignored `.env` file (see [Credentials](#credentials-env-file)).
+Autodesk Platform Services skills. Each task has its own skill in `skills/<name>/` (name and description load at startup, so they trigger on their own). This file only routes and holds the rules every skill shares. Everything except token requests is plain `curl` + `jq` against the REST API (specs: https://github.com/autodesk-platform-services/aps-sdk-openapi). Run commands from this folder.
 
-## Getting an access token (every API call needs one)
+## Route a request
 
-Every leaf skill starts with a `TOKEN=$(…)` line. That line is the only supported way to get a token; run it from this folder (the `aps-utilities` folder), in the same shell command as the `curl` that uses it (shell state does not persist between agent tool calls).
+1. **Auth type first.** App-owned (OSS buckets, Model Derivative, Design Automation, Webhooks) → `aps-auth-2legged`. User-owned (hubs, projects, folders, files in ACC / BIM 360 / Fusion Team, GraphQL data models) → `aps-auth-3legged`. Each leaf skill's first command already calls the right one; credentials, scopes and token errors are documented there.
+2. **Open the leaf skill** for the task and run its recipe. Compose skills for workflows (create bucket → upload → translate → view).
+3. **No leaf skill for the ask?** Read the family reference, then the spec (`references/conventions.md`, "Spec lookup").
 
-| Data you touch | Command | Notes |
+| API family | Leaf skills (`skills/`) | Read when no leaf skill fits |
 |---|---|---|
-| App-owned: OSS buckets, Model Derivative, Design Automation, Webhooks, Viewer tokens | `TOKEN=$(python3 skills/authentication/aps-auth-2legged/scripts/get_token.py --raw --scope "<scopes>")` | Needs only `APS_CLIENT_ID` and `APS_CLIENT_SECRET` |
-| User-owned: hubs, projects, folders, files (ACC, BIM 360, Fusion), GraphQL data models | `TOKEN=$(python3 skills/authentication/aps-auth-3legged/scripts/ensure_token.py --scope "<scopes>")` | Opens the browser for login the first time, then reuses and refreshes the stored token |
-
-Then call the API with `-H "Authorization: Bearer $TOKEN"`. Never print `$TOKEN`.
-
-Common scopes: `bucket:read data:read` (read OSS), `bucket:create data:write data:create` (create and upload), `data:read viewables:read` (Model Derivative, Viewer), `code:all` (Design Automation), `data:read` (browse hubs/projects). Full list: [`references/authentication.md`](references/authentication.md).
-
-Before the first token request:
-1. Use `python3`, not `python`. Many machines (macOS) have no `python` command. The leaf recipes write `python`; substitute `python3` if it isn't found.
-2. The scripts need `requests`: `pip3 install requests` (ask before installing).
-3. Credentials come from `.env` in this folder. The scripts read it themselves, so a shell where `APS_CLIENT_ID` is unset is fine. If the scripts report "Fill in these values in …/.env" or "No .env file found", follow the [Credentials](#credentials-env-file) rules.
-
-Errors: `401` = wrong or expired credentials, rerun the command; `403` with a valid token = missing scope, add it to `--scope`. Tokens last about 60 minutes and are cached per scope string.
-
-## How to route a request
-
-1. **Decide the auth type first.** App-owned resources (OSS buckets, Model Derivative, Design Automation, Webhooks) → 2-legged. User-owned data (hubs, projects, folders, files in ACC / BIM 360 / Fusion Team) → 3-legged. Read `skills/authentication/…` if unsure.
-2. **Pick the API family** from the table below and open its reference file — it lists every skill in that family, the endpoints each wraps, and the build status.
-3. **Open the leaf skill's `SKILL.md`** and run its curl recipe — but if the call is anything other than `GET`, first follow [Confirm before any modification](#confirm-before-any-modification-mandatory). Compose several leaf skills for end-to-end workflows (e.g. upload → translate → view). For an endpoint no leaf skill covers, look it up in the OpenAPI spec (see [Calling APS with curl](#calling-aps-with-curl)).
-4. If no leaf skill exists yet, follow the family's reference to find the closest one and the conventions in `references/conventions.md`.
-
-## API families → references
-
-| API family | Typical asks | Reference | Skills folder | Status |
-|---|---|---|---|---|
-| **Authentication** (OAuth 2-legged / 3-legged, PKCE, refresh, token introspection) | "get a token", "log in with Autodesk", 401/403 | [`references/authentication.md`](references/authentication.md) | `skills/authentication/` | 2 skills built |
-| **Data Management** (OSS buckets & objects, Hubs, Projects, Folders, Items, Versions, Commands) | "create a bucket", "upload a file", "list hubs/projects", "download from ACC" | [`references/data-management.md`](references/data-management.md) | `skills/data-management/` | 7 built, ~40 planned (buckets, browse hubs/projects/folders, upload to folder) |
-| **Model Derivative** (translate to SVF/SVF2/OBJ/STL/IFC, manifests, metadata, properties, thumbnails) | "translate a model", "get properties", "extract geometry" | [`references/model-derivative.md`](references/model-derivative.md) | `skills/model-derivative/` | 2 built (translate, inspect) |
-| **Viewer** (viewer tokens, loading documents, extensions, embedding) | "show it in the Viewer", "viewer HTML page" | [`references/viewer.md`](references/viewer.md) | `skills/viewer/` | 1 built (view model) |
-| **Design Automation** (AppBundles, Activities, WorkItems for AutoCAD/Revit/Inventor/3ds Max) | "run a Revit script in the cloud", "batch convert DWGs" | [`references/design-automation.md`](references/design-automation.md) | `skills/design-automation/` | 2 built (list appbundles, list engines) |
-| **Webhooks** (dm.version.added, dm.folder.*, extraction.finished, hooks CRUD) | "notify me when a file changes" | [`references/webhooks.md`](references/webhooks.md) | `skills/webhooks/` | planned |
-| **ACC / BIM 360** (Account Admin, Project Admin, Docs custom attributes, Issues, RFIs, Submittals, Assets, Cost, Sheets, Model Coordination, Data Connector) | "list issues in project X", "add a user to a project", "export project data" | [`references/acc-bim360.md`](references/acc-bim360.md) | `skills/acc-bim360/` | planned |
-| **AEC Data Model** (GraphQL: element groups, elements, properties across hubs) | "query Revit elements without downloading", "GraphQL APS" | [`references/aec-data-model.md`](references/aec-data-model.md) | `skills/aec-data-model/` | planned |
-| **Manufacturing Data Model / Fusion** (GraphQL: components, occurrences, properties, Fusion Team) | "query Fusion designs", "Fusion BOM" | [`references/manufacturing-data-model.md`](references/manufacturing-data-model.md) | `skills/manufacturing-data-model/` | 1 built (hubs) |
-| **Reality Capture** (photoscenes → meshes/orthos) | "photogrammetry", "make a mesh from photos" | [`references/reality-capture.md`](references/reality-capture.md) | `skills/reality-capture/` | planned |
-| **Tandem, Forma, Flow Graph Engine, Parameters, Premium Reporting, Token Flex** | niche platform APIs | [`references/other-apis.md`](references/other-apis.md) | `skills/other/` | planned |
-
-## Credentials (.env file)
-
-Every script auto-loads variables from a `.env` file (nearest one walking up from the CWD, then from the script's location upward; `APS_ENV_FILE` overrides the path). Real environment variables win over `.env`. Template: [`.env.example`](.env.example). `.env` is git-ignored.
-
-Agent rules:
-0. **Get tokens with the auth scripts, never by hand-building a token request** (`get_token.py --raw`, `ensure_token.py`). They read `.env`, so the client secret never appears in a curl command.
-1. **Do not export, echo or re-pass credentials yourself.** Only the token flows into curl, as `Authorization: Bearer $TOKEN`.
-2. **If `.env` is missing, or the token scripts fail with "Fill in these values in …/.env" / "No .env file found"**: create `.env` from `.env.example` if it does not exist, then **ask the user to open it and fill in the listed values** (`APS_CLIENT_ID`, `APS_CLIENT_SECRET`; client credentials from https://aps.autodesk.com/myapps). Stop and wait until they say it is done, then retry.
-3. **Never ask the user to paste a secret or token into the chat**, and never print values from `.env` (show key names only). If they paste one anyway, tell them to put it in `.env` instead and treat it as exposed (rotate it).
+| Authentication | `aps-auth-2legged`, `aps-auth-3legged` | [`references/authentication.md`](references/authentication.md) |
+| Data Management | `aps-oss-*`, `aps-dm-*` | [`references/data-management.md`](references/data-management.md) |
+| Model Derivative | `aps-md-translate`, `aps-md-inspect` | [`references/model-derivative.md`](references/model-derivative.md) |
+| Viewer | `aps-viewer-view-model` | [`references/viewer.md`](references/viewer.md) |
+| Design Automation | `aps-da-list-appbundles`, `aps-da-list-engines` | [`references/design-automation.md`](references/design-automation.md) |
+| Manufacturing Data Model | `aps-mfgdm-hubs-projects-folders` | [`references/manufacturing-data-model.md`](references/manufacturing-data-model.md) |
+| Webhooks, ACC / BIM 360, AEC Data Model, Reality Capture, other | none yet | [`webhooks`](references/webhooks.md), [`acc-bim360`](references/acc-bim360.md), [`aec-data-model`](references/aec-data-model.md), [`reality-capture`](references/reality-capture.md), [`other-apis`](references/other-apis.md) |
 
 ## Confirm before any modification (mandatory)
 
-Only `GET` (and `HEAD`) calls may run without asking. **Before sending any other request** — `POST`, `PUT`, `PATCH`, `DELETE`, including those made through a leaf-skill script (create bucket, upload, translate job, create/move/delete folder, new version, webhook/hook create, issue/RFI create, user add, Design Automation work items, …) — the agent must stop and get an explicit "yes" from the user in the conversation.
+Only `GET`/`HEAD` run without asking. Before any `POST`, `PUT`, `PATCH` or `DELETE` (create, upload, translate, delete, webhook, work item, …): describe the method, URL, headers, body, target and what changes (flag anything irreversible), then **wait for an explicit "yes" to that description**. The user's original request is not approval; approval for one action does not cover the next. Read-only exceptions: token requests and GraphQL *queries* (not mutations). Full rules: [`references/confirmation.md`](references/confirmation.md), read them before the first modifying call.
 
-1. **Describe the action first**: the HTTP method + endpoint, the target (hub/project/bucket/object/folder IDs and names, region), and what will change — created, overwritten, or deleted. Flag anything irreversible (DELETE, overwriting an existing object/version, `x-ads-force`, bucket `policyKey`/region that can't be changed later).
-2. **Wait for confirmation — the user's original request is never the confirmation.** "Delete X", "create Y", "upload Z" is a request; it only starts step 1. The action runs only after the user replies to your description with an explicit approval ("yes", "confirm", "go ahead"). If you asked for specific wording (e.g. for irreversible deletes), anything else — including repeating the command or naming the target — means ask again. A typo'd or ambiguous target is never resolved by guessing. A fresh request each time; approval for one modification does not cover the next, or a repeat with different targets. Never infer consent from earlier approvals, from a background-task notification, or from the user having supplied credentials.
-3. **Batch carefully**: for a multi-step job (e.g. upload → translate) list all the modifying steps in one message and ask once; anything not listed needs a new confirmation.
-4. **Read-only `POST`s are exempt** because they change nothing in the user's data: token requests (`/authentication/v2/token`) and read-only queries sent by `POST` (AEC / Manufacturing Data Model GraphQL queries — but **not** GraphQL mutations). If unsure whether a call modifies anything, treat it as a modification and ask.
-5. **Nothing enforces this for you**: curl has no confirmation prompt, so the agent is the only guard. Show the exact curl command (token as `$TOKEN`, never its value) in the description, and run it only after the user approved that exact command.
-6. The description is the dry run: print the method, URL, headers and body you intend to send. Don't send anything to "see what happens".
+## Gotchas
 
-## Calling APS with curl
-
-```bash
-APS=https://developer.api.autodesk.com
-TOKEN=$(python3 skills/authentication/aps-auth-2legged/scripts/get_token.py --raw --scope "bucket:read data:read")   # app-owned data
-TOKEN=$(python3 skills/authentication/aps-auth-3legged/scripts/ensure_token.py --scope "data:read")                  # user data (opens the browser if needed)
-curl -sS "$APS/oss/v2/buckets" -H "Authorization: Bearer $TOKEN" -H "x-ads-region: US" | jq .
-```
-
-- Run from the `aps-utilities` folder (paths above are relative to it), or use absolute paths.
-- `jq` is used for JSON parsing and URL-encoding (`jq -rn --arg v "$X" '$v|@uri'`).
-- **Spec lookup** for endpoints without a leaf skill: clone or browse https://github.com/autodesk-platform-services/aps-sdk-openapi (`authentication`, `datamanagement`, `modelderivative`, `oss`, `webhooks`, `secureserviceaccount`, `forma/{accountadmin,forms,issues}`). Each YAML has parameters, bodies, scopes and a cURL sample per operation. Design Automation, GraphQL (AEC / Manufacturing Data Model) and others are not in that repo; use the docs at https://aps.autodesk.com/en/docs/.
-- Check `-w '%{http_code}'` or `-i` when debugging. APS error bodies are JSON and say what is wrong.
-- Read-only paging: follow `next` (OSS) or `links.next.href` (JSON:API) in a loop; recipes are in `aps-oss-list-objects` and `aps-dm-browse`.
-
-## Cross-cutting conventions (apply to every family)
-
-- **Regions**: `x-ads-region: US | EMEA | AUS` on OSS and some ACC calls; hubs/projects are region-bound. Set `APS_REGION`.
-- **IDs & URNs**: hub/project IDs prefixed `b.`; folder/item/version URNs `urn:adsk.wipprod:…`; OSS `objectId` → URL-safe base64 for Model Derivative. See `references/conventions.md`.
-- **Pagination**: JSON:API `links.next` for `/project/v1` & `/data/v1`; `next` cursor for `/oss/v2`; `page[number]`/`page[limit]` params.
-- **Errors**: 401 = bad/expired token; 403 = missing scope or no permission; 404 can mean wrong region; 429 means wait for the `Retry-After` header and retry (use `curl --retry 5 --retry-all-errors` for idempotent reads).
-- **Secrets** never go into logs or the chat; the only place they live is the git-ignored `.env` (or real env vars). Only the token scripts read them.
-
-## Repository layout
-
-```
-SKILL.md                     ← this file (router)
-references/<api>.md          ← per-API skill inventory, endpoints, status
-references/conventions.md    ← IDs, URNs, regions, pagination, error handling
-_shared/aps_common.py        ← token helper; vendored by _shared/vendor.py into skills/authentication/*/scripts/ only
-skills/<api>/<skill-name>/   ← leaf skills: SKILL.md (curl recipes); only authentication/* also has scripts/
-```
-Skill names are prefixed by family: `aps-auth-*`, `aps-oss-*` / `aps-dm-*`, `aps-md-*`, `aps-da-*`, `aps-wh-*`, `aps-acc-*`, `aps-aecdm-*`, `aps-mfgdm-*`, `aps-rc-*`.
+- Use `python3`, not `python` (macOS has none). Token scripts need `requests` (ask before `pip3 install`).
+- Credentials live only in the git-ignored `.env` here; scripts read it. Never print, export or ask for secrets or tokens in chat; if the user pastes one, tell them to put it in `.env` and rotate it. Missing `.env` handling: see `aps-auth-2legged`.
+- Never print `$TOKEN`. Shell state doesn't persist between tool calls: get the token and run `curl` in the same command.
+- **Regions**: `x-ads-region: US | EMEA | AUS` on OSS and some ACC calls (`APS_REGION`). A `404` often means wrong region.
+- **IDs**: hub/project ids start `b.` (ACC/BIM 360) or `a.` (Fusion Team). URN ids must be URL-encoded in paths. OSS `objectId` → URL-safe base64 (no padding) for Model Derivative.
+- **Errors**: `401` bad/expired token; `403` missing scope or permission; `429` wait for `Retry-After`.
+- More (pagination styles, env vars, skill-authoring rules): [`references/conventions.md`](references/conventions.md).

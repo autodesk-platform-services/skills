@@ -1,6 +1,6 @@
 # Design Automation API v3 — skill reference
 
-Part of the [`aps`](../SKILL.md) umbrella skill. Skills will live in `skills/design-automation/`.
+Part of the [`aps`](../SKILL.md) umbrella skill. Skills will live in `skills/`.
 Base: `https://developer.api.autodesk.com/da/us-east/v3` · Skill prefix: `aps-da-*` · Conventions: [`conventions.md`](conventions.md)
 
 Status legend: ✅ built · 🔜 next · ⬜ planned — **2 built (`aps-da-list-appbundles`, `aps-da-list-engines`); the rest planned.**
