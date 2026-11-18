@@ -80,16 +80,19 @@ Use the source table below to pick the TOC(s) to open. For example:
 |---|---|
 | `acc_v1` | Autodesk Construction Cloud APIs |
 | `aecdatamodel_v1` | AEC Data Model API |
-| `applications_v1` | Application Management API |
+| `applications_v2` | Application Management API |
 | `bim360_v1` | BIM 360 API |
 | `buildingconnected_v2` | BuildingConnected & TradeTapp APIs |
+| `content_catalog_v2` | Content Catalog |
 | `data_v2` | Data Management API |
 | `dataviz_v1` | Data Visualization |
 | `design-automation_v3` | Automation API |
-| `dx-sdk-beta_v7.2.0` | Data Exchange .NET SDK v7.2.0 |
+| `dx-sdk_v8.0.0` | Data Exchange .NET SDK v8.0.0 |
 | `fdxgraph_v1` | Data Exchange GraphQL |
+| `flow_data_v1` | M&E Data Model API (Beta) |
 | `flow_graph_engine_v1` | Flow Graph Engine |
 | `forma_v1` | Forma Site Design API (Beta) |
+| `fusion-operations_v2` | Fusion Operations API |
 | `informed-design_v1` | Informed Design API (Beta) |
 | `insights_v1` | Business Success Plan Reporting API |
 | `mfgdataapi_v3` | Manufacturing Data Model API |
@@ -97,9 +100,11 @@ Use the source table below to pick the TOC(s) to open. For example:
 | `oauth_v2` | Authentication API |
 | `parameters_v1` | Parameters API |
 | `profile_v2` | User Profile API |
+| `reality-capture_v1` | Reality Capture API |
 | `ssa_v1` | Secure Service Account API |
 | `sustainability_v3` | Sustainability Data API |
 | `tandem_v1` | Tandem Data |
+| `team_admin_v1` | Team Admin API (Beta) |
 | `tokenflex_v1` | Token Flex Usage Data API |
 | `vaultdataapi_v2` | Vault Data API |
 | `viewer_v7` | Viewer |
@@ -138,7 +143,7 @@ https://aps.autodesk.com/en/docs/acc/v1/reference/http/issues-issues-GET/	GET is
   |---|---|
   | `acc/v1/reference/http/issues/issues-GET.html` | `…/en/docs/acc/v1/reference/http/issues-issues-GET/` |
   | `model-derivative/v2/overview.html` | `…/en/docs/model-derivative/v2/developers_guide/overview/` |
-  | `dx-sdk-beta/v1/v720/developers_guide/overview.html` | `…/en/docs/dx-sdk-beta/v7.2.0/developers_guide/overview/` |
+  | `dx-sdk/v1/v800/developers_guide/overview.html` | `…/en/docs/dx-sdk/v8.0.0/developers_guide/overview/` |
 
 - **Column 3 is the page HTML path** for Step 4.
 - **Given a portal URL** (from the user or elsewhere): map it to its source ID (Step 2), index that TOC, and `grep -F` for the exact URL (with trailing `/`) to get its CDN source. Given a CDN URL: `grep -F` the path after `bPlouYTd/` in column 3; if the repo slug is outdated, grep for the tail of the path instead.
