@@ -8,18 +8,18 @@ VS Code Copilot), single-user scenarios.
 
 **Characteristics:**
 
-- Server lifetime tied to the MCP client session
-- Single session by design — one client at a time
+- Server lifetime tied to the MCP client process
+- One client per server process
 - Simplest security model (no network exposure)
 - Logs **must** go to **stderr**, never stdout (stdout is reserved for MCP messages)
-- STDIO servers are inherently single-session — stateful vs. stateless is not applicable
+- The client owns the process, so there's no multi-user state to manage
 
 ## Node.js
 
 ```typescript
 // src/index.ts
 import "dotenv/config";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { serveStdio } from "@modelcontextprotocol/server/stdio";
 import { createMcpServer } from "./server.js";
 
 const options = {
@@ -27,15 +27,12 @@ const options = {
   clientSecret: process.env.APS_CLIENT_SECRET!,
 };
 
-async function main() {
-  const server = createMcpServer(options);
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  // Server runs until stdin closes
-}
-
-main().catch((err) => { console.error(err); process.exit(1); });
+serveStdio(() => createMcpServer(options)); // runs until stdin closes
+console.error("APS MCP server running on stdio");
 ```
+
+`serveStdio` negotiates the protocol revision with the client: `2026-07-28` clients probe with
+`server/discover`, and older clients still get their `initialize` handshake.
 
 ## Python
 
@@ -45,6 +42,8 @@ if __name__ == "__main__":
     mcp.run()  # defaults to STDIO
     # or explicitly: mcp.run(transport="stdio")
 ```
+
+FastMCP 4 answers both `2026-07-28` clients and older clients that send `initialize`.
 
 Run:
 

@@ -30,7 +30,7 @@ Ask the user **all three questions at once** if they have not already answered:
 3. **Authentication** — Which APS auth pattern?
    - **2-legged OAuth** — app accesses its own resources; no user sign-in
    - **Secure Service Accounts (SSA)** — automated server-to-server; acts as a service account with user context, without interactive login
-   - **3-legged OAuth** — user signs in via browser; server acts on their behalf
+   - **3-legged OAuth** — user signs in via browser; server acts on their behalf. Needs Streamable HTTP and an identity provider for MCP authorization, which tells the server who each user is
 
 If the user's request already makes one of the choices clear (e.g., "Python FastMCP server"), skip that question.
 
@@ -89,6 +89,6 @@ After creating files, tell the user:
 
 - **Never implement token passthrough.** The MCP server must authenticate with APS itself — it must never accept APS tokens from the MCP client and forward them.
 - **Always cache tokens.** Use the `aps-auth` helpers, which cache tokens and refresh them ahead of expiry.
-- **STDIO ↔ Stateless HTTP distinction.** STDIO servers are inherently single-session. Streamable HTTP servers should default to stateless (no session ID) unless 3-legged OAuth is chosen, which requires stateful sessions to track per-user tokens.
+- **Streamable HTTP is stateless.** The MCP `2026-07-28` revision removed sessions, so never key per-user state by MCP session ID or client info. For 3-legged OAuth, protect the server with MCP authorization and key APS tokens by the authenticated user (the access token's `sub`); see `auth.md`.
 - **Tool descriptions matter.** Write clear docstrings/descriptions for every tool — the LLM uses them to decide when to call each tool.
 - **Return both `content` and `structuredContent`** in Node.js tools when the data could be consumed programmatically (e.g., by a UI component). Python FastMCP infers structured output automatically from return types.

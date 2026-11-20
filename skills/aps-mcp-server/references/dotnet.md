@@ -5,7 +5,9 @@
 - `ModelContextProtocol` — latest (≥1.0; the examples use the `McpServer` type, which replaced `IMcpServer`)
 - `Microsoft.Extensions.Hosting` — latest
 - `Microsoft.Extensions.Http` — latest
+- `ModelContextProtocol.AspNetCore` — latest (HTTP transport only)
 - `System.IdentityModel.Tokens.Jwt` — latest (SSA auth only)
+- `Microsoft.AspNetCore.Authentication.JwtBearer` — same major version as the target framework, such as 9.x for `net9.0` (3-legged OAuth only, to validate MCP access tokens)
 
 ## Project Initialisation
 
@@ -15,9 +17,12 @@ cd ApsMcpServer
 dotnet add package ModelContextProtocol
 dotnet add package Microsoft.Extensions.Hosting
 dotnet add package Microsoft.Extensions.Http
+# HTTP transport (WithHttpTransport, MapMcp, and MCP authorization):
+dotnet add package ModelContextProtocol.AspNetCore
 # SSA auth:
 dotnet add package System.IdentityModel.Tokens.Jwt
-# 3LO auth: add <FrameworkReference Include="Microsoft.AspNetCore.App" /> to the .csproj
+# 3LO auth: add <FrameworkReference Include="Microsoft.AspNetCore.App" /> to the .csproj, and
+dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer --version "9.*"  # match the target framework
 ```
 
 ### `.csproj` (ensure nullable and implicit usings)
@@ -71,6 +76,7 @@ await app.RunAsync();
 // Program.cs  (HTTP transport — requires Microsoft.AspNetCore.App)
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using ModelContextProtocol.AspNetCore;
 using Microsoft.Extensions.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -82,7 +88,7 @@ builder.Services.AddHttpClient<ApsOssClient>();
 
 builder.Services
     .AddMcpServer()
-    .WithHttpTransport()
+    .WithHttpTransport(o => o.SessionMode = HttpServerSessionMode.Stateless)
     .WithToolsFromAssembly();
 
 var app = builder.Build();

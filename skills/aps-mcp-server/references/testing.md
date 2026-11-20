@@ -45,7 +45,12 @@ npx @modelcontextprotocol/inspector \
 - [ ] Tool descriptions and input schemas are accurate
 - [ ] Calling `list-buckets` (or equivalent) returns data or a clear error
 - [ ] Auth errors surface as readable messages, not raw stack traces
-- [ ] For 3LO: unauthenticated tool call returns `auth_required` + `auth_url`
+- [ ] For 3LO: a request without a bearer token gets `401` with a `WWW-Authenticate` header that
+      points to the protected resource metadata, and Inspector's OAuth flow signs in to the IdP
+- [ ] For 3LO: a signed-in user without APS tokens gets `auth_required` + `auth_url`; after the
+      APS sign-in, the same call returns data
+- [ ] For 3LO: a second IdP user gets their own `auth_required` reply, not the first user's data
+- [ ] For 3LO: opening `/callback` with a reused or made-up `state` returns `400`
 
 ---
 

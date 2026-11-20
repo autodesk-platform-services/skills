@@ -1,5 +1,9 @@
 # Python APS MCP Server Reference
 
+FastMCP 4 is the first release that supports the MCP `2026-07-28` revision: requests carry no
+session and no `initialize` handshake, and FastMCP still serves older clients that send
+`initialize`. Use FastMCP 4 or later.
+
 ## Package Manager: uv
 
 Always use `uv` for Python APS MCP servers. It provides fast, reproducible
@@ -14,7 +18,7 @@ name = "aps-mcp-server"
 version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
-    "fastmcp>=2.3.4",
+    "fastmcp>=4.0",
     "httpx>=0.27",
     "python-dotenv>=1.0",
     # SSA auth only:
@@ -32,7 +36,7 @@ build-backend = "hatchling.build"
 ```bash
 uv init aps-mcp-server
 cd aps-mcp-server
-uv add fastmcp httpx python-dotenv
+uv add "fastmcp>=4" httpx python-dotenv
 # SSA auth:
 uv add "pyjwt[crypto]"
 ```
@@ -88,9 +92,10 @@ if __name__ == "__main__":
     mcp.run()  # defaults to STDIO
 ```
 
-## FastMCP Server — Streamable HTTP (Stateless)
+## FastMCP Server — Streamable HTTP
 
-For 2-legged OAuth and SSA (no per-user sessions needed):
+For 2-legged OAuth and SSA (no per-user state needed). `stateless_http=True` keeps older,
+`initialize`-based clients stateless too; `2026-07-28` requests are stateless either way.
 
 ```python
 # src/aps_mcp_server/server.py
@@ -122,22 +127,25 @@ async def list_objects(bucket_key: str) -> list[dict]:
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", "5000"))
-    mcp.run(transport="streamable-http", host="0.0.0.0", port=port)
+    mcp.run(transport="http", host="0.0.0.0", port=port, stateless_http=True)
 ```
 
 Run:
 ```bash
 uv run python -m aps_mcp_server.server
 # or via fastmcp CLI:
-uv run fastmcp run src/aps_mcp_server/server.py:mcp --transport streamable-http --port 5000
+uv run fastmcp run src/aps_mcp_server/server.py:mcp --transport http --port 5000 --stateless
 ```
 
-## FastMCP Server — Streamable HTTP (Stateful, 3LO only)
+## FastMCP Server — Streamable HTTP with 3-legged OAuth
 
-When using 3-legged OAuth, the server must be **stateful** to track per-user
-tokens by `session_id`. The token helper (`auth.py`) comes from the `aps-auth`
-skill; the callback route and tool pattern are in [`auth.md`](auth.md). Tools
-use `ctx: Context` to get the session ID, and `await get_access_token(ctx.session_id)`.
+With 3-legged OAuth, the server stays stateless and stores APS tokens per MCP
+user. Protect it with MCP authorization (`FastMCP(..., auth=RemoteAuthProvider(...))`),
+and key tokens by the `sub` claim of the validated access token, read with
+`fastmcp.server.dependencies.get_access_token()`. The token helper (`auth.py`)
+comes from the `aps-auth` skill; the auth provider, callback route, and tool
+pattern are in [`auth.md`](auth.md). Don't key tokens by `ctx.session_id`: on
+`2026-07-28` connections it changes on every request.
 
 ## APS OSS API Helpers
 
@@ -182,6 +190,9 @@ APS_SSA_KEY_BASE64=
 
 # 3LO auth only
 APS_CALLBACK_URL=http://localhost:5000/callback
+MCP_AUTH_ISSUER=https://your-idp.example.com
+MCP_AUTH_JWKS_URI=https://your-idp.example.com/.well-known/jwks.json
+PUBLIC_ENDPOINT_URL=http://localhost:5000
 
 # HTTP transport only
 PORT=5000
@@ -227,3 +238,12 @@ async def list_buckets() -> list[dict]:   # structured output inferred
 
 Return `list[dict] | dict` when the tool may return either data or an
 auth-required redirect response (3LO pattern).
+
+## Request context
+
+Tools that need request details take a `ctx: Context` parameter (from `fastmcp`), which FastMCP
+injects and leaves out of the input schema. On `2026-07-28` connections, `ctx.session_id` is new
+for every request, so never use it to keep state between calls. Identify the user from the
+validated MCP access token instead (`fastmcp.server.dependencies.get_access_token()`, see
+[`auth.md`](auth.md)). Client-sent values such as `_meta` or `clientInfo` aren't verified, so
+don't use them for authorization.
