@@ -17,8 +17,7 @@ dotnet add package Microsoft.Extensions.Hosting
 dotnet add package Microsoft.Extensions.Http
 # SSA auth:
 dotnet add package System.IdentityModel.Tokens.Jwt
-# 3LO auth (embedded web server for OAuth callback):
-dotnet add package Microsoft.AspNetCore.App
+# 3LO auth: add <FrameworkReference Include="Microsoft.AspNetCore.App" /> to the .csproj
 ```
 
 ### `.csproj` (ensure nullable and implicit usings)
@@ -134,51 +133,9 @@ public class OssTools(ApsOssClient ossClient)
 
 ## Auth Service
 
-```csharp
-// Services/ApsAuthService.cs
-using System.Net.Http.Json;
-using System.Text.Json;
-
-public class ApsAuthService(IConfiguration config, IHttpClientFactory httpClientFactory)
-{
-    private const string TokenUrl = "https://developer.api.autodesk.com/authentication/v2/token";
-
-    private string? _cachedToken;
-    private DateTime _expiresAt = DateTime.MinValue;
-
-    public async Task<string> GetAccessTokenAsync(string scope = "bucket:read data:read")
-    {
-        if (_cachedToken != null && DateTime.UtcNow < _expiresAt.AddSeconds(-60))
-            return _cachedToken;
-
-        var client = httpClientFactory.CreateClient();
-        var clientId = config["APS_CLIENT_ID"] ?? throw new InvalidOperationException("APS_CLIENT_ID not set");
-        var clientSecret = config["APS_CLIENT_SECRET"] ?? throw new InvalidOperationException("APS_CLIENT_SECRET not set");
-
-        var form = new Dictionary<string, string>
-        {
-            ["grant_type"] = "client_credentials",
-            ["scope"] = scope,
-        };
-
-        var request = new HttpRequestMessage(HttpMethod.Post, TokenUrl)
-        {
-            Content = new FormUrlEncodedContent(form),
-        };
-        var credentials = Convert.ToBase64String(
-            System.Text.Encoding.UTF8.GetBytes($"{clientId}:{clientSecret}"));
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", credentials);
-
-        var response = await client.SendAsync(request);
-        response.EnsureSuccessStatusCode();
-
-        var json = await response.Content.ReadFromJsonAsync<JsonElement>();
-        _cachedToken = json.GetProperty("access_token").GetString()!;
-        _expiresAt = DateTime.UtcNow.AddSeconds(json.GetProperty("expires_in").GetInt32());
-        return _cachedToken;
-    }
-}
-```
+Use `ApsAuthService` from the 2-legged reference of the `aps-auth` skill
+(`Services/ApsAuthService.cs`), or the service for the chosen auth type. The
+OSS client and tools below depend on its `GetAccessTokenAsync()` method.
 
 ## OSS API Client
 
@@ -287,9 +244,8 @@ Or point to the published binary:
 
 ## SSA-specific additions
 
-For Secure Service Account auth, register `ApsSsaAuthService` instead of
-`ApsAuthService`. See [`auth-patterns.md`](auth-patterns.md) for the JWT
-assertion implementation. Add to DI:
+For Secure Service Account auth, register `ApsSsaAuthService` (from the
+`aps-auth` skill) instead of `ApsAuthService`. Add to DI:
 
 ```csharp
 builder.Services.AddSingleton<ApsSsaAuthService>();

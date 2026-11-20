@@ -1,12 +1,12 @@
-# Auth: Secure Service Accounts — Python
+# SSA token helper: Python
 
 ## Install
 
 ```bash
-uv add "pyjwt[crypto]"
+uv add "pyjwt[crypto]" httpx python-dotenv
 ```
 
-## `src/aps_mcp_server/auth.py`
+## `auth.py`
 
 ```python
 import os
@@ -19,6 +19,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 APS_CLIENT_ID = os.environ["APS_CLIENT_ID"]
+APS_CLIENT_SECRET = os.environ["APS_CLIENT_SECRET"]
 APS_SSA_ID = os.environ["APS_SSA_ID"]
 APS_SSA_KEY_ID = os.environ["APS_SSA_KEY_ID"]
 APS_SSA_PRIVATE_KEY = base64.b64decode(os.environ["APS_SSA_KEY_BASE64"]).decode()
@@ -34,7 +35,7 @@ def _build_assertion(scope: list[str]) -> str:
         "sub": APS_SSA_ID,
         "aud": APS_TOKEN_URL,
         "exp": now + 300,
-        "scope": scope,
+        "scope": scope,  # must be a list
     }
     return jwt.encode(
         payload,
@@ -56,6 +57,7 @@ async def get_access_token(scope: str = "data:read") -> str:
                 "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
                 "assertion": assertion,
             },
+            auth=(APS_CLIENT_ID, APS_CLIENT_SECRET),
         )
         r.raise_for_status()
         data = r.json()

@@ -49,7 +49,7 @@ aps-mcp-server/
     └── aps_mcp_server/
         ├── __init__.py
         ├── server.py        # FastMCP app + tool registration
-        ├── auth.py          # Token acquisition (swapped per auth type)
+        ├── auth.py          # Token helper from the aps-auth skill (per auth type)
         └── aps/
             ├── __init__.py
             └── oss.py       # APS OSS API helpers
@@ -135,65 +135,9 @@ uv run fastmcp run src/aps_mcp_server/server.py:mcp --transport streamable-http 
 ## FastMCP Server — Streamable HTTP (Stateful, 3LO only)
 
 When using 3-legged OAuth, the server must be **stateful** to track per-user
-tokens by `session_id`. See [`auth-patterns.md`](auth-patterns.md) for the
-full 3LO implementation. The server structure stays the same; tools use
-`ctx: Context` to get the session ID.
-
-```python
-# src/aps_mcp_server/server.py  (3LO stateful)
-import os
-import time
-from fastmcp import FastMCP, Context
-from starlette.requests import Request
-from starlette.responses import HTMLResponse
-from .auth import build_auth_url, exchange_code, refresh_if_needed
-
-mcp = FastMCP("APS MCP Server")
-
-# In-memory session store  {session_id: {access_token, refresh_token, expires_at}}
-_sessions: dict[str, dict] = {}
-
-
-def _get_session_token(session_id: str) -> str | None:
-    session = _sessions.get(session_id)
-    if not session:
-        return None
-    return refresh_if_needed(session)
-
-
-@mcp.custom_route("/callback", methods=["GET"])
-async def oauth_callback(request: Request) -> HTMLResponse:
-    code = request.query_params.get("code")
-    session_id = request.query_params.get("state")
-    if not code or not session_id:
-        return HTMLResponse("Missing code or state.", status_code=400)
-    tokens = await exchange_code(code)
-    _sessions[session_id] = {
-        "access_token": tokens["access_token"],
-        "refresh_token": tokens.get("refresh_token"),
-        "expires_at": time.time() + tokens.get("expires_in", 3600),
-    }
-    return HTMLResponse("<h2>Authentication successful! You can close this window.</h2>")
-
-
-@mcp.tool()
-async def list_buckets(ctx: Context) -> list[dict] | dict:
-    """List all OSS buckets accessible to the authenticated user."""
-    token = _get_session_token(ctx.session_id)
-    if not token:
-        return {
-            "auth_required": True,
-            "auth_url": build_auth_url(ctx.session_id),
-            "message": "Open auth_url in a browser to sign in, then call list_buckets again.",
-        }
-    from .aps.oss import list_oss_buckets
-    return await list_oss_buckets(token)
-
-
-if __name__ == "__main__":
-    port = int(os.getenv("PORT", "5000"))
-    mcp.run(transport="streamable-http", host="0.0.0.0", port=port)
-```
+tokens by `session_id`. The token helper (`auth.py`) comes from the `aps-auth`
+skill; the callback route and tool pattern are in [`auth.md`](auth.md). Tools
+use `ctx: Context` to get the session ID, and `await get_access_token(ctx.session_id)`.
 
 ## APS OSS API Helpers
 
@@ -266,19 +210,9 @@ PORT=5000
 
 ## Loading `.env` in Python
 
-Always load environment variables at module level before any other imports
-that depend on them:
-
-```python
-# src/aps_mcp_server/auth.py
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-
-APS_CLIENT_ID = os.environ["APS_CLIENT_ID"]
-APS_CLIENT_SECRET = os.environ["APS_CLIENT_SECRET"]
-```
+Load environment variables at module level, before any code that depends on
+them. The `aps-auth` helpers for `src/aps_mcp_server/auth.py` already call
+`load_dotenv()` at the top.
 
 ## Type Hints and Return Values
 

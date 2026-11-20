@@ -6,6 +6,7 @@ Scaffold a custom MCP (Model Context Protocol) server that integrates with Autod
 
 - Node.js 20+, .NET 9+, or Python 3.11+ (depending on the target language)
 - Internet access for package installation
+- The [`aps-auth`](../aps-auth/) skill, which provides the APS token helpers for each auth type
 
 ## Installation
 

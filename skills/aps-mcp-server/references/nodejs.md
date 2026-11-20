@@ -7,7 +7,6 @@
 - `express` — latest (HTTP transport only)
 - `dotenv` — latest
 - `jsonwebtoken` — latest (SSA auth only)
-- `jwks-rsa` — latest (SSA auth only)
 - `axios` or `node-fetch` — for APS API calls
 
 ## Project Initialisation
@@ -69,7 +68,7 @@ import { registerOssTools } from "./tools/oss.js";
 export interface ServerOptions {
   clientId: string;
   clientSecret: string;
-  // Add SSA or per-request token fields here as needed
+  // Add the credential fields of the chosen aps-auth helper (SSA key, callback URL) here
 }
 
 export function createMcpServer(options: ServerOptions): McpServer {
@@ -242,7 +241,7 @@ app.listen(port, () => console.log(`APS MCP server listening on port ${port}`));
 
 ## `.env.example`
 
-See [`auth-patterns.md`](auth-patterns.md) for the auth-specific variables to add.
+Add the auth-specific variables for the chosen flow from the `aps-auth` skill.
 
 ```dotenv
 # APS Application credentials (https://aps.autodesk.com/myapps)

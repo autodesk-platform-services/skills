@@ -28,8 +28,8 @@ Ask the user **all three questions at once** if they have not already answered:
 1. **Language** — Node.js/TypeScript, .NET/C#, or Python?
 2. **Transport** — Local (STDIO, for Claude Desktop or similar) or Cloud (Streamable HTTP, for web deployment)?
 3. **Authentication** — Which APS auth pattern?
-   - **2-legged OAuth** — app accesses its own resources; no user sign-in (note: legacy, but still supported)
-   - **Secure Service Accounts (SSA)** — automated server-to-server; acts on behalf of a real user without interactive login
+   - **2-legged OAuth** — app accesses its own resources; no user sign-in
+   - **Secure Service Accounts (SSA)** — automated server-to-server; acts as a service account with user context, without interactive login
    - **3-legged OAuth** — user signs in via browser; server acts on their behalf
 
 If the user's request already makes one of the choices clear (e.g., "Python FastMCP server"), skip that question.
@@ -41,9 +41,10 @@ Before writing any files, load the appropriate references:
 - **Node.js** → read [`references/nodejs.md`](references/nodejs.md)
 - **.NET** → read [`references/dotnet.md`](references/dotnet.md)
 - **Python** → read [`references/python.md`](references/python.md)
-- **2-legged OAuth** → read [`references/auth-2lo.md`](references/auth-2lo.md)
-- **Secure Service Accounts** → read [`references/auth-ssa.md`](references/auth-ssa.md)
-- **3-legged OAuth** → read [`references/auth-3lo.md`](references/auth-3lo.md)
+- **Auth (always)** → read [`references/auth.md`](references/auth.md) for how auth is wired into the server
+- **Token helper for the chosen auth type and language** → use the `aps-auth` skill (2-legged
+  OAuth, Secure Service Accounts, or 3-legged OAuth). Its helpers are the source of truth for
+  token acquisition, caching, and refresh.
 - **STDIO** → read [`references/transport-stdio.md`](references/transport-stdio.md)
 - **Streamable HTTP** → read [`references/transport-http.md`](references/transport-http.md)
 - **Always** → read [`references/testing.md`](references/testing.md)
@@ -87,7 +88,7 @@ After creating files, tell the user:
 ## Key Rules
 
 - **Never implement token passthrough.** The MCP server must authenticate with APS itself — it must never accept APS tokens from the MCP client and forward them.
-- **Always cache tokens.** Check expiry before every APS call; refresh proactively (≥60 s before expiry).
+- **Always cache tokens.** Use the `aps-auth` helpers, which cache tokens and refresh them ahead of expiry.
 - **STDIO ↔ Stateless HTTP distinction.** STDIO servers are inherently single-session. Streamable HTTP servers should default to stateless (no session ID) unless 3-legged OAuth is chosen, which requires stateful sessions to track per-user tokens.
 - **Tool descriptions matter.** Write clear docstrings/descriptions for every tool — the LLM uses them to decide when to call each tool.
 - **Return both `content` and `structuredContent`** in Node.js tools when the data could be consumed programmatically (e.g., by a UI component). Python FastMCP infers structured output automatically from return types.
