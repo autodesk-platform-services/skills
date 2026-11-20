@@ -123,16 +123,53 @@ cp -r skills/<skill-name> ~/.copilot/skills/
 
 To make a skill available only in a specific project, copy it into the project's `.claude/skills/`, `.agents/skills/` or `.github/skills/` folder instead. Create the target folder first if it doesn't exist.
 
-## Available Skills
+## Available skills
+
+The APS skills are organized in three layers. Foundational skills hold knowledge shared across all APS APIs. Domain skills cover one APS component each. Workflow skills are outcome-oriented, and combine domain and foundational skills to build complete solutions. See [Skill structure](CONTRIBUTING.md#skill-structure) for details.
+
+Skills marked as planned are part of the structure, but their content isn't available yet.
+
+### Foundational skills
+
+| Skill | Description |
+| ----- | ----------- |
+| [`aps-reference`](skills/aps-reference/) | Locate authoritative APS sources: navigate the APS documentation portal, decode glossary terms and product renames, index TOC JSON trees, extract content from static HTML pages, and build valid portal links. |
+| `aps-auth` | Planned. Choose between 2-legged, 3-legged, PKCE, and SSA authentication, select scopes, and manage tokens safely. |
+| `aps-api-essentials` | Planned. Cross-API conventions: URNs and IDs, regions, rate limits, pagination, async patterns, GraphQL patterns, error triage, and SDKs. |
+| `aps-app-management` | Planned. Developer hubs, API product enablement, billing and usage, app registration, and secret rotation. |
+
+### Domain skills
+
+| Skill | Description |
+| ----- | ----------- |
+| `aps-data-management` | Planned. Object storage (buckets, uploads, downloads) and the project hierarchy (hubs, projects, folders, items, versions). |
+| `aps-model-derivative` | Planned. Translation jobs, manifests, derivatives, metadata, and properties. |
+| `aps-viewer` | Planned. Viewer integration, performance, multi-model loading, events, markups, and embedding. |
+| `aps-automation` | Planned. Automation API activities, work items, and app bundles, including scaffolding and debugging. |
+| `aps-webhooks` | Planned. Event selection, delivery semantics, signature verification, and hook management. |
+| `aps-aec-data-model` | Planned. AEC Data Model specifics: activation, element groups, properties, and version changes. |
+| `aps-mfg-data-model` | Planned. Manufacturing Data Model specifics: Fusion hubs, designs, assemblies, and BOMs. |
+| `aps-data-exchange` | Planned. Creating data exchanges, token rules, incremental sync, and publishing views. |
+| `aps-forma` | Planned. Forma (ACC) and BIM 360 account admin and project modules: Issues, RFIs, Submittals, Cost, Model Coordination, and more. |
+
+### Workflow skills
+
+| Skill | Description |
+| ----- | ----------- |
+| [`aps-mcp-server`](skills/aps-mcp-server/) | Build and extend MCP (Model Context Protocol) servers that integrate with APS. Supports Node.js/TypeScript, .NET/C#, and Python. |
+| [`aps-migration`](skills/aps-migration/) | Migrate APS codebases to newer APIs, SDKs, and viewer versions. Includes a detailed APS Viewer v7→v8 playbook: audit for breaking changes, then port three.js overlays, SceneBuilder, custom materials, internals, and retired extensions to the Scene API and documented APIs. |
+| `aps-web-viewer-app` | Planned. End-to-end browser apps: sign-in, hub and file pickers, upload and view, and issues next to the model. |
+| `aps-model-data-extraction` | Planned. Choose a data source, export element data, compare versions, and produce change reports. |
+| `aps-cloud-batch-processing` | Planned. Run scripts and conversions over many models in the cloud, with per-file failure handling. |
+| `aps-sync-and-notifications` | Planned. Keep external databases in sync, schedule exports, and send notifications. |
+
+### Other Autodesk product skills
 
 | Skill | Description |
 | ----- | ----------- |
 | [`acad-arx-wizard`](skills/acad-arx-wizard/) | Scaffold ObjectARX C++ projects/classes for AutoCAD 2027 and Visual Studio 2026 using deterministic PowerShell generators (ARX/DBX/CRX, Jig, Reactors, Custom Object, MFC, .NET, COM, DynProp). |
 | [`acad-cuix-builder`](skills/acad-cuix-builder/) | Generate AutoCAD partial CUIX files from prompts. Describe your ribbon panels and LISP/command buttons conversationally and get a ready-to-CUILOAD `.cuix` with embedded BMP icons. |
 | [`acad-dotnet`](skills/acad-dotnet/) | Scaffold and develop AutoCAD 2027 .NET plugins (AutoCAD, Civil 3D, Plant 3D) targeting .NET 10 / x64. Covers csproj patterns, bundle packaging, desktop testing, and Design Automation deployment. |
-| [`aps-docs-portal`](skills/aps-docs-portal/) | Navigate the APS documentation portal — decode glossary terms, index TOC JSON trees, extract content from static HTML pages, and build valid portal links. |
-| [`aps-mcp-server-gen`](skills/aps-mcp-server-gen/) | Scaffold a custom MCP (Model Context Protocol) server that integrates with APS. Supports Node.js/TypeScript, .NET/C#, and Python. |
-| [`aps-viewer-v8-migration`](skills/aps-viewer-v8-migration/) | Migrate APS Viewer apps from v7 to v8 — audit for breaking changes, then port three.js overlays, SceneBuilder, custom materials, internals, and retired extensions to the Scene API and documented APIs. |
 | [`flow-ptr-app`](skills/flow-ptr-app/) | Guide for developing Flow Production Tracking (FPTR) / ShotGrid Toolkit apps following a spec-driven lifecycle — capture intent, write and validate a spec, plan, implement, verify, release, and maintain. |
 
 ## Contributing

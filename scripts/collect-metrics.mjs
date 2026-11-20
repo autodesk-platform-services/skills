@@ -70,8 +70,9 @@ function upsertCsv(file, header, rows) {
     writeFileSync(path, [header.join(','), ...lines].join('\n') + '\n');
 }
 
+// Only folders with a SKILL.md are published skills; placeholder folders for planned skills are skipped.
 const skills = readdirSync(join(root, 'skills'), { withFileTypes: true })
-    .filter(entry => entry.isDirectory())
+    .filter(entry => entry.isDirectory() && existsSync(join(root, 'skills', entry.name, 'SKILL.md')))
     .map(entry => entry.name)
     .sort();
 

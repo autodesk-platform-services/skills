@@ -1,6 +1,10 @@
 # Contributing
 
-To add a new skill, create a folder under `skills/` with:
+The APS skills follow a fixed structure of foundational, domain, and workflow skills. Before you add content, read [Skill structure](#skill-structure) to find the skill that owns your topic. Most contributions extend an existing skill, or fill in a planned one, instead of adding a new skill.
+
+## Adding or filling in a skill
+
+Each skill is a folder under `skills/` with:
 
 - A `SKILL.md` file containing the full agent instructions (with YAML frontmatter for `name`, `description`, and `metadata`, including the [gallery tags](#gallery-tags))
 - A `README.md` file for humans describing what the skill does, its requirements, recommended installation command (e.g., `npx skills add autodesk-platform-services/skills --project --skill <skill-name>`), any additional setup steps, and example usage
@@ -8,10 +12,12 @@ To add a new skill, create a folder under `skills/` with:
 - A `scripts/` subfolder for any reusable helper scripts the agent should run
 - An `assets/` subfolder for output templates and other static resources
 
-> [!IMPORTANT]
-> Prefix the skill name (for example, with `aps-`) to avoid name clashes with other skills.
+Planned skills already have a placeholder folder that holds only a `.gitkeep` file. Placeholders aren't bundled, listed in the gallery, or checked by `scripts/check-skills.mjs`. To fill one in, add the files above and delete the `.gitkeep`.
 
-Then add a row for the new skill to the "Available Skills" table in the main [README.md](README.md), with a short description and a link to the skill's folder. Keep all other skill-specific information (requirements, installation, usage) in the skill's own `README.md`. The main README should only contain general information about the repository.
+> [!IMPORTANT]
+> Prefix the skill name (for example, with `aps-`) to avoid name clashes with other skills. Don't add an APS skill that isn't in the [skill map](#skill-map) without discussing it in an issue first.
+
+Then update the skill's row in the "Available skills" tables of the main [README.md](README.md): remove "Planned.", link the skill name to its folder (``[`aps-example`](skills/aps-example/)``), and keep the description short. Keep all other skill-specific information (requirements, installation, usage) in the skill's own `README.md`. The main README should only contain general information about the repository.
 
 There's no separate registration step for the plugin. The repository is a single [Agent Plugin](https://agent-plugins.org) called `aps-skills`, defined by [`plugin.json`](plugin.json) and listed in [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) (used by both Claude Code and GitHub Copilot). Every folder under `skills/` that contains a `SKILL.md` is bundled automatically.
 
@@ -44,6 +50,71 @@ node scripts/check-skills.mjs
 ```
 
 Both checks also run in CI on every pull request.
+
+## Skill structure
+
+The APS skills help coding agents build new solutions, migrate existing codebases, troubleshoot issues, and integrate APS-based extensions accurately. The structure was derived from a catalog of real APS developer questions. All skills ship in the single `aps-skills` plugin.
+
+### Design principles
+
+- **Three layers.** Foundational skills hold cross-domain knowledge. Domain skills cover one APS component each. Workflow skills are outcome-oriented and combine the other two layers.
+- **One owner per topic.** Each piece of guidance lives in exactly one skill. Other skills link to it instead of repeating it. For example, region handling and GraphQL query patterns live only in `aps-api-essentials`. Refer to another skill by name (for example, "use the `aps-reference` skill to find the docs page"), not by a relative path, because users can install skills individually.
+- **Durable knowledge only.** Skills hold best practices, decision guidance, and gotchas. Volatile details stay in authoritative sources and are referenced, not copied. These include endpoint lists, scopes per endpoint, rate limit values, page sizes, pricing, and deprecation mappings.
+- **Known gaps carry a date.** Capability gaps (for example, "the Issues API can't delete issues") stop agents from inventing endpoints, but they change over time. Record them in a "Known gaps" section with a last-verified date, and tell the agent to confirm against the OpenAPI spec or GraphQL schema before telling a user something is impossible.
+- **Progressive disclosure.** Large skills keep `SKILL.md` short and act as a router to per-topic files in `references/`, which the agent loads on demand. Deterministic operator tasks live in `scripts/`. For example, `aps-migration` keeps the general migration method in `SKILL.md` and the Viewer v7→v8 playbook in `references/viewer-v8.md`.
+- **No circular dependencies.** Workflow skills depend on domain and foundational skills. Domain skills depend on foundational skills and, where needed, on other domain skills. Nothing depends back up the chain.
+
+### Known gaps format
+
+```markdown
+## Known gaps
+
+Last verified: 2026-11-20. Confirm against the OpenAPI spec or GraphQL schema before telling a user something isn't possible.
+
+- The Issues API can't delete issues.
+```
+
+### Skill map
+
+All domain and workflow skills implicitly require `aps-reference`, `aps-auth`, and `aps-api-essentials`. The "Requires" column lists only additional dependencies.
+
+#### Foundational skills
+
+| Skill | Requires | Owns |
+| ----- | -------- | ---- |
+| `aps-reference` | None | Locating authoritative and supporting sources (OpenAPI specs, GraphQL schemas, docs, blog posts, tutorials, samples, SDKs, changelogs, deprecation notices), the product rename map (Forge→APS, Design Automation→Automation API, BIM 360 and ACC→Forma), and judging whether an older Forge-era answer still applies |
+| `aps-auth` | `aps-reference` | Choosing between 2-legged, 3-legged, PKCE, and SSA; scope selection; token lifecycle and refresh; 3-legged callback and PKCE errors; x-user-id impersonation and migration to SSA; custom integration provisioning; downscoped Viewer tokens |
+| `aps-api-essentials` | `aps-reference`, `aps-auth`, `aps-app-management` | URN encoding, ID formats, hub regions, rate limits and backoff, pagination, async and 202 patterns, polling versus webhooks, error payloads, batch "skipped" items, shared GraphQL patterns, error triage, SDK versus raw REST, shell quirks |
+| `aps-app-management` | `aps-reference`, `aps-auth` | Developer hubs, enabling API products, billable usage, passthrough billing, usage suspension, consumption and cost estimation, app registration, secret rotation |
+
+#### Domain skills
+
+| Skill | Requires | Owns |
+| ----- | -------- | ---- |
+| `aps-data-management` | Foundational only | Object storage (buckets, regions, signed S3 uploads and downloads) and the project hierarchy (hubs, projects, folders, items, versions, relationships, permissions) |
+| `aps-model-derivative` | `aps-data-management` | Translation jobs and manifests, linked and zipped inputs, IFC converters, thumbnails and 2D views, metadata and properties, `forceget`, translation errors, offline viewing |
+| `aps-viewer` | `aps-model-derivative` | Framework integration, performance, dbId mapping, multi-model loading, coordinate transforms, events, custom properties, markups, sheets and views, embedding constraints |
+| `aps-automation` | `aps-data-management` | Activities, work items, and app bundles; inputs and parameters; multiple product versions; CI/CD; debugging with reports; common failures; plugin and bundle scaffolding |
+| `aps-webhooks` | Foundational only | Choosing events, delivery semantics, signature verification, local development, hook management |
+| `aps-aec-data-model` | Foundational only | Hub activation and indexing, element groups, property discovery, type versus instance properties, version changes, Plant 3D data |
+| `aps-mfg-data-model` | Foundational only | Fusion hubs, projects, and designs; assembly structure and BOMs; component properties |
+| `aps-data-exchange` | `aps-data-management` | Creating data exchanges, REST versus GraphQL token rules, incremental sync, publishing views |
+| `aps-forma` | `aps-data-management` | Account and project admin (Forma versus BIM 360), members, Issues, RFIs, Submittals, Transmittals, Forms, Assets, Cost, Takeoff, Model Coordination, BuildingConnected, data exports, container IDs |
+
+#### Workflow skills
+
+| Skill | Requires | Owns |
+| ----- | -------- | ---- |
+| `aps-web-viewer-app` | `aps-data-management`, `aps-model-derivative`, `aps-viewer`, `aps-forma`, `aps-webhooks` | End-to-end browser apps: sign-in, region-aware pickers, upload and view, issues next to the model, overlays from external data, reloading on new versions |
+| `aps-model-data-extraction` | `aps-aec-data-model`, `aps-model-derivative`, `aps-viewer`, `aps-data-management`, `aps-forma` | Choosing a data source and fallback order, exporting element data, comparing versions, recurring change reports |
+| `aps-cloud-batch-processing` | `aps-automation`, `aps-data-management`, `aps-webhooks` | Scripts over many models without desktop products, batch conversion, cloud health checks, per-file failures, completion tracking |
+| `aps-sync-and-notifications` | `aps-webhooks`, `aps-forma`, `aps-data-management` | Syncing external databases, scheduled exports to BI tools, notifications to Teams and email, polling where no events exist |
+| `aps-mcp-server` | Domain skills as needed for the tools being built | Building and extending MCP servers for APS: the server's APS identity, separating MCP client auth from APS auth, adding tools, client connection failures |
+| `aps-migration` | `aps-viewer`, `aps-forma`, `aps-data-exchange` | The migration method (inventory, map through the official guide, verify, cut over) for Forge→APS, Authentication v2, x-user-id→SSA, Viewer v7→v8, BIM 360→Forma, BuildingConnected v2→v3, Forms API v1, Data Exchange lookup by file ID, developer hub migration, and SDK target changes. Mapping tables stay in the official guides. |
+
+#### Deferred skills
+
+`aps-tandem` (facilities, streams and sensor data, asset queries) and `aps-forma-site-design` (proposals, terrain, elements, revisions) are out of scope for now because few questions need them. Until they're added, agents rely on `aps-reference` to find the relevant docs and samples. They don't have placeholder folders.
 
 ## Best Practices
 
@@ -190,7 +261,7 @@ Tips for a good suite:
 - The `tool_used: Skill` grader only shows whether the skill fired. It isn't counted in the with/without score, because the baseline run can't fire the skill.
 - Use `runs: 3` or more. Agent output varies from run to run, and a single run is noise.
 
-See [`evals/aps-docs-portal/`](evals/aps-docs-portal/) for a complete example.
+See [`evals/aps-reference/`](evals/aps-reference/) for a complete example.
 
 ### Running evals locally
 

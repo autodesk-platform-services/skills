@@ -27,5 +27,5 @@ jobs:
       - name: Check skill registration
         run: node scripts/check-skills.mjs
 
-      - name: Test aps-viewer-v8-migration audit script
-        run: node evals/aps-viewer-v8-migration/audit/test-audit.mjs
+      - name: Test aps-migration Viewer v8 audit script
+        run: node evals/aps-migration/audit/test-audit.mjs

@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Checks that every skill folder is consistently registered across the repository:
 // SKILL.md frontmatter (including gallery filter tags), skill README, main README table,
-// and the single bundled plugin (plugin.json and the plugin marketplace).
+// and the single bundled plugin (plugin.json and the plugin marketplace). Placeholder folders for
+// planned skills (containing only `.gitkeep`) are skipped.
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -67,9 +68,19 @@ function splitTags(value) {
 }
 
 const errors = [];
-const skills = readdirSync(skillsDir, { withFileTypes: true })
+const folders = readdirSync(skillsDir, { withFileTypes: true })
     .filter(entry => entry.isDirectory())
     .map(entry => entry.name);
+
+// Planned skills are placeholder folders that hold nothing but a `.gitkeep` file (empty subfolders,
+// which git doesn't track, are ignored too). They aren't bundled or registered yet, so they're
+// skipped until they get a SKILL.md.
+const ignoredFiles = new Set(['.gitkeep', '.DS_Store', 'Thumbs.db']);
+const hasContent = path => readdirSync(path, { withFileTypes: true })
+    .some(entry => entry.isDirectory() ? hasContent(join(path, entry.name)) : !ignoredFiles.has(entry.name));
+const isPlaceholder = folder => !hasContent(join(skillsDir, folder));
+const placeholders = folders.filter(isPlaceholder);
+const skills = folders.filter(folder => !isPlaceholder(folder));
 
 for (const skill of skills) {
     const skillPath = join(skillsDir, skill);
@@ -92,7 +103,7 @@ for (const skill of skills) {
         errors.push(`${skill}: missing README.md`);
     }
     if (!readme.includes(`(skills/${skill}/)`)) {
-        errors.push(`${skill}: no row in the "Available Skills" table of README.md`);
+        errors.push(`${skill}: no row in the "Available skills" tables of README.md`);
     }
 }
 
@@ -118,4 +129,4 @@ if (errors.length > 0) {
     console.error(errors.map(error => `✘ ${error}`).join('\n'));
     process.exit(1);
 }
-console.log(`✔ ${skills.length} skills are consistently registered`);
+console.log(`✔ ${skills.length} skills are consistently registered (${placeholders.length} planned skill placeholders skipped)`);
