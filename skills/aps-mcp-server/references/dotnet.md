@@ -2,7 +2,7 @@
 
 ## NuGet Packages
 
-- `ModelContextProtocol` — latest (≥0.2.0-preview)
+- `ModelContextProtocol` — latest (≥1.0; the examples use the `McpServer` type, which replaced `IMcpServer`)
 - `Microsoft.Extensions.Hosting` — latest
 - `Microsoft.Extensions.Http` — latest
 - `System.IdentityModel.Tokens.Jwt` — latest (SSA auth only)
@@ -12,7 +12,7 @@
 ```bash
 dotnet new console -n ApsMcpServer
 cd ApsMcpServer
-dotnet add package ModelContextProtocol --prerelease
+dotnet add package ModelContextProtocol
 dotnet add package Microsoft.Extensions.Hosting
 dotnet add package Microsoft.Extensions.Http
 # SSA auth:

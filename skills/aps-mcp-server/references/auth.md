@@ -41,6 +41,13 @@ With 3-legged OAuth, tokens are stored per MCP session:
   again.
 - Use the stateful Streamable HTTP setup from `transport-http.md`.
 
+> [!NOTE]
+> The MCP `2026-07-28` protocol revision removed sessions from Streamable HTTP (SEP-2567). Clients
+> using that revision don't send an `Mcp-Session-Id`, so session-keyed tokens only work with
+> clients that still use the `initialize` handshake, or with a server that forces them to
+> downgrade (as the .NET `HttpServerSessionMode.Stateful` mode does). Check the target clients
+> before choosing 3-legged OAuth.
+
 ### Node.js
 
 ```typescript
@@ -123,8 +130,23 @@ if __name__ == "__main__":
 
 ### .NET
 
+The C# SDK serves Streamable HTTP statelessly by default, and `McpServer.SessionId` is `null` in
+stateless mode. Switch to stateful sessions for 3-legged OAuth:
+
 ```csharp
-// Program.cs — after app.Build()
+// Program.cs
+using ModelContextProtocol.AspNetCore;
+
+builder.Services.AddHttpClient();
+builder.Services.AddSingleton<ApsThreeLeggedAuthService>();
+builder.Services
+    .AddMcpServer()
+    .WithHttpTransport(o => o.SessionMode = HttpServerSessionMode.Stateful)
+    .WithToolsFromAssembly();
+
+var app = builder.Build();
+app.MapMcp("/mcp");
+
 app.MapGet("/callback", async (string code, string state, ApsThreeLeggedAuthService authService) =>
 {
     await authService.ExchangeCodeAsync(state, code);
@@ -132,22 +154,37 @@ app.MapGet("/callback", async (string code, string state, ApsThreeLeggedAuthServ
 });
 ```
 
+In tools, take the `McpServer` parameter and key tokens by `server.SessionId`. Never key them by
+`server.ClientInfo`: that's the client app's name and version, which every user of the same MCP
+client shares.
+
 ```csharp
+using System.ComponentModel;
+using System.Text.Json;
+using ModelContextProtocol.Server;
+
 [McpServerToolType]
-public class OssTools(ApsThreeLeggedAuthService authService)
+public class OssTools(ApsThreeLeggedAuthService authService, ApsOssClient ossClient)
 {
     [McpServerTool]
     [Description("List OSS buckets accessible to the authenticated user.")]
-    public async Task<string> ListBuckets(IMcpServer server)
+    public async Task<string> ListBuckets(McpServer server)
     {
-        var sessionId = server.ClientInfo?.Name; // or however session ID is surfaced
-        var token = await authService.GetAccessTokenAsync(sessionId ?? "");
+        if (server.SessionId is not { } sessionId)
+            throw new InvalidOperationException(
+                "3-legged OAuth needs a stateful HTTP session. Configure SessionMode = HttpServerSessionMode.Stateful.");
+
+        var token = await authService.GetAccessTokenAsync(sessionId);
         if (token is null)
         {
-            var authUrl = authService.BuildAuthUrl(sessionId ?? "");
-            return $$$"""{"auth_required":true,"auth_url":"{{{authUrl}}}","message":"Open auth_url in a browser, then call this tool again."}""";
+            return JsonSerializer.Serialize(new
+            {
+                auth_required = true,
+                auth_url = authService.BuildAuthUrl(sessionId),
+                message = "Open auth_url in a browser to sign in, then call this tool again.",
+            });
         }
-        // ... use token
+        // ... call APS with token, for example through ossClient
         return "...";
     }
 }
