@@ -133,10 +133,10 @@ Skills marked as planned are part of the structure, but their content isn't avai
 
 | Skill | Description |
 | ----- | ----------- |
-| [`aps-reference`](skills/aps-reference/) | Locate authoritative APS sources: navigate the APS documentation portal, decode glossary terms and product renames, index TOC JSON trees, extract content from static HTML pages, and build valid portal links. |
-| [`aps-auth`](skills/aps-auth/) | Choose between 2-legged, 3-legged, PKCE, and SSA authentication, and get, cache, and refresh APS tokens with helpers for Node.js/TypeScript, Python, and .NET/C#. |
-| `aps-api-essentials` | Planned. Cross-API conventions: URNs and IDs, regions, rate limits, pagination, async patterns, GraphQL patterns, error triage, and SDKs. |
-| `aps-app-management` | Planned. Developer hubs, API product enablement, billing and usage, app registration, and secret rotation. |
+| [`aps-reference`](skills/aps-reference/) | Locate authoritative APS sources: navigate the APS documentation portal, decode glossary terms and product renames, index TOC JSON trees, extract content from static HTML pages, build valid portal links, and find OpenAPI specs, samples, blog posts, and deprecation notices. |
+| [`aps-auth`](skills/aps-auth/) | Choose between 2-legged, 3-legged, PKCE, and SSA authentication, and get, cache, and refresh APS tokens with helpers for Node.js/TypeScript, Python, and .NET/C#. Also covers x-user-id to SSA migration, custom integration provisioning, Viewer tokens, and sign-in troubleshooting. |
+| [`aps-api-essentials`](skills/aps-api-essentials/) | Cross-API conventions: URNs and IDs, regions, rate limits, pagination, async patterns, GraphQL patterns, error triage, and SDKs. Includes operator scripts for tokens, bucket counts, translation status, webhooks, and derivative downloads. |
+| [`aps-app-management`](skills/aps-app-management/) | Developer hubs, API product enablement, billing and usage, passthrough billing, cost estimation, and client secret rotation without downtime. |
 
 ### Domain skills
 

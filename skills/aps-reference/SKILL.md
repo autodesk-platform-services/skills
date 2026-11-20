@@ -5,8 +5,9 @@ description: >
   decode glossary terms, index table-of-contents JSON trees, extract content from static HTML pages,
   and build valid aps.autodesk.com portal links. Covers ACC, BIM 360, Model Derivative,
   Data Management, Viewer, Design Automation, Authentication, Webhooks, and all related APS APIs.
-  Use it to locate authoritative APS sources and to decode product renames (Forge → APS,
-  Design Automation → Automation API, ACC → Forma).
+  Use it to locate authoritative APS sources (OpenAPI specs, GraphQL schemas, samples, SDKs, blog posts,
+  changelogs, deprecation notices), to decode product renames (Forge → APS, Design Automation →
+  Automation API, ACC → Forma), and to judge whether an older Forge-era answer still applies.
 metadata:
   author: Developer Advocates @ Autodesk
   version: "0.3"
@@ -65,6 +66,22 @@ If the question mentions an acronym you don't see here, look for its definition 
 - **AECDM**: AEC Data Model API — unified API for accessing design and construction data across ACC
 - **DX**: Data Exchange — API for exchanging design data between applications in a neutral format
 - **Auth**: Authentication — APS OAuth flows including 2LO, 3LO, PKCE, PAT (Personal Access Tokens), and SSA
+
+### Product rename map
+
+Older posts, samples, and answers use the old names. Treat them as the same thing, then verify the details.
+
+| Old name | Current name |
+|---|---|
+| Autodesk Forge, `forge.autodesk.com` | Autodesk Platform Services (APS), `aps.autodesk.com` |
+| Forge Viewer | APS Viewer |
+| Design Automation API | Automation API |
+| BIM 360 and ACC (Autodesk Construction Cloud), Autodesk Docs | Forma services (BIM 360 is the legacy platform; docs still say ACC in places) |
+| Authentication v1 (`/authentication/v1/...`) | Authentication v2 (`/authentication/v2/...`) |
+| Region code `APAC` | `AUS` |
+
+Names don't always change the endpoints: an old answer can use a renamed product and still be accurate, or use the
+current name and be wrong. Check the details against the docs. See `references/older-answers.md`.
 
 **Translation Cost (Model Derivative API):**
 Complex jobs are Revit (.rvt), IFC, and Navisworks (.nwd/.nwc). Everything else is a simple job.
@@ -180,6 +197,17 @@ Notes:
 3. **List the specific events, parameters, or features** (from the reference pages — quote values exactly)
 4. **Provide reference links** — portal URLs copied from index column 1 only
 5. **Include a practical example** if applicable (curl command, code snippet, etc.)
+
+---
+
+## When the docs portal isn't the right source
+
+The method above answers "what does the documentation say". Read these when the question is different:
+
+| Read | When |
+|---|---|
+| `references/other-sources.md` | You need an OpenAPI spec or GraphQL schema, runnable sample code, an SDK repository, a blog post, a changelog, or a deprecation notice |
+| `references/older-answers.md` | You found a Forge-era post, sample, or answer, or one you can't date, and must decide whether to use it |
 
 ---
 

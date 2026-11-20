@@ -4,7 +4,9 @@ description: >
   Authenticate with Autodesk Platform Services (APS). Use when the user needs to choose between
   2-legged OAuth, 3-legged OAuth (authorization code or PKCE), and Secure Service Accounts (SSA),
   write code that gets, caches, or refreshes APS access tokens, or debug token errors (invalid
-  assertion, invalid grant, rejected scopes, callback failures). Includes token helpers for
+  assertion, invalid grant, rejected scopes, callback and PKCE failures). Also covers replacing
+  x-user-id impersonation with SSA, provisioning an app on a customer's hub (custom integrations,
+  hub not visible), and the token to give the browser Viewer. Includes token helpers for
   Node.js/TypeScript, Python, and .NET/C#.
 metadata:
   author: Developer Advocates @ Autodesk
@@ -67,6 +69,17 @@ All helpers read credentials from environment variables (`APS_CLIENT_ID`, `APS_C
 and flow-specific ones). Adapt where they read configuration from to the host app, but keep the
 caching and refresh logic.
 
+## Common situations
+
+Read the matching file when the question is about one of these, not about a flow:
+
+| Situation | Read |
+| --- | --- |
+| Code sends `x-user-id` with a 2-legged token, or a backend job needs user-context APIs | `references/impersonation-and-ssa-migration.md` |
+| The token is valid but a hub or project isn't visible, or it works for one customer and not another | `references/custom-integrations.md` |
+| A browser app needs a token for the Viewer | `references/viewer-tokens.md` |
+| A token request, sign-in redirect, or PKCE exchange fails | `references/troubleshooting.md` |
+
 ## Gotchas
 
 - **SSA token exchange needs Basic auth.** The `jwt-bearer` token request must include the client
@@ -84,8 +97,17 @@ caching and refresh logic.
   the code exchange must match a callback URL registered for the app, including scheme, host,
   port, and path.
 
-## Not covered yet
+- **A valid token doesn't mean the hub is visible.** For Forma, ACC, and BIM 360 data, the customer's
+  hub admin must add the app's client ID as a custom integration. See `references/custom-integrations.md`.
+- **Never give the browser your backend token.** Hand the Viewer a separate token that carries only
+  `viewables:read`. See `references/viewer-tokens.md`.
 
-This skill doesn't have guidance yet for x-user-id impersonation and migrating from it to SSA,
-custom integration provisioning on customer accounts, or downscoped tokens for the Viewer. Use
-the `aps-reference` skill to find the relevant docs.
+## Known gaps
+
+Last verified: 2026-11-20. Confirm against the OpenAPI spec or GraphQL schema before telling a user something isn't possible.
+
+- The client assertion JWT used to authenticate secret rotation (Application Management API) isn't covered
+  here. Use `aps-app-management` and the Secret Rotation page of the `applications_v2` docs.
+- There's no documented way to restrict a `viewables:read` token to specific models. Restrict which URNs
+  your server hands out instead.
+- Support for `x-user-id` varies per endpoint. Check the endpoint's reference page.
