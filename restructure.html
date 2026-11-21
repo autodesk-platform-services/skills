@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>APS agent skills map</title>
+<style>
+  :root {
+    --bg: oklch(98.5% 0.004 250);
+    --surface: #fff;
+    --ink: oklch(24% 0.02 260);
+    --muted: oklch(46% 0.02 260);
+    --line: oklch(87% 0.01 260);
+    --edge: oklch(62% 0.02 260);
+    --req: oklch(52% 0.15 165);
+    --dep: oklch(55% 0.21 355);
+    --band: 95.5%;
+    --band-line: 86%;
+    --band-c: 0.035;
+    --accent-l: 52%;
+    --shadow: 0 1px 2px rgb(0 0 0 / .06), 0 8px 24px rgb(0 0 0 / .07);
+
+    @media (prefers-color-scheme: dark) {
+      --bg: oklch(17% 0.015 260);
+      --surface: oklch(25% 0.02 260);
+      --ink: oklch(94% 0.01 260);
+      --muted: oklch(74% 0.02 260);
+      --line: oklch(37% 0.02 260);
+      --edge: oklch(58% 0.02 260);
+      --req: oklch(78% 0.16 165);
+      --dep: oklch(78% 0.17 355);
+      --band: 23%;
+      --band-line: 35%;
+      --band-c: 0.045;
+      --accent-l: 76%;
+      --shadow: 0 1px 2px rgb(0 0 0 / .4), 0 8px 24px rgb(0 0 0 / .35);
+    }
+
+    color-scheme: light dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  code, .mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+
+  .page { max-width: 1480px; margin: 0 auto; padding: 28px 24px 56px; }
+
+  header.top { display: flex; flex-wrap: wrap; gap: 16px 32px; align-items: end; justify-content: space-between; margin-bottom: 22px; }
+  header.top h1 { margin: 0 0 4px; font-size: 1.75rem; letter-spacing: -0.01em; }
+  header.top p { margin: 0; color: var(--muted); max-width: 60ch; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; font-size: .82rem; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .legend svg { width: 34px; height: 10px; overflow: visible; }
+  .legend label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; color: var(--ink); }
+  .legend input { accent-color: var(--req); }
+
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; align-items: start; }
+  @media (min-width: 1280px) {
+    .layout { grid-template-columns: minmax(0, 1fr) 400px; }
+    .panel { position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow: auto; }
+  }
+
+  .stage-wrap { overflow-x: auto; padding-bottom: 6px; }
+  .stage { position: relative; min-width: 860px; display: flex; flex-direction: column; gap: 52px; }
+
+  .layer {
+    --h: 230;
+    --accent: oklch(var(--accent-l) 0.16 var(--h));
+    background: oklch(var(--band) var(--band-c) var(--h));
+    border: 1px solid oklch(var(--band-line) 0.06 var(--h));
+    border-radius: 18px;
+    padding: 16px 18px 20px;
+  }
+  .layer[data-layer="workflow"] { --h: 305; }
+  .layer[data-layer="domain"] { --h: 235; padding-bottom: 72px; }
+  .layer[data-layer="foundational"] { --h: 65; padding-bottom: 72px; }
+
+  .layer-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin-bottom: 14px; }
+  .layer-head h2 { margin: 0; font-size: .8rem; text-transform: none; letter-spacing: .02em; font-weight: 700; color: var(--accent); }
+  .layer-head p { margin: 0; font-size: .85rem; color: var(--muted); }
+  .layer-head .count { margin-left: auto; font-size: .78rem; color: var(--muted); }
+
+  .cards { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 10px; }
+  .foundational-cards { max-width: 760px; margin-inline: auto; }
+
+  .skill {
+    position: relative;
+    z-index: 2;
+    min-height: 58px;
+    padding: 9px 10px 9px 12px;
+    text-align: left;
+    font: 600 .8rem/1.25 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 5px solid var(--accent);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: box-shadow .2s, opacity .25s, background-color .2s, filter .25s;
+    animation: fade .5s both;
+    animation-delay: calc(var(--i) * 25ms);
+    display: flex;
+    align-items: center;
+  }
+  .skill .pfx { color: var(--muted); font-weight: 400; }
+  .skill:hover { box-shadow: var(--shadow); }
+  .skill:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+  .skill.is-focus { box-shadow: 0 0 0 3px var(--accent), var(--shadow); }
+  .skill.is-selected { background: oklch(from var(--accent) l c h / .16); box-shadow: 0 0 0 3px var(--accent), var(--shadow); }
+  .skill[data-rel="requires"] { box-shadow: 0 0 0 2px var(--req); }
+  .skill[data-rel="required by"] { box-shadow: 0 0 0 2px var(--dep); }
+  .skill.is-dim { opacity: .35; filter: saturate(.4); }
+  .skill[data-rel]::after {
+    content: attr(data-rel);
+    position: absolute;
+    top: -9px; right: 8px;
+    padding: 0 7px;
+    font: 600 .62rem/1.5 system-ui, sans-serif;
+    border-radius: 99px;
+    color: var(--bg);
+  }
+  .skill[data-rel="requires"]::after { background: var(--req); }
+  .skill[data-rel="required by"]::after { background: var(--dep); }
+
+  @keyframes fade { from { opacity: 0; } }
+
+  svg#edges { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: visible; opacity: 0; transition: opacity .6s .35s; }
+  svg#edges.ready { opacity: 1; }
+  .edge-g path { fill: none; stroke: var(--edge); stroke-width: 1.5; opacity: .32; transition: opacity .25s, stroke .25s, stroke-width .25s; }
+  .edge-g circle { fill: var(--edge); opacity: .32; transition: opacity .25s, fill .25s; }
+  .no-all .edge-g path, .no-all .edge-g circle { opacity: 0; }
+  .edge-g.implicit path, .edge-g.implicit circle { opacity: 0; }
+  .edge-g.dim path, .edge-g.dim circle { opacity: .06; }
+  .edge-g.req path, .edge-g.dep path { stroke-width: 2.4; opacity: 1; stroke-dasharray: 8 7; animation: flow .9s linear infinite; }
+  .edge-g.req circle, .edge-g.dep circle { opacity: 1; }
+  .edge-g.req path { stroke: var(--req); }
+  .edge-g.req circle { fill: var(--req); }
+  .edge-g.dep path { stroke: var(--dep); }
+  .edge-g.dep circle { fill: var(--dep); }
+  .edge-g.implicit.req path, .edge-g.implicit.dep path { stroke-dasharray: 3 7; opacity: .8; }
+  .edge-g.implicit.req circle, .edge-g.implicit.dep circle { opacity: .8; }
+  @keyframes flow { to { stroke-dashoffset: -15; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .skill { animation: none; }
+    .edge-g.req path, .edge-g.dep path { animation: none; }
+    svg#edges { transition: none; }
+  }
+
+  /* detail panel */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 22px 22px 26px;
+    box-shadow: var(--shadow);
+  }
+  .panel h2 { margin: 6px 0 6px; font-size: 1.25rem; word-break: break-word; }
+  .panel h3 { margin: 20px 0 6px; font-size: .74rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .panel p { margin: 0 0 6px; }
+  .badge {
+    display: inline-block; padding: 2px 10px; border-radius: 99px;
+    font-size: .74rem; font-weight: 700;
+    color: var(--bg);
+    background: oklch(var(--accent-l) 0.16 var(--h));
+  }
+  .note { font-size: .88rem; color: var(--muted); font-style: italic; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    font: 500 .74rem ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    padding: 3px 9px; border-radius: 99px;
+    border: 1px solid var(--line); background: transparent; color: var(--ink);
+    cursor: pointer;
+  }
+  .chip:hover { border-color: var(--ink); }
+  .chip:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+  .chip.req { border-color: var(--req); }
+  .chip.dep { border-color: var(--dep); }
+  .chip.implicit { border-style: dashed; }
+  .chip-label { font-size: .78rem; color: var(--muted); margin: 8px 0 4px; }
+  .prompts { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+  .prompts li {
+    display: flex; gap: 10px; align-items: flex-start; justify-content: space-between;
+    padding: 9px 10px 9px 12px;
+    border-radius: 10px;
+    background: oklch(var(--band) var(--band-c) var(--h));
+    border-left: 3px solid oklch(var(--accent-l) 0.16 var(--h));
+    font-size: .9rem;
+  }
+  .copy {
+    flex: none;
+    font: 600 .7rem system-ui, sans-serif;
+    padding: 3px 9px; border-radius: 99px;
+    border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+    cursor: pointer;
+  }
+  .copy:hover { border-color: var(--ink); }
+  .copy:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+  .clear { margin-top: 18px; font: 600 .8rem system-ui, sans-serif; background: none; border: 0; color: var(--muted); cursor: pointer; text-decoration: underline; padding: 0; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 14px 0; }
+  .stat { padding: 10px; border-radius: 12px; text-align: center; background: oklch(var(--band) var(--band-c) var(--h)); }
+  .stat b { display: block; font-size: 1.5rem; line-height: 1.1; color: oklch(var(--accent-l) 0.16 var(--h)); }
+  .stat span { font-size: .75rem; color: var(--muted); }
+  .panel ul.tips { padding-left: 18px; color: var(--muted); font-size: .9rem; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="top">
+    <div>
+      <h1>APS agent skills map</h1>
+      <p>19 skills in three layers. Workflow skills build on domain skills, which build on the foundational skills at the base.</p>
+    </div>
+    <div class="legend" aria-label="Legend">
+      <span><svg viewBox="0 0 34 10" aria-hidden="true"><path d="M0 5h28" stroke="var(--req)" stroke-width="2.4" stroke-dasharray="6 5" fill="none"/><circle cx="30" cy="5" r="3.2" fill="var(--req)"/></svg>Requires</span>
+      <span><svg viewBox="0 0 34 10" aria-hidden="true"><path d="M0 5h28" stroke="var(--dep)" stroke-width="2.4" stroke-dasharray="6 5" fill="none"/><circle cx="30" cy="5" r="3.2" fill="var(--dep)"/></svg>Required by</span>
+      <span><svg viewBox="0 0 34 10" aria-hidden="true"><path d="M0 5h28" stroke="var(--edge)" stroke-width="2" stroke-dasharray="2 5" fill="none"/><circle cx="30" cy="5" r="3.2" fill="var(--edge)"/></svg>Implicit</span>
+      <label><input type="checkbox" id="toggle-all" checked> Show all connections</label>
+    </div>
+  </header>
+
+  <main class="layout">
+    <div class="stage-wrap">
+      <div class="stage" id="stage" role="group" aria-label="Skills by layer">
+        <svg id="edges" aria-hidden="true"></svg>
+      </div>
+    </div>
+    <aside class="panel" id="panel" aria-live="polite" aria-label="Skill details"></aside>
+  </main>
+</div>
+
+<script>
+const LAYERS = {
+  workflow: { title: 'Workflow layer', blurb: 'Outcome-oriented skills that combine the layers below', rank: 0 },
+  domain: { title: 'Domain layer', blurb: 'One APS component each', rank: 1 },
+  foundational: { title: 'Foundational layer', blurb: 'Cross-domain knowledge that every other skill builds on', rank: 2 }
+};
+const TRIO = ['aps-reference', 'aps-auth', 'aps-api-essentials'];
+
+const SKILLS = [
+  // ---------- workflow ----------
+  { id: 'aps-web-viewer-app', layer: 'workflow',
+    requires: ['aps-data-management', 'aps-model-derivative', 'aps-viewer', 'aps-forma', 'aps-webhooks'],
+    owns: `End-to-end browser apps: sign-in, a region-aware hub, project, folder, and file picker, upload-and-view, issues next to the model, creating issues from clicked elements, overlays from external data, and reloading when a new version arrives.`,
+    prompts: [`Build a web app where users sign in and pick a hub, project, folder, and file.`, `Let me upload a file from my computer and view it in 3D.`, `Show project issues next to the model.`, `Color elements by sensor values from my spreadsheet.`] },
+  { id: 'aps-model-data-extraction', layer: 'workflow',
+    requires: ['aps-aec-data-model', 'aps-model-derivative', 'aps-viewer', 'aps-data-management', 'aps-forma'],
+    owns: `Choosing a data source and its fallback order (AEC Data Model → Model Derivative → Forma model properties → Viewer), exporting element data, comparing versions, and producing recurring change reports.`,
+    prompts: [`Which API should I use to get Revit properties or quantities?`, `Export all walls with type, level, and area to a CSV.`, `Compare two versions of a model.`, `Build a weekly change report across all models in a project.`] },
+  { id: 'aps-cloud-batch-processing', layer: 'workflow',
+    requires: ['aps-automation', 'aps-data-management', 'aps-webhooks'],
+    owns: `Running scripts over many models without desktop products, batch format conversion, cloud standards and health checks, per-file failure handling, and completion tracking.`,
+    prompts: [`Run a Revit script on every model in a project.`, `Batch-convert Revit files to IFC without opening Revit.`, `Write a Revit health check that runs in the cloud.`] },
+  { id: 'aps-sync-and-notifications', layer: 'workflow',
+    requires: ['aps-webhooks', 'aps-forma', 'aps-data-management'],
+    owns: `Keeping external databases in sync, scheduled exports to BI tools and warehouses, notifications to Teams and email, choosing between new-version and translation events, and polling where no events exist.`,
+    prompts: [`Keep my database in sync with changes in Forma.`, `Export project data nightly into Power BI.`, `Post to Teams when a new version lands in a folder.`, `How do I detect overdue RFIs?`] },
+  { id: 'aps-migration', layer: 'workflow',
+    requires: ['aps-viewer', 'aps-forma', 'aps-data-exchange'],
+    owns: `The migration method: inventory the codebase's APS usage, map each usage through the official migration guide, verify, then cut over. Covers Forge→APS, Authentication v2, x-user-id→SSA, Viewer v7→v8, BIM 360→Forma, BuildingConnected v2→v3, Forms API v1, the deprecated Data Exchange lookup by file ID, developer hub migration, and SDK target changes.`,
+    defers: `Official migration guides and deprecation notices for all mapping tables. The skill holds no endpoint mappings itself.`,
+    prompts: [`Upgrade my viewer app to v8.`, `My sample broke after the Authentication v2 migration.`, `Which BuildingConnected v2 endpoints have v3 replacements?`, `Should I migrate from x-user-id impersonation to SSA?`] },
+  { id: 'aps-mcp-server', layer: 'workflow',
+    requires: ['aps-api-essentials'],
+    note: 'Also requires domain skills as needed for the tools being built.',
+    owns: `Building and extending MCP servers for APS: choosing the server's APS identity, keeping MCP client auth separate from APS auth, adding tools, and fixing client connection failures.`,
+    prompts: [`Build an MCP server for APS.`, `Which APS identity should my MCP server use?`, `Why can't my MCP client connect to my APS MCP server?`] },
+
+  // ---------- domain ----------
+  { id: 'aps-viewer', layer: 'domain',
+    requires: ['aps-model-derivative'],
+    owns: `Viewer integration with React and Angular, performance with many dbIds, mapping dbIds to Revit element and external IDs, multi-model loading, coordinate transforms, events and operation completion, custom properties, markups, sheet and view switching, and embedding constraints (headless Chrome, iOS WKWebView).`,
+    defers: `Viewer API reference and the official v7→v8 migration guide.`,
+    prompts: [`Why do I get "Autodesk is not defined" in my React app?`, `How do I color thousands of elements by dbId without slowing down?`, `How do I load the architecture and structure models together?`, `How do I map a Viewer dbId to a Revit element ID?`] },
+  { id: 'aps-model-derivative', layer: 'domain',
+    requires: ['aps-data-management'],
+    owns: `Translation jobs and manifests, linked Revit files, Inventor assemblies, zipped inputs with root files, IFC converter choice, thumbnails and 2D views, metadata and properties for large models, 202 and forceget, translation error codes, and offline viewing constraints.`,
+    defers: `Model Derivative docs for supported formats and output options.`,
+    prompts: [`Why does my translation job return 409 Conflict?`, `How do I translate a Revit file with links?`, `How do I extract properties from a very large model?`, `Why does the metadata call return 202?`] },
+  { id: 'aps-data-management', layer: 'domain',
+    requires: [],
+    structure: `references/object-storage.md and references/project-data.md.`,
+    owns: `Object storage (bucket naming and ownership, regions, large and signed S3 uploads and downloads, upload completion, listing objects) and the project hierarchy (hubs, projects, folders, items, versions, relationships, permissions, paths, moving and renaming, version lookup).`,
+    prompts: [`How do I upload a file larger than a few gigabytes?`, `How do I upload a file into a Forma project folder and later add a new version?`, `Why doesn't listing a folder return shared Revit models?`, `How do I find the version issued for tender?`] },
+  { id: 'aps-automation', layer: 'domain',
+    requires: ['aps-data-management'],
+    structure: `Scaffold templates and packaging scripts in scripts/.`,
+    owns: `Activities, work items, and app bundles; passing JSON, RFA files, and large parameters; how bundles read inputs; supporting multiple product versions; CI/CD for bundles; debugging with reports; common failures (failedInstructions, FailedMissingOutput, "failed to prepare app package", false "success" status); cloud differences for fonts and PDF export; scaffolding Revit and Inventor plugins and bundles.`,
+    prompts: [`Scaffold a Revit plugin and app bundle for the Automation API.`, `Why does my work item fail with FailedMissingOutput?`, `How do I support multiple Revit versions?`, `Why is the status success even though my code failed?`] },
+  { id: 'aps-forma', layer: 'domain',
+    requires: ['aps-data-management'],
+    structure: `SKILL.md as router with one reference file per module; a "Known gaps" section with a last-verified date.`,
+    owns: `Account and project admin (Forma versus BIM 360), project members and bulk imports, Issues, RFIs, Submittals, Transmittals, Forms, Assets, Cost, Takeoff, Model Coordination (clashes), BuildingConnected, and data exports. Also container IDs, id versus autodeskId, and custom integration requirements.`,
+    defers: `Per-module OpenAPI specs and deprecation notices.`,
+    prompts: [`How do I create issues in bulk?`, `How do I read clash results and group them by discipline and level?`, `How do I turn takeoff quantities into a cost budget?`, `When do I use the Forma admin APIs instead of the BIM 360 admin APIs?`, `Why does listing project users return 403 with data:read?`] },
+  { id: 'aps-data-exchange', layer: 'domain',
+    requires: ['aps-data-management'],
+    owns: `Creating data exchanges from files in Forma and knowing when they're ready, token rules that differ between the REST and GraphQL surfaces, pulling only what changed since the last sync, and publishing views from web apps.`,
+    defers: `Data Exchange docs and GraphQL schema; deprecation notices for replaced endpoints.`,
+    prompts: [`How do I create a data exchange from a file in Forma and know when it's ready?`, `Why does the Data Exchange REST API reject my user token while GraphQL requires one?`, `How do I pull only what changed in a data exchange since my last sync?`] },
+  { id: 'aps-webhooks', layer: 'domain',
+    requires: [],
+    owns: `Choosing events, delivery semantics (duplicates and retries), verifying callback signatures, local development without a public URL, token types for hook management, listing active and inactive hooks, and turning off all hooks.`,
+    prompts: [`Why does my webhook fire more than once for the same event?`, `Why am I not receiving any events?`, `How do I verify that a callback came from Autodesk?`, `How do I receive webhooks during development without ngrok?`] },
+  { id: 'aps-aec-data-model', layer: 'domain',
+    requires: [],
+    owns: `AEC Data Model specifics: hub activation and indexing (including models uploaded before activation), element groups and their projects, discovering properties on an element group, type versus instance properties, querying changes between versions and the latest-version diff limit, change notifications, sheets, and Plant 3D data. Generic GraphQL patterns live in aps-api-essentials.`,
+    defers: `The published AEC Data Model GraphQL schema for types and fields.`,
+    prompts: [`Why do queries return NOT_FOUND after getHubs and getProjects succeed?`, `How do I discover which properties exist on an element group?`, `How do I read type properties versus instance properties?`, `How do I query only what changed since a previous version?`, `How do I query Plant 3D data?`] },
+  { id: 'aps-mfg-data-model', layer: 'domain',
+    requires: [],
+    owns: `Manufacturing Data Model specifics: navigating Fusion hubs, projects, and designs, reading assembly structure and BOMs, and component properties. Generic GraphQL patterns live in aps-api-essentials.`,
+    defers: `The published Manufacturing Data Model GraphQL schema for types and fields.`,
+    prompts: [`How do I read assembly structure and BOMs from Fusion data?`, `List all components and their part numbers in a Fusion design.`] },
+
+  // ---------- foundational ----------
+  { id: 'aps-reference', layer: 'foundational',
+    requires: [],
+    owns: `Locating authoritative and supporting sources: OpenAPI specs, GraphQL schemas, documentation, blog posts, tutorials, code samples, SDK repositories, changelogs, and deprecation notices. Also the product rename map (Forge→APS, Design Automation→Automation API, BIM 360 and ACC→Forma) and guidance for judging whether an older Forge-era answer still applies.`,
+    defers: `The APS docs portal, APS blog, and the autodesk-platform-services GitHub organization for all content.`,
+    prompts: [`Where's the OpenAPI spec for the Data Management API?`, `Where do I find the GraphQL schema for the Manufacturing Data Model?`, `Is there a code sample for uploading files in Python?`, `Is Design Automation the same as the Automation API?`, `I found a Forge answer from 2021. Is it still valid?`] },
+  { id: 'aps-auth', layer: 'foundational',
+    requires: ['aps-reference'],
+    owns: `Choosing between 2-legged, 3-legged, PKCE, and SSA. Scope selection strategy, token lifecycle and safe refresh in long-running services, 3-legged callback and PKCE errors, x-user-id impersonation and migration to SSA, custom integration provisioning on customer accounts, and downscoped tokens for the Viewer.`,
+    defers: `Authentication API docs for scope lists, supported grant types per API, and endpoint details.`,
+    prompts: [`Should I use 2-legged, 3-legged, PKCE, or SSA for a nightly backend job?`, `Why does this endpoint reject my 2-legged token?`, `My 3-legged login fails with an empty challenge error.`, `How do I give the Viewer a token that can only read viewables?`, `Why can a user see the hub on one customer's account but not another?`] },
+  { id: 'aps-app-management', layer: 'foundational',
+    requires: ['aps-reference', 'aps-auth'],
+    owns: `Developer hubs and migration to them, enabling API products, billable versus non-billable usage, included subscription usage, passthrough billing, usage suspension, checking consumption, monthly cost estimation, app registration, and secret rotation without downtime.`,
+    defers: `Pricing and billing pages for current rates; Application Management API docs for endpoint details. Points to aps-auth for client assertion JWT signing.`,
+    prompts: [`Do I need to migrate my app to a developer hub?`, `Why was my API usage suspended?`, `How much would my app cost per month at the usage I expect?`, `How do I rotate a client secret without downtime?`, `Why do I get "The client_id specified does not have access to the api product"?`] },
+  { id: 'aps-api-essentials', layer: 'foundational',
+    requires: ['aps-reference', 'aps-auth', 'aps-app-management'],
+    structure: `SKILL.md as router; references/ids-and-urns.md, references/limits-and-pagination.md, references/graphql.md, references/errors-and-triage.md, references/sdks-and-cli.md; operator scripts in scripts/ (get a token, count objects in a bucket, check translation status, list registered webhooks, download a derivative).`,
+    owns: `Cross-API conventions: URN encoding, ID formats (b. prefixes; items, versions, and lineages), hub regions, rate limits and Retry-After backoff, pagination and cursor expiry, async and 202 patterns, polling versus webhooks, timeouts, error payloads inside HTTP 200 responses, and batch "skipped" items. Also common GraphQL patterns shared by the APS GraphQL APIs: cursor pagination, fragments, property filtering, and designing queries that keep Data Out costs down. Also an error triage path (auth → product enablement → scope → region → limits), SDK versus raw REST, diagnosing SDK and REST mismatches, and shell quirks across platforms.`,
+    defers: `Per-API docs for rate limit values and page sizes; published GraphQL schemas for types and fields; SDK repositories and issue trackers for SDK-specific bugs.`,
+    prompts: [`Why am I getting 429 API request capacity exceeded?`, `How do I encode a URN correctly?`, `Why does my pagination cursor stop working after a few minutes?`, `How do I paginate GraphQL results with cursors?`, `How do I avoid repeating the same query fragments?`, `Should I use the official .NET SDK or call the REST API directly?`, `How many files are in my bucket?`] }
+];
+
+// ---------- graph ----------
+const byId = Object.fromEntries(SKILLS.map(s => [s.id, s]));
+const isFoundational = id => byId[id].layer === 'foundational';
+const implicitReq = id => isFoundational(id) ? [] : TRIO.filter(t => !byId[id].requires.includes(t));
+const allReq = id => [...byId[id].requires, ...implicitReq(id)];
+const allDependents = id => SKILLS.filter(s => allReq(s.id).includes(id)).map(s => s.id);
+
+function closure(start, next) {
+  const seen = new Set(), queue = [start];
+  while (queue.length) for (const n of next(queue.shift())) if (!seen.has(n)) { seen.add(n); queue.push(n); }
+  return seen;
+}
+
+const EDGES = [];
+SKILLS.forEach(s => {
+  s.requires.forEach(r => EDGES.push({ a: s.id, b: r, implicit: false }));
+  implicitReq(s.id).forEach(r => EDGES.push({ a: s.id, b: r, implicit: true }));
+});
+
+// ---------- DOM ----------
+const $ = sel => document.querySelector(sel);
+const stage = $('#stage'), svg = $('#edges'), panel = $('#panel');
+const NS = 'http://www.w3.org/2000/svg';
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const short = id => id.replace(/^aps-/, '');
+const cardEls = {};
+
+let idx = 0;
+const layerOrder = { workflow: [], domain: [], foundational: [] };
+SKILLS.forEach(s => layerOrder[s.layer].push(s));
+
+Object.entries(layerOrder).forEach(([key, list]) => {
+  const L = LAYERS[key];
+  const sec = document.createElement('section');
+  sec.className = 'layer';
+  sec.dataset.layer = key;
+  sec.innerHTML = `<div class="layer-head"><h2>${L.title}</h2><p>${L.blurb}</p><span class="count">${list.length} skills</span></div>`;
+  const grid = document.createElement('div');
+  grid.className = 'cards' + (key === 'foundational' ? ' foundational-cards' : '');
+  grid.style.setProperty('--n', list.length);
+  list.forEach(s => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'skill';
+    b.dataset.id = s.id;
+    b.style.setProperty('--i', idx++);
+    b.setAttribute('aria-pressed', 'false');
+    b.innerHTML = `<span><span class="pfx">aps-</span>${esc(short(s.id)).replace(/-/g, '-<wbr>')}</span>`;
+    b.addEventListener('click', () => select(selected === s.id ? null : s.id));
+    b.addEventListener('mouseenter', () => { hovered = s.id; applyFocus(); });
+    b.addEventListener('mouseleave', () => { hovered = null; applyFocus(); });
+    b.addEventListener('focus', () => { hovered = s.id; applyFocus(); });
+    b.addEventListener('blur', () => { hovered = null; applyFocus(); });
+    cardEls[s.id] = b;
+    grid.append(b);
+  });
+  sec.append(grid);
+  stage.insertBefore(sec, svg);
+});
+
+// edge elements
+EDGES.forEach(e => {
+  const g = document.createElementNS(NS, 'g');
+  g.setAttribute('class', 'edge-g' + (e.implicit ? ' implicit' : ''));
+  g.append(document.createElementNS(NS, 'path'), document.createElementNS(NS, 'circle'));
+  g.lastChild.setAttribute('r', 3.4);
+  svg.append(g);
+  e.el = g;
+});
+
+// ---------- geometry ----------
+function layoutEdges() {
+  const sr = stage.getBoundingClientRect();
+  svg.setAttribute('width', sr.width);
+  svg.setAttribute('height', sr.height);
+  svg.setAttribute('viewBox', `0 0 ${sr.width} ${sr.height}`);
+  const R = {};
+  for (const id in cardEls) {
+    const r = cardEls[id].getBoundingClientRect();
+    R[id] = { x: r.left - sr.left, y: r.top - sr.top, w: r.width, h: r.height, cx: r.left - sr.left + r.width / 2 };
+  }
+  const layerRank = id => LAYERS[byId[id].layer].rank;
+
+  // spread anchors of explicit edges that share a card side
+  const groups = {};
+  const add = (key, e, end, other) => (groups[key] ??= []).push({ e, end, other });
+  EDGES.filter(e => !e.implicit).forEach(e => {
+    const same = layerRank(e.a) === layerRank(e.b);
+    e.endSide = same ? 'bottom' : 'top';
+    add(e.a + ':bottom', e, 'start', e.b);
+    add(e.b + ':' + e.endSide, e, 'end', e.a);
+  });
+  for (const key in groups) {
+    const list = groups[key], id = key.split(':')[0], n = list.length;
+    list.sort((p, q) => R[p.other].cx - R[q.other].cx);
+    const step = n > 1 ? Math.min(14, (R[id].w * 0.6) / (n - 1)) : 0;
+    list.forEach((item, i) => { item.e[item.end === 'start' ? 'ox' : 'tx_off'] = (i - (n - 1) / 2) * step; });
+  }
+
+  // implicit edges fan out across the target's top edge
+  const implicitSources = SKILLS.filter(s => !isFoundational(s.id)).sort((p, q) => R[p.id].cx - R[q.id].cx).map(s => s.id);
+
+  EDGES.forEach(e => {
+    const A = R[e.a], B = R[e.b];
+    let sx, sy, tx, ty, d;
+    sy = A.y + A.h;
+    if (e.implicit) {
+      sx = A.cx;
+      const t = implicitSources.indexOf(e.a) / (implicitSources.length - 1) - 0.5;
+      tx = B.cx + t * B.w * 0.7;
+      ty = B.y;
+    } else {
+      sx = A.cx + (e.ox || 0);
+      tx = B.cx + (e.tx_off || 0);
+      ty = e.endSide === 'bottom' ? B.y + B.h : B.y;
+    }
+    if (!e.implicit && e.endSide === 'bottom') {
+      const dip = 26 + Math.min(Math.abs(sx - tx) * 0.16, 56);
+      d = `M${sx},${sy} C${sx},${sy + dip} ${tx},${ty + dip} ${tx},${ty}`;
+    } else {
+      const k = Math.min((ty - sy) * 0.5, 150);
+      d = `M${sx},${sy} C${sx},${sy + k} ${tx},${ty - k} ${tx},${ty}`;
+    }
+    e.el.firstChild.setAttribute('d', d);
+    e.el.lastChild.setAttribute('cx', tx);
+    e.el.lastChild.setAttribute('cy', ty);
+  });
+  svg.classList.add('ready');
+}
+
+// ---------- focus / selection ----------
+let selected = null, hovered = null;
+
+function applyFocus() {
+  const F = hovered ?? selected;
+  const reqSet = F ? closure(F, allReq) : new Set();
+  const depSet = F ? closure(F, allDependents) : new Set();
+
+  for (const id in cardEls) {
+    const el = cardEls[id];
+    const rel = id === F ? '' : reqSet.has(id) ? 'requires' : depSet.has(id) ? 'required by' : '';
+    el.classList.toggle('is-selected', id === selected);
+    el.classList.toggle('is-focus', !!F && id === F && id !== selected);
+    el.classList.toggle('is-dim', !!F && id !== F && !rel);
+    if (rel) el.dataset.rel = rel; else delete el.dataset.rel;
+    el.setAttribute('aria-pressed', String(id === selected));
+  }
+
+  const highlighted = [];
+  EDGES.forEach(e => {
+    let cls = '';
+    if (F) {
+      if (e.implicit) cls = e.a === F ? 'req' : e.b === F ? 'dep' : 'dim';
+      else if ((e.a === F || reqSet.has(e.a)) && reqSet.has(e.b)) cls = 'req';
+      else if ((e.b === F || depSet.has(e.b)) && depSet.has(e.a)) cls = 'dep';
+      else cls = 'dim';
+    }
+    e.el.setAttribute('class', 'edge-g' + (e.implicit ? ' implicit' : '') + (cls ? ' ' + cls : ''));
+    if (cls === 'req' || cls === 'dep') highlighted.push(e.el);
+  });
+  highlighted.forEach(g => svg.append(g)); // draw highlighted edges on top
+}
+
+function select(id) {
+  selected = id;
+  if (id) history.replaceState(null, '', '#' + id); else history.replaceState(null, '', location.pathname + location.search);
+  applyFocus();
+  renderPanel();
+  if (id && matchMedia('(max-width: 1279px)').matches) panel.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'nearest' });
+}
+
+// ---------- panel ----------
+const chips = (ids, cls = '') => ids.map(i => `<button type="button" class="chip ${cls}" data-go="${i}">${esc(i)}</button>`).join('');
+
+function renderPanel() {
+  if (!selected) {
+    const c = k => layerOrder[k].length;
+    panel.style.setProperty('--h', 235);
+    panel.innerHTML = `
+      <span class="badge">Overview</span>
+      <h2>Explore the skills</h2>
+      <p>Select a skill to see what it owns, what it depends on, and example prompts that should trigger it.</p>
+      <div class="stats">
+        <div class="stat" style="--h:305"><b>${c('workflow')}</b><span>workflow</span></div>
+        <div class="stat" style="--h:235"><b>${c('domain')}</b><span>domain</span></div>
+        <div class="stat" style="--h:65"><b>${c('foundational')}</b><span>foundational</span></div>
+      </div>
+      <ul class="tips">
+        <li>Dependencies only point downward, so there are no cycles. Workflow skills use domain skills, and domain skills use foundational skills.</li>
+        <li>Every domain and workflow skill implicitly requires <code>aps-reference</code>, <code>aps-auth</code>, and <code>aps-api-essentials</code>. Those links are dashed and appear only when you select a skill.</li>
+        <li>Hover to preview a skill's dependencies. Click to pin it. Press Esc to clear.</li>
+      </ul>`;
+    return;
+  }
+  const s = byId[selected], L = LAYERS[s.layer];
+  const h = { workflow: 305, domain: 235, foundational: 65 }[s.layer];
+  const direct = s.requires, implicit = implicitReq(s.id);
+  const trans = [...closure(s.id, allReq)].filter(x => !direct.includes(x) && !implicit.includes(x) && !TRIO.includes(x));
+  const transTrio = [...closure(s.id, allReq)].filter(x => !direct.includes(x) && !implicit.includes(x) && TRIO.includes(x));
+  const dependents = SKILLS.filter(x => x.requires.includes(s.id)).map(x => x.id);
+  const isTrio = TRIO.includes(s.id);
+
+  let reqHtml = '';
+  if (direct.length) reqHtml += `<div class="chips">${chips(direct, 'req')}</div>`;
+  if (implicit.length) reqHtml += `<p class="chip-label">Implicit, like every domain and workflow skill</p><div class="chips">${chips(implicit, 'implicit')}</div>`;
+  const pulled = [...trans, ...transTrio];
+  if (pulled.length) reqHtml += `<p class="chip-label">Also pulled in through those</p><div class="chips">${chips(pulled)}</div>`;
+  if (!direct.length && !implicit.length && !pulled.length) reqHtml = `<p>Nothing. This skill sits at the base of the stack.</p>`;
+  if (s.note) reqHtml += `<p class="note">${esc(s.note)}</p>`;
+  else if (!isFoundational(s.id) && !direct.length) reqHtml += `<p class="note">Foundational skills only.</p>`;
+
+  let depHtml = '';
+  if (dependents.length) depHtml += `<div class="chips">${chips(dependents, 'dep')}</div>`;
+  if (isTrio) depHtml += `<p class="chip-label">Plus every domain and workflow skill, implicitly</p>`;
+  if (!dependents.length && !isTrio) depHtml = `<p>Nothing else builds on this skill. It's an entry point.</p>`;
+
+  panel.style.setProperty('--h', h);
+  panel.innerHTML = `
+    <span class="badge">${L.title}</span>
+    <h2 class="mono">${esc(s.id)}</h2>
+    <h3>What it owns</h3><p>${esc(s.owns)}</p>
+    ${s.defers ? `<h3>Defers to</h3><p>${esc(s.defers)}</p>` : ''}
+    ${s.structure ? `<h3>Structure</h3><p>${esc(s.structure)}</p>` : ''}
+    <h3>Requires</h3>${reqHtml}
+    <h3>Required by</h3>${depHtml}
+    <h3>Example prompts</h3>
+    <ul class="prompts">${s.prompts.map(p => `<li><span>${esc(p)}</span><button type="button" class="copy" data-copy="${esc(p)}" aria-label="Copy prompt">Copy</button></li>`).join('')}</ul>
+    <button type="button" class="clear" data-clear>Clear selection</button>`;
+}
+
+panel.addEventListener('click', e => {
+  const go = e.target.closest('[data-go]');
+  if (go) return select(go.dataset.go);
+  if (e.target.closest('[data-clear]')) return select(null);
+  const cp = e.target.closest('[data-copy]');
+  if (cp) {
+    navigator.clipboard?.writeText(cp.dataset.copy).then(() => {
+      cp.textContent = 'Copied';
+      setTimeout(() => (cp.textContent = 'Copy'), 1200);
+    });
+  }
+});
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && selected) select(null); });
+$('#toggle-all').addEventListener('change', e => stage.classList.toggle('no-all', !e.target.checked));
+new ResizeObserver(layoutEdges).observe(stage);
+document.fonts?.ready.then(layoutEdges);
+
+layoutEdges();
+const start = decodeURIComponent(location.hash.slice(1));
+selected = byId[start] ? start : null;
+applyFocus();
+renderPanel();
+</script>
+</body>
+</html>
