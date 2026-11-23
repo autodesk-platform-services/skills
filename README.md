@@ -134,6 +134,7 @@ To make a skill available only in a specific project, copy it into the project's
 | [`aps-mcp-server-gen`](skills/aps-mcp-server-gen/) | Scaffold a custom MCP (Model Context Protocol) server that integrates with APS. Supports Node.js/TypeScript, .NET/C#, and Python. |
 | [`aps-viewer-v8-migration`](skills/aps-viewer-v8-migration/) | Migrate APS Viewer apps from v7 to v8 — audit for breaking changes, then port three.js overlays, SceneBuilder, custom materials, internals, and retired extensions to the Scene API and documented APIs. |
 | [`flow-ptr-app`](skills/flow-ptr-app/) | Guide for developing Flow Production Tracking (FPTR) / ShotGrid Toolkit apps following a spec-driven lifecycle — capture intent, write and validate a spec, plan, implement, verify, release, and maintain. |
+| [`aps-aecdm-plant3d-forma`](skills/aps-aecdm-plant3d-forma/) | Discover Plant 3D P&ID and 3D data sets in Forma via AEC Data Model GraphQL, local .dcf schema, and production query patterns. |
 
 ## Contributing
 
