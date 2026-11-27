@@ -1,0 +1,10 @@
+{
+  "name": "v7-fixture",
+  "private": true,
+  "dependencies": {
+    "three": "^0.160.0"
+  },
+  "devDependencies": {
+    "@types/forge-viewer": "^7.89.0"
+  }
+}

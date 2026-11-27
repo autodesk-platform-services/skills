@@ -1,0 +1,13 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "aps-skills",
+  "description": "Agent skills for Autodesk Platform Services (APS) and Autodesk products like AutoCAD and Flow Production Tracking.",
+  "author": {
+    "name": "Autodesk Platform Services",
+    "url": "https://aps.autodesk.com"
+  },
+  "homepage": "https://github.com/autodesk-platform-services/skills",
+  "repository": "https://github.com/autodesk-platform-services/skills",
+  "license": "MIT",
+  "keywords": ["aps", "autodesk", "autocad", "forge", "flow-production-tracking", "mcp", "objectarx", "dotnet"]
+}

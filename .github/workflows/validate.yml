@@ -1,0 +1,31 @@
+name: Validate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Validate plugin marketplace
+        run: claude plugin validate .
+
+      - name: Check skill registration
+        run: node scripts/check-skills.mjs
+
+      - name: Test aps-viewer-v8-migration audit script
+        run: node evals/aps-viewer-v8-migration/audit/test-audit.mjs

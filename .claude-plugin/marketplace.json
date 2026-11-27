@@ -1,0 +1,28 @@
+{
+  "name": "aps-plugins",
+  "description": "Agent plugins for Autodesk Platform Services (APS) and related technology.",
+  "owner": {
+    "name": "Autodesk Platform Services",
+    "url": "https://aps.autodesk.com"
+  },
+  "plugins": [
+    {
+      "name": "aps-skills",
+      "source": "./",
+      "description": "Agent skills for Autodesk Platform Services (APS) and related technology.",
+      "category": "aps",
+      "tags": [
+        "aps",
+        "autodesk-platform-services",
+        "autocad",
+        "flow-production-tracking"
+      ],
+      "author": {
+        "name": "Autodesk"
+      },
+      "homepage": "https://github.com/autodesk-platform-services/skills",
+      "repository": "https://github.com/autodesk-platform-services/skills",
+      "license": "MIT"
+    }
+  ]
+}

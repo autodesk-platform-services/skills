@@ -10,6 +10,9 @@ description: >
 metadata:
   author: Developer Advocates @ Autodesk
   version: "0.1"
+  products: "APS, Forma"
+  technologies: "MCP, Node.js, TypeScript, .NET, C#, Python, OAuth"
+  industries: "AEC, Manufacturing, Media & Entertainment"
 compatibility: Requires Node.js 20+, or .NET 9+, or Python 3.11+, plus internet access for package installation.
 ---
 

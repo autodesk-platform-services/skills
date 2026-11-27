@@ -1,6 +1,10 @@
 ---
 name: flow-ptr-app
 description: "Guide for developing a new Flow Production Tracking (FPTR) / ShotGrid Toolkit (sgtk) app following a Spec-driven approach. Triggers on: create a new FPTR app, new Flow Production Tracking app, new Toolkit app, tk-multi-starterapp, sgtk app development, tank install_app, tank switch_app, dev sandbox pipeline configuration, ShotGrid Toolkit app."
+metadata:
+  products: "Flow Production Tracking"
+  technologies: "Python, Toolkit"
+  industries: "Media & Entertainment"
 ---
 
 # Create a Flow Production Tracking (FPTR) Toolkit App

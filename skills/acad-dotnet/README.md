@@ -1,4 +1,4 @@
-# acad-dotnet — AutoCAD .NET Plugin Skill
+# AutoCAD .NET Plugin Skill
 
 Scaffold and develop AutoCAD 2027 .NET plugins (AutoCAD, Civil 3D, Plant 3D) targeting .NET 10 / x64. Covers project creation, csproj patterns, bundle packaging, desktop testing, and Design Automation deployment.
 
@@ -16,6 +16,12 @@ Scaffold and develop AutoCAD 2027 .NET plugins (AutoCAD, Civil 3D, Plant 3D) tar
 | `templates/civil/` | `dotnet new civil` template — Civil 3D plugin scaffold |
 
 ## Installation
+
+### Recommended (project-level)
+
+```bash
+npx skills add autodesk-platform-services/skills --project --skill acad-dotnet
+```
 
 ### Manual (Claude Code)
 

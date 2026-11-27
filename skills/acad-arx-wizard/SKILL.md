@@ -2,6 +2,10 @@
 name: acad-arx-wizard
 description: "Agentic ObjectARX project scaffolding for AutoCAD 2027 / Visual Studio 2026. Replaces the broken .vsz VsWizardEngine wizard with a PowerShell script that generates identical C++ project files. Works for new ARX/DBX/CRX projects and add-on class wizards (Jig, Reactors, Custom Object, MFC, .NET Wrapper, COM Wrapper, Dynamic Property)."
 argument-hint: "Wizard type and project/class name (e.g. 'create an ARX app called MyPlugin with MFC shared', or 'add a Jig class CMyJig to my project')"
+metadata:
+  products: "AutoCAD"
+  technologies: "C++, ObjectARX, PowerShell, Visual Studio, MFC, COM"
+  industries: "AEC, Manufacturing"
 ---
 
 # ObjectARX Wizard Skill — AutoCAD 2027 / VS 2026
