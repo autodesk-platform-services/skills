@@ -8,6 +8,9 @@ description: >
 metadata:
   author: Dinar Sharafutdinov
   version: "0.1"
+  products: "Forma"
+  industries: "AEC"
+  technologies: "TypeScript, JavaScript"
 compatibility: Forma Site Design licence with a project you can edit; Node 20+; forma-embedded-view-sdk 0.96.0
 ---
 
